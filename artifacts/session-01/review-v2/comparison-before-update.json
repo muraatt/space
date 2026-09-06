@@ -1,0 +1,423 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Users\\Murat\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\node\\bin\\node.exe",
+      "C:\\Users\\Murat\\Desktop\\Oyun\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "orbit.visual",
+      "--update-snapshots=none"
+    ],
+    "configFile": "C:\\Users\\Murat\\Desktop\\Oyun\\playwright.config.ts",
+    "rootDir": "C:/Users/Murat/Desktop/Oyun/packages/test-tools/tests",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Users/Murat/Desktop/Oyun/artifacts/session-01/test-output",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "C:/Users/Murat/Desktop/Oyun/packages/test-tools/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 45000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "artifacts/session-01/e2e-results.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "none",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "orbit.visual.spec.ts",
+      "file": "orbit.visual.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "orbit_day / webgpu: image, telemetry and bounded draw count",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 10677,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mpage\u001b[39m\u001b[2m).\u001b[22mtoHaveScreenshot\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\n  261298 pixels (ratio 0.13 of all image pixels) are different.\n\n  Snapshot: orbit_day-webgpu.png\n\nCall log:\n\u001b[2m  - Expect \"toHaveScreenshot(orbit_day-webgpu.png)\" with timeout 5000ms\u001b[22m\n\u001b[2m    - verifying given screenshot expectation\u001b[22m\n\u001b[2m  - taking page screenshot\u001b[22m\n\u001b[2m    - disabled all CSS animations\u001b[22m\n\u001b[2m  - waiting for fonts to load...\u001b[22m\n\u001b[2m  - fonts loaded\u001b[22m\n\u001b[2m  - 261298 pixels (ratio 0.13 of all image pixels) are different.\u001b[22m\n\u001b[2m  - waiting 100ms before taking screenshot\u001b[22m\n\u001b[2m  - taking page screenshot\u001b[22m\n\u001b[2m    - disabled all CSS animations\u001b[22m\n\u001b[2m  - waiting for fonts to load...\u001b[22m\n\u001b[2m  - fonts loaded\u001b[22m\n\u001b[2m  - captured a stable screenshot\u001b[22m\n\u001b[2m  - 261298 pixels (ratio 0.13 of all image pixels) are different.\u001b[22m\n",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mpage\u001b[39m\u001b[2m).\u001b[22mtoHaveScreenshot\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\n  261298 pixels (ratio 0.13 of all image pixels) are different.\n\n  Snapshot: orbit_day-webgpu.png\n\nCall log:\n\u001b[2m  - Expect \"toHaveScreenshot(orbit_day-webgpu.png)\" with timeout 5000ms\u001b[22m\n\u001b[2m    - verifying given screenshot expectation\u001b[22m\n\u001b[2m  - taking page screenshot\u001b[22m\n\u001b[2m    - disabled all CSS animations\u001b[22m\n\u001b[2m  - waiting for fonts to load...\u001b[22m\n\u001b[2m  - fonts loaded\u001b[22m\n\u001b[2m  - 261298 pixels (ratio 0.13 of all image pixels) are different.\u001b[22m\n\u001b[2m  - waiting 100ms before taking screenshot\u001b[22m\n\u001b[2m  - taking page screenshot\u001b[22m\n\u001b[2m    - disabled all CSS animations\u001b[22m\n\u001b[2m  - waiting for fonts to load...\u001b[22m\n\u001b[2m  - fonts loaded\u001b[22m\n\u001b[2m  - captured a stable screenshot\u001b[22m\n\u001b[2m  - 261298 pixels (ratio 0.13 of all image pixels) are different.\u001b[22m\n\n    at C:\\Users\\Murat\\Desktop\\Oyun\\packages\\test-tools\\tests\\orbit.visual.spec.ts:12:24",
+                    "location": {
+                      "file": "C:\\Users\\Murat\\Desktop\\Oyun\\packages\\test-tools\\tests\\orbit.visual.spec.ts",
+                      "column": 24,
+                      "line": 12
+                    },
+                    "snippet": "  10 |     const m=await page.evaluate(()=>window.__ORBITAL__!.getMetrics());expect(m.backend).toBe(backend==='webgpu'?'WebGPU':'WebGL2');expect(m.drawCalls).toBeGreaterThan(0);expect(m.drawCalls).toBeLessThanOrEqual(150);expect(m.triangles).toBeGreaterThan(10000);\n  11 |     const connection=page.locator('.connection');\n> 12 |     await expect(page).toHaveScreenshot(`${scene.id}-${backend}.png`,{mask:[connection],animations:'disabled'});\n     |                        ^\n  13 |     await mkdir('artifacts/session-01',{recursive:true});await page.screenshot({path:`artifacts/session-01/${scene.id}-${backend}.png`});await writeFile(`artifacts/session-01/${scene.id}-${backend}-smoke.json`,JSON.stringify({kind:'smoke-not-performance-acceptance',metrics:m},null,2));\n  14 |     expect(errors).toEqual([]);\n  15 |   });"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "C:\\Users\\Murat\\Desktop\\Oyun\\packages\\test-tools\\tests\\orbit.visual.spec.ts",
+                        "column": 24,
+                        "line": 12
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mpage\u001b[39m\u001b[2m).\u001b[22mtoHaveScreenshot\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\n  261298 pixels (ratio 0.13 of all image pixels) are different.\n\n  Snapshot: orbit_day-webgpu.png\n\nCall log:\n\u001b[2m  - Expect \"toHaveScreenshot(orbit_day-webgpu.png)\" with timeout 5000ms\u001b[22m\n\u001b[2m    - verifying given screenshot expectation\u001b[22m\n\u001b[2m  - taking page screenshot\u001b[22m\n\u001b[2m    - disabled all CSS animations\u001b[22m\n\u001b[2m  - waiting for fonts to load...\u001b[22m\n\u001b[2m  - fonts loaded\u001b[22m\n\u001b[2m  - 261298 pixels (ratio 0.13 of all image pixels) are different.\u001b[22m\n\u001b[2m  - waiting 100ms before taking screenshot\u001b[22m\n\u001b[2m  - taking page screenshot\u001b[22m\n\u001b[2m    - disabled all CSS animations\u001b[22m\n\u001b[2m  - waiting for fonts to load...\u001b[22m\n\u001b[2m  - fonts loaded\u001b[22m\n\u001b[2m  - captured a stable screenshot\u001b[22m\n\u001b[2m  - 261298 pixels (ratio 0.13 of all image pixels) are different.\u001b[22m\n\n\n  10 |     const m=await page.evaluate(()=>window.__ORBITAL__!.getMetrics());expect(m.backend).toBe(backend==='webgpu'?'WebGPU':'WebGL2');expect(m.drawCalls).toBeGreaterThan(0);expect(m.drawCalls).toBeLessThanOrEqual(150);expect(m.triangles).toBeGreaterThan(10000);\n  11 |     const connection=page.locator('.connection');\n> 12 |     await expect(page).toHaveScreenshot(`${scene.id}-${backend}.png`,{mask:[connection],animations:'disabled'});\n     |                        ^\n  13 |     await mkdir('artifacts/session-01',{recursive:true});await page.screenshot({path:`artifacts/session-01/${scene.id}-${backend}.png`});await writeFile(`artifacts/session-01/${scene.id}-${backend}-smoke.json`,JSON.stringify({kind:'smoke-not-performance-acceptance',metrics:m},null,2));\n  14 |     expect(errors).toEqual([]);\n  15 |   });\n    at C:\\Users\\Murat\\Desktop\\Oyun\\packages\\test-tools\\tests\\orbit.visual.spec.ts:12:24"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-06T15:26:07.541Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "orbit-day-webgpu-expected.png",
+                      "contentType": "image/png",
+                      "path": "C:\\Users\\Murat\\Desktop\\Oyun\\packages\\test-tools\\tests\\baselines\\win32\\orbit.visual.spec.ts\\orbit-day-webgpu.png"
+                    },
+                    {
+                      "name": "orbit-day-webgpu-actual.png",
+                      "contentType": "image/png",
+                      "path": "C:\\Users\\Murat\\Desktop\\Oyun\\artifacts\\session-01\\test-output\\orbit.visual-orbit-day-web-1e8c3-etry-and-bounded-draw-count\\orbit-day-webgpu-actual.png"
+                    },
+                    {
+                      "name": "orbit-day-webgpu-diff.png",
+                      "contentType": "image/png",
+                      "path": "C:\\Users\\Murat\\Desktop\\Oyun\\artifacts\\session-01\\test-output\\orbit.visual-orbit-day-web-1e8c3-etry-and-bounded-draw-count\\orbit-day-webgpu-diff.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\Users\\Murat\\Desktop\\Oyun\\artifacts\\session-01\\test-output\\orbit.visual-orbit-day-web-1e8c3-etry-and-bounded-draw-count\\error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "C:\\Users\\Murat\\Desktop\\Oyun\\artifacts\\session-01\\test-output\\orbit.visual-orbit-day-web-1e8c3-etry-and-bounded-draw-count\\trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "C:\\Users\\Murat\\Desktop\\Oyun\\packages\\test-tools\\tests\\orbit.visual.spec.ts",
+                    "column": 24,
+                    "line": 12
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "51ae25db774d89ff8a62-73fe939665dcc02b6045",
+          "file": "orbit.visual.spec.ts",
+          "line": 7,
+          "column": 3
+        },
+        {
+          "title": "orbit_night / webgpu: image, telemetry and bounded draw count",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 10960,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mpage\u001b[39m\u001b[2m).\u001b[22mtoHaveScreenshot\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\n  67746 pixels (ratio 0.04 of all image pixels) are different.\n\n  Snapshot: orbit_night-webgpu.png\n\nCall log:\n\u001b[2m  - Expect \"toHaveScreenshot(orbit_night-webgpu.png)\" with timeout 5000ms\u001b[22m\n\u001b[2m    - verifying given screenshot expectation\u001b[22m\n\u001b[2m  - taking page screenshot\u001b[22m\n\u001b[2m    - disabled all CSS animations\u001b[22m\n\u001b[2m  - waiting for fonts to load...\u001b[22m\n\u001b[2m  - fonts loaded\u001b[22m\n\u001b[2m  - 67746 pixels (ratio 0.04 of all image pixels) are different.\u001b[22m\n\u001b[2m  - waiting 100ms before taking screenshot\u001b[22m\n\u001b[2m  - taking page screenshot\u001b[22m\n\u001b[2m    - disabled all CSS animations\u001b[22m\n\u001b[2m  - waiting for fonts to load...\u001b[22m\n\u001b[2m  - fonts loaded\u001b[22m\n\u001b[2m  - captured a stable screenshot\u001b[22m\n\u001b[2m  - 67746 pixels (ratio 0.04 of all image pixels) are different.\u001b[22m\n",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mpage\u001b[39m\u001b[2m).\u001b[22mtoHaveScreenshot\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\n  67746 pixels (ratio 0.04 of all image pixels) are different.\n\n  Snapshot: orbit_night-webgpu.png\n\nCall log:\n\u001b[2m  - Expect \"toHaveScreenshot(orbit_night-webgpu.png)\" with timeout 5000ms\u001b[22m\n\u001b[2m    - verifying given screenshot expectation\u001b[22m\n\u001b[2m  - taking page screenshot\u001b[22m\n\u001b[2m    - disabled all CSS animations\u001b[22m\n\u001b[2m  - waiting for fonts to load...\u001b[22m\n\u001b[2m  - fonts loaded\u001b[22m\n\u001b[2m  - 67746 pixels (ratio 0.04 of all image pixels) are different.\u001b[22m\n\u001b[2m  - waiting 100ms before taking screenshot\u001b[22m\n\u001b[2m  - taking page screenshot\u001b[22m\n\u001b[2m    - disabled all CSS animations\u001b[22m\n\u001b[2m  - waiting for fonts to load...\u001b[22m\n\u001b[2m  - fonts loaded\u001b[22m\n\u001b[2m  - captured a stable screenshot\u001b[22m\n\u001b[2m  - 67746 pixels (ratio 0.04 of all image pixels) are different.\u001b[22m\n\n    at C:\\Users\\Murat\\Desktop\\Oyun\\packages\\test-tools\\tests\\orbit.visual.spec.ts:12:24",
+                    "location": {
+                      "file": "C:\\Users\\Murat\\Desktop\\Oyun\\packages\\test-tools\\tests\\orbit.visual.spec.ts",
+                      "column": 24,
+                      "line": 12
+                    },
+                    "snippet": "  10 |     const m=await page.evaluate(()=>window.__ORBITAL__!.getMetrics());expect(m.backend).toBe(backend==='webgpu'?'WebGPU':'WebGL2');expect(m.drawCalls).toBeGreaterThan(0);expect(m.drawCalls).toBeLessThanOrEqual(150);expect(m.triangles).toBeGreaterThan(10000);\n  11 |     const connection=page.locator('.connection');\n> 12 |     await expect(page).toHaveScreenshot(`${scene.id}-${backend}.png`,{mask:[connection],animations:'disabled'});\n     |                        ^\n  13 |     await mkdir('artifacts/session-01',{recursive:true});await page.screenshot({path:`artifacts/session-01/${scene.id}-${backend}.png`});await writeFile(`artifacts/session-01/${scene.id}-${backend}-smoke.json`,JSON.stringify({kind:'smoke-not-performance-acceptance',metrics:m},null,2));\n  14 |     expect(errors).toEqual([]);\n  15 |   });"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "C:\\Users\\Murat\\Desktop\\Oyun\\packages\\test-tools\\tests\\orbit.visual.spec.ts",
+                        "column": 24,
+                        "line": 12
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mpage\u001b[39m\u001b[2m).\u001b[22mtoHaveScreenshot\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\n  67746 pixels (ratio 0.04 of all image pixels) are different.\n\n  Snapshot: orbit_night-webgpu.png\n\nCall log:\n\u001b[2m  - Expect \"toHaveScreenshot(orbit_night-webgpu.png)\" with timeout 5000ms\u001b[22m\n\u001b[2m    - verifying given screenshot expectation\u001b[22m\n\u001b[2m  - taking page screenshot\u001b[22m\n\u001b[2m    - disabled all CSS animations\u001b[22m\n\u001b[2m  - waiting for fonts to load...\u001b[22m\n\u001b[2m  - fonts loaded\u001b[22m\n\u001b[2m  - 67746 pixels (ratio 0.04 of all image pixels) are different.\u001b[22m\n\u001b[2m  - waiting 100ms before taking screenshot\u001b[22m\n\u001b[2m  - taking page screenshot\u001b[22m\n\u001b[2m    - disabled all CSS animations\u001b[22m\n\u001b[2m  - waiting for fonts to load...\u001b[22m\n\u001b[2m  - fonts loaded\u001b[22m\n\u001b[2m  - captured a stable screenshot\u001b[22m\n\u001b[2m  - 67746 pixels (ratio 0.04 of all image pixels) are different.\u001b[22m\n\n\n  10 |     const m=await page.evaluate(()=>window.__ORBITAL__!.getMetrics());expect(m.backend).toBe(backend==='webgpu'?'WebGPU':'WebGL2');expect(m.drawCalls).toBeGreaterThan(0);expect(m.drawCalls).toBeLessThanOrEqual(150);expect(m.triangles).toBeGreaterThan(10000);\n  11 |     const connection=page.locator('.connection');\n> 12 |     await expect(page).toHaveScreenshot(`${scene.id}-${backend}.png`,{mask:[connection],animations:'disabled'});\n     |                        ^\n  13 |     await mkdir('artifacts/session-01',{recursive:true});await page.screenshot({path:`artifacts/session-01/${scene.id}-${backend}.png`});await writeFile(`artifacts/session-01/${scene.id}-${backend}-smoke.json`,JSON.stringify({kind:'smoke-not-performance-acceptance',metrics:m},null,2));\n  14 |     expect(errors).toEqual([]);\n  15 |   });\n    at C:\\Users\\Murat\\Desktop\\Oyun\\packages\\test-tools\\tests\\orbit.visual.spec.ts:12:24"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-06T15:26:20.898Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "orbit-night-webgpu-expected.png",
+                      "contentType": "image/png",
+                      "path": "C:\\Users\\Murat\\Desktop\\Oyun\\packages\\test-tools\\tests\\baselines\\win32\\orbit.visual.spec.ts\\orbit-night-webgpu.png"
+                    },
+                    {
+                      "name": "orbit-night-webgpu-actual.png",
+                      "contentType": "image/png",
+                      "path": "C:\\Users\\Murat\\Desktop\\Oyun\\artifacts\\session-01\\test-output\\orbit.visual-orbit-night-w-c34b2-etry-and-bounded-draw-count\\orbit-night-webgpu-actual.png"
+                    },
+                    {
+                      "name": "orbit-night-webgpu-diff.png",
+                      "contentType": "image/png",
+                      "path": "C:\\Users\\Murat\\Desktop\\Oyun\\artifacts\\session-01\\test-output\\orbit.visual-orbit-night-w-c34b2-etry-and-bounded-draw-count\\orbit-night-webgpu-diff.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\Users\\Murat\\Desktop\\Oyun\\artifacts\\session-01\\test-output\\orbit.visual-orbit-night-w-c34b2-etry-and-bounded-draw-count\\error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "C:\\Users\\Murat\\Desktop\\Oyun\\artifacts\\session-01\\test-output\\orbit.visual-orbit-night-w-c34b2-etry-and-bounded-draw-count\\trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "C:\\Users\\Murat\\Desktop\\Oyun\\packages\\test-tools\\tests\\orbit.visual.spec.ts",
+                    "column": 24,
+                    "line": 12
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "51ae25db774d89ff8a62-0ae57015f842743b5c0a",
+          "file": "orbit.visual.spec.ts",
+          "line": 7,
+          "column": 3
+        },
+        {
+          "title": "orbit_day / webgl2: image, telemetry and bounded draw count",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 11729,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mpage\u001b[39m\u001b[2m).\u001b[22mtoHaveScreenshot\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\n  257440 pixels (ratio 0.13 of all image pixels) are different.\n\n  Snapshot: orbit_day-webgl2.png\n\nCall log:\n\u001b[2m  - Expect \"toHaveScreenshot(orbit_day-webgl2.png)\" with timeout 5000ms\u001b[22m\n\u001b[2m    - verifying given screenshot expectation\u001b[22m\n\u001b[2m  - taking page screenshot\u001b[22m\n\u001b[2m    - disabled all CSS animations\u001b[22m\n\u001b[2m  - waiting for fonts to load...\u001b[22m\n\u001b[2m  - fonts loaded\u001b[22m\n\u001b[2m  - 257583 pixels (ratio 0.13 of all image pixels) are different.\u001b[22m\n\u001b[2m  - waiting 100ms before taking screenshot\u001b[22m\n\u001b[2m  - taking page screenshot\u001b[22m\n\u001b[2m    - disabled all CSS animations\u001b[22m\n\u001b[2m  - waiting for fonts to load...\u001b[22m\n\u001b[2m  - fonts loaded\u001b[22m\n\u001b[2m  - captured a stable screenshot\u001b[22m\n\u001b[2m  - 257440 pixels (ratio 0.13 of all image pixels) are different.\u001b[22m\n",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mpage\u001b[39m\u001b[2m).\u001b[22mtoHaveScreenshot\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\n  257440 pixels (ratio 0.13 of all image pixels) are different.\n\n  Snapshot: orbit_day-webgl2.png\n\nCall log:\n\u001b[2m  - Expect \"toHaveScreenshot(orbit_day-webgl2.png)\" with timeout 5000ms\u001b[22m\n\u001b[2m    - verifying given screenshot expectation\u001b[22m\n\u001b[2m  - taking page screenshot\u001b[22m\n\u001b[2m    - disabled all CSS animations\u001b[22m\n\u001b[2m  - waiting for fonts to load...\u001b[22m\n\u001b[2m  - fonts loaded\u001b[22m\n\u001b[2m  - 257583 pixels (ratio 0.13 of all image pixels) are different.\u001b[22m\n\u001b[2m  - waiting 100ms before taking screenshot\u001b[22m\n\u001b[2m  - taking page screenshot\u001b[22m\n\u001b[2m    - disabled all CSS animations\u001b[22m\n\u001b[2m  - waiting for fonts to load...\u001b[22m\n\u001b[2m  - fonts loaded\u001b[22m\n\u001b[2m  - captured a stable screenshot\u001b[22m\n\u001b[2m  - 257440 pixels (ratio 0.13 of all image pixels) are different.\u001b[22m\n\n    at C:\\Users\\Murat\\Desktop\\Oyun\\packages\\test-tools\\tests\\orbit.visual.spec.ts:12:24",
+                    "location": {
+                      "file": "C:\\Users\\Murat\\Desktop\\Oyun\\packages\\test-tools\\tests\\orbit.visual.spec.ts",
+                      "column": 24,
+                      "line": 12
+                    },
+                    "snippet": "  10 |     const m=await page.evaluate(()=>window.__ORBITAL__!.getMetrics());expect(m.backend).toBe(backend==='webgpu'?'WebGPU':'WebGL2');expect(m.drawCalls).toBeGreaterThan(0);expect(m.drawCalls).toBeLessThanOrEqual(150);expect(m.triangles).toBeGreaterThan(10000);\n  11 |     const connection=page.locator('.connection');\n> 12 |     await expect(page).toHaveScreenshot(`${scene.id}-${backend}.png`,{mask:[connection],animations:'disabled'});\n     |                        ^\n  13 |     await mkdir('artifacts/session-01',{recursive:true});await page.screenshot({path:`artifacts/session-01/${scene.id}-${backend}.png`});await writeFile(`artifacts/session-01/${scene.id}-${backend}-smoke.json`,JSON.stringify({kind:'smoke-not-performance-acceptance',metrics:m},null,2));\n  14 |     expect(errors).toEqual([]);\n  15 |   });"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "C:\\Users\\Murat\\Desktop\\Oyun\\packages\\test-tools\\tests\\orbit.visual.spec.ts",
+                        "column": 24,
+                        "line": 12
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mpage\u001b[39m\u001b[2m).\u001b[22mtoHaveScreenshot\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\n  257440 pixels (ratio 0.13 of all image pixels) are different.\n\n  Snapshot: orbit_day-webgl2.png\n\nCall log:\n\u001b[2m  - Expect \"toHaveScreenshot(orbit_day-webgl2.png)\" with timeout 5000ms\u001b[22m\n\u001b[2m    - verifying given screenshot expectation\u001b[22m\n\u001b[2m  - taking page screenshot\u001b[22m\n\u001b[2m    - disabled all CSS animations\u001b[22m\n\u001b[2m  - waiting for fonts to load...\u001b[22m\n\u001b[2m  - fonts loaded\u001b[22m\n\u001b[2m  - 257583 pixels (ratio 0.13 of all image pixels) are different.\u001b[22m\n\u001b[2m  - waiting 100ms before taking screenshot\u001b[22m\n\u001b[2m  - taking page screenshot\u001b[22m\n\u001b[2m    - disabled all CSS animations\u001b[22m\n\u001b[2m  - waiting for fonts to load...\u001b[22m\n\u001b[2m  - fonts loaded\u001b[22m\n\u001b[2m  - captured a stable screenshot\u001b[22m\n\u001b[2m  - 257440 pixels (ratio 0.13 of all image pixels) are different.\u001b[22m\n\n\n  10 |     const m=await page.evaluate(()=>window.__ORBITAL__!.getMetrics());expect(m.backend).toBe(backend==='webgpu'?'WebGPU':'WebGL2');expect(m.drawCalls).toBeGreaterThan(0);expect(m.drawCalls).toBeLessThanOrEqual(150);expect(m.triangles).toBeGreaterThan(10000);\n  11 |     const connection=page.locator('.connection');\n> 12 |     await expect(page).toHaveScreenshot(`${scene.id}-${backend}.png`,{mask:[connection],animations:'disabled'});\n     |                        ^\n  13 |     await mkdir('artifacts/session-01',{recursive:true});await page.screenshot({path:`artifacts/session-01/${scene.id}-${backend}.png`});await writeFile(`artifacts/session-01/${scene.id}-${backend}-smoke.json`,JSON.stringify({kind:'smoke-not-performance-acceptance',metrics:m},null,2));\n  14 |     expect(errors).toEqual([]);\n  15 |   });\n    at C:\\Users\\Murat\\Desktop\\Oyun\\packages\\test-tools\\tests\\orbit.visual.spec.ts:12:24"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-06T15:26:34.592Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "orbit-day-webgl2-expected.png",
+                      "contentType": "image/png",
+                      "path": "C:\\Users\\Murat\\Desktop\\Oyun\\packages\\test-tools\\tests\\baselines\\win32\\orbit.visual.spec.ts\\orbit-day-webgl2.png"
+                    },
+                    {
+                      "name": "orbit-day-webgl2-actual.png",
+                      "contentType": "image/png",
+                      "path": "C:\\Users\\Murat\\Desktop\\Oyun\\artifacts\\session-01\\test-output\\orbit.visual-orbit-day-web-bb929-etry-and-bounded-draw-count\\orbit-day-webgl2-actual.png"
+                    },
+                    {
+                      "name": "orbit-day-webgl2-diff.png",
+                      "contentType": "image/png",
+                      "path": "C:\\Users\\Murat\\Desktop\\Oyun\\artifacts\\session-01\\test-output\\orbit.visual-orbit-day-web-bb929-etry-and-bounded-draw-count\\orbit-day-webgl2-diff.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\Users\\Murat\\Desktop\\Oyun\\artifacts\\session-01\\test-output\\orbit.visual-orbit-day-web-bb929-etry-and-bounded-draw-count\\error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "C:\\Users\\Murat\\Desktop\\Oyun\\artifacts\\session-01\\test-output\\orbit.visual-orbit-day-web-bb929-etry-and-bounded-draw-count\\trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "C:\\Users\\Murat\\Desktop\\Oyun\\packages\\test-tools\\tests\\orbit.visual.spec.ts",
+                    "column": 24,
+                    "line": 12
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "51ae25db774d89ff8a62-6f698fd14ff1f63129d3",
+          "file": "orbit.visual.spec.ts",
+          "line": 7,
+          "column": 3
+        },
+        {
+          "title": "orbit_night / webgl2: image, telemetry and bounded draw count",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 13230,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mpage\u001b[39m\u001b[2m).\u001b[22mtoHaveScreenshot\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nTimeout: 5000ms\n  Timeout 5000ms exceeded.\n\n  Snapshot: orbit_night-webgl2.png\n\nCall log:\n\u001b[2m  - Expect \"toHaveScreenshot(orbit_night-webgl2.png)\" with timeout 5000ms\u001b[22m\n\u001b[2m    - verifying given screenshot expectation\u001b[22m\n\u001b[2m  - taking page screenshot\u001b[22m\n\u001b[2m    - disabled all CSS animations\u001b[22m\n\u001b[2m  - waiting for fonts to load...\u001b[22m\n\u001b[2m  - fonts loaded\u001b[22m\n\u001b[2m  - 67611 pixels (ratio 0.04 of all image pixels) are different.\u001b[22m\n\u001b[2m  - waiting 100ms before taking screenshot\u001b[22m\n\u001b[2m  - taking page screenshot\u001b[22m\n\u001b[2m    - disabled all CSS animations\u001b[22m\n\u001b[2m  - waiting for fonts to load...\u001b[22m\n\u001b[2m  - fonts loaded\u001b[22m\n\u001b[2m  - Timeout 5000ms exceeded.\u001b[22m\n",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mpage\u001b[39m\u001b[2m).\u001b[22mtoHaveScreenshot\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nTimeout: 5000ms\n  Timeout 5000ms exceeded.\n\n  Snapshot: orbit_night-webgl2.png\n\nCall log:\n\u001b[2m  - Expect \"toHaveScreenshot(orbit_night-webgl2.png)\" with timeout 5000ms\u001b[22m\n\u001b[2m    - verifying given screenshot expectation\u001b[22m\n\u001b[2m  - taking page screenshot\u001b[22m\n\u001b[2m    - disabled all CSS animations\u001b[22m\n\u001b[2m  - waiting for fonts to load...\u001b[22m\n\u001b[2m  - fonts loaded\u001b[22m\n\u001b[2m  - 67611 pixels (ratio 0.04 of all image pixels) are different.\u001b[22m\n\u001b[2m  - waiting 100ms before taking screenshot\u001b[22m\n\u001b[2m  - taking page screenshot\u001b[22m\n\u001b[2m    - disabled all CSS animations\u001b[22m\n\u001b[2m  - waiting for fonts to load...\u001b[22m\n\u001b[2m  - fonts loaded\u001b[22m\n\u001b[2m  - Timeout 5000ms exceeded.\u001b[22m\n\n    at C:\\Users\\Murat\\Desktop\\Oyun\\packages\\test-tools\\tests\\orbit.visual.spec.ts:12:24",
+                    "location": {
+                      "file": "C:\\Users\\Murat\\Desktop\\Oyun\\packages\\test-tools\\tests\\orbit.visual.spec.ts",
+                      "column": 24,
+                      "line": 12
+                    },
+                    "snippet": "  10 |     const m=await page.evaluate(()=>window.__ORBITAL__!.getMetrics());expect(m.backend).toBe(backend==='webgpu'?'WebGPU':'WebGL2');expect(m.drawCalls).toBeGreaterThan(0);expect(m.drawCalls).toBeLessThanOrEqual(150);expect(m.triangles).toBeGreaterThan(10000);\n  11 |     const connection=page.locator('.connection');\n> 12 |     await expect(page).toHaveScreenshot(`${scene.id}-${backend}.png`,{mask:[connection],animations:'disabled'});\n     |                        ^\n  13 |     await mkdir('artifacts/session-01',{recursive:true});await page.screenshot({path:`artifacts/session-01/${scene.id}-${backend}.png`});await writeFile(`artifacts/session-01/${scene.id}-${backend}-smoke.json`,JSON.stringify({kind:'smoke-not-performance-acceptance',metrics:m},null,2));\n  14 |     expect(errors).toEqual([]);\n  15 |   });"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "C:\\Users\\Murat\\Desktop\\Oyun\\packages\\test-tools\\tests\\orbit.visual.spec.ts",
+                        "column": 24,
+                        "line": 12
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mpage\u001b[39m\u001b[2m).\u001b[22mtoHaveScreenshot\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nTimeout: 5000ms\n  Timeout 5000ms exceeded.\n\n  Snapshot: orbit_night-webgl2.png\n\nCall log:\n\u001b[2m  - Expect \"toHaveScreenshot(orbit_night-webgl2.png)\" with timeout 5000ms\u001b[22m\n\u001b[2m    - verifying given screenshot expectation\u001b[22m\n\u001b[2m  - taking page screenshot\u001b[22m\n\u001b[2m    - disabled all CSS animations\u001b[22m\n\u001b[2m  - waiting for fonts to load...\u001b[22m\n\u001b[2m  - fonts loaded\u001b[22m\n\u001b[2m  - 67611 pixels (ratio 0.04 of all image pixels) are different.\u001b[22m\n\u001b[2m  - waiting 100ms before taking screenshot\u001b[22m\n\u001b[2m  - taking page screenshot\u001b[22m\n\u001b[2m    - disabled all CSS animations\u001b[22m\n\u001b[2m  - waiting for fonts to load...\u001b[22m\n\u001b[2m  - fonts loaded\u001b[22m\n\u001b[2m  - Timeout 5000ms exceeded.\u001b[22m\n\n\n  10 |     const m=await page.evaluate(()=>window.__ORBITAL__!.getMetrics());expect(m.backend).toBe(backend==='webgpu'?'WebGPU':'WebGL2');expect(m.drawCalls).toBeGreaterThan(0);expect(m.drawCalls).toBeLessThanOrEqual(150);expect(m.triangles).toBeGreaterThan(10000);\n  11 |     const connection=page.locator('.connection');\n> 12 |     await expect(page).toHaveScreenshot(`${scene.id}-${backend}.png`,{mask:[connection],animations:'disabled'});\n     |                        ^\n  13 |     await mkdir('artifacts/session-01',{recursive:true});await page.screenshot({path:`artifacts/session-01/${scene.id}-${backend}.png`});await writeFile(`artifacts/session-01/${scene.id}-${backend}-smoke.json`,JSON.stringify({kind:'smoke-not-performance-acceptance',metrics:m},null,2));\n  14 |     expect(errors).toEqual([]);\n  15 |   });\n    at C:\\Users\\Murat\\Desktop\\Oyun\\packages\\test-tools\\tests\\orbit.visual.spec.ts:12:24"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-06T15:26:49.163Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "orbit-night-webgl2-expected.png",
+                      "contentType": "image/png",
+                      "path": "C:\\Users\\Murat\\Desktop\\Oyun\\packages\\test-tools\\tests\\baselines\\win32\\orbit.visual.spec.ts\\orbit-night-webgl2.png"
+                    },
+                    {
+                      "name": "orbit-night-webgl2-actual.png",
+                      "contentType": "image/png",
+                      "path": "C:\\Users\\Murat\\Desktop\\Oyun\\artifacts\\session-01\\test-output\\orbit.visual-orbit-night-w-7065d-etry-and-bounded-draw-count\\orbit-night-webgl2-actual.png"
+                    },
+                    {
+                      "name": "orbit-night-webgl2-diff.png",
+                      "contentType": "image/png",
+                      "path": "C:\\Users\\Murat\\Desktop\\Oyun\\artifacts\\session-01\\test-output\\orbit.visual-orbit-night-w-7065d-etry-and-bounded-draw-count\\orbit-night-webgl2-diff.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\Users\\Murat\\Desktop\\Oyun\\artifacts\\session-01\\test-output\\orbit.visual-orbit-night-w-7065d-etry-and-bounded-draw-count\\error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "C:\\Users\\Murat\\Desktop\\Oyun\\artifacts\\session-01\\test-output\\orbit.visual-orbit-night-w-7065d-etry-and-bounded-draw-count\\trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "C:\\Users\\Murat\\Desktop\\Oyun\\packages\\test-tools\\tests\\orbit.visual.spec.ts",
+                    "column": 24,
+                    "line": 12
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "51ae25db774d89ff8a62-b0aa12ccf5b3dae6da50",
+          "file": "orbit.visual.spec.ts",
+          "line": 7,
+          "column": 3
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-06T15:26:05.539Z",
+    "duration": 60249.032,
+    "expected": 0,
+    "skipped": 0,
+    "unexpected": 4,
+    "flaky": 0
+  }
+}

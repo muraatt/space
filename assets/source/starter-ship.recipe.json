@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "name": "Kestrel ST-01",
+  "units": "metres",
+  "length": 12,
+  "width": 9.2,
+  "bodyAxes": { "right": "+X", "up": "+Y", "forward": "-Z" },
+  "materials": { "ceramic": "#b6b9af", "structure": "#26313a", "radiator": "#101d29", "marking": "#d39352" },
+  "components": [
+    "pressure-core",
+    "nose-docking-ring",
+    "four-external-tanks",
+    "radiator-pair",
+    "four-main-engine-bells",
+    "navigation-lamps",
+    "antenna"
+  ],
+  "generator": "packages/client/src/render/ship.ts",
+  "license": "Project original; no third-party mesh",
+  "laterBlenderSource": "Session 3"
+}

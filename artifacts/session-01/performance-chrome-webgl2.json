@@ -1,0 +1,77 @@
+{
+  "kind": "production-local-hardware-measurement",
+  "timestamp": "2026-09-06T15:45:14.850Z",
+  "scene": "orbit_day",
+  "browser": {
+    "channel": "chrome",
+    "version": "152.0.7977.82",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+    "headless": true
+  },
+  "os": "10.0.26200",
+  "cpu": "12th Gen Intel(R) Core(TM) i7-12700H",
+  "logicalCores": 20,
+  "ramGiB": 15.746795654296875,
+  "backend": "WebGL2",
+  "adapter": {
+    "renderer": "ANGLE (Intel, Intel(R) UHD Graphics (0x00004626) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "vendor": "Google Inc. (Intel)"
+  },
+  "viewport": [
+    1920,
+    1080
+  ],
+  "pixelRatio": 1,
+  "warmupSeconds": 15,
+  "sampleSeconds": 30,
+  "elapsedSeconds": 30.053721000000003,
+  "summary": {
+    "samples": 1021,
+    "meanMs": 29.43741429970617,
+    "fps": 33.97037490517574,
+    "p50Ms": 27.700000000004366,
+    "p95Ms": 48.60000000000582,
+    "p99Ms": 69.29999999999563,
+    "maxMs": 187.70000000000437
+  },
+  "drawCallsMax": 15,
+  "trianglesMax": 54454,
+  "rttMaxMs": 3.5999999046325684,
+  "serverTickP95MaxMs": 0.42959999999948195,
+  "serverTickP99MaxMs": 0.7405000000017026,
+  "backlogMaxMs": 7.96573333333404,
+  "snapshots": [
+    {
+      "backend": "WebGL2",
+      "adapter": {
+        "renderer": "ANGLE (Intel, Intel(R) UHD Graphics (0x00004626) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+        "vendor": "Google Inc. (Intel)"
+      },
+      "drawCalls": 15,
+      "triangles": 54454,
+      "frameMs": 30.700416666666662,
+      "fps": 32.5728478169406,
+      "p95Ms": 48.799999999995634,
+      "frames": 1648,
+      "viewport": [
+        1920,
+        1080
+      ],
+      "pixelRatio": 1,
+      "rttMs": 3.5999999046325684,
+      "bytesIn": 365270,
+      "bytesOut": 70150,
+      "server": {
+        "tickMs": 0.16889999999693828,
+        "tickP95Ms": 0.42959999999948195,
+        "tickP99Ms": 0.7405000000017026,
+        "backlogMs": 7.96573333333404,
+        "rejectedCommands": 0
+      }
+    }
+  ],
+  "finalTick": 2150,
+  "errors": [],
+  "referenceGpuAcceptance": "UNVERIFIED: identify GPU against hardware.json; this is not a GTX 1660/RTX 2060 certificate.",
+  "buildManifest": "0.1.0"
+}

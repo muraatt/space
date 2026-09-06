@@ -1,0 +1,10 @@
+Earth surface: Land ocean ice 2048.jpg / NASA G57730.
+NASA Goddard Space Flight Center. Reto Stöckli (land, shallow water), Robert Simmon (ocean color/compositing), MODIS teams and supporting institutions credited at the source.
+Distributed file: https://upload.wikimedia.org/wikipedia/commons/c/cd/Land_ocean_ice_2048.jpg
+Source and full attribution: https://commons.wikimedia.org/wiki/File:Land_ocean_ice_2048.jpg
+The selected Commons distribution is offered under Creative Commons Attribution-ShareAlike 3.0 Unported.
+License: https://creativecommons.org/licenses/by-sa/3.0/
+Legal code: https://creativecommons.org/licenses/by-sa/3.0/legalcode
+Changes: None to the JPEG file. Original available in packages/client/public/textures/earth-day.jpg.
+Retain attribution and license when redistributing. Adaptations of this texture must use the same or compatible license. This does not imply NASA or creator endorsement.
+Retrieved 2026-09-06. SHA-256 is recorded in assets/manifest.json.

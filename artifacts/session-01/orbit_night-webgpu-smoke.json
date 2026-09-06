@@ -1,0 +1,33 @@
+{
+  "kind": "smoke-not-performance-acceptance",
+  "metrics": {
+    "backend": "WebGPU",
+    "adapter": {
+      "vendor": "intel",
+      "architecture": "gen-12lp",
+      "device": "",
+      "description": ""
+    },
+    "drawCalls": 16,
+    "triangles": 90550,
+    "frameMs": 40.422000000000004,
+    "fps": 24.739003512938496,
+    "p95Ms": 62.5,
+    "frames": 50,
+    "viewport": [
+      1920,
+      1080
+    ],
+    "pixelRatio": 1,
+    "rttMs": 8.599999904632568,
+    "bytesIn": 19571,
+    "bytesOut": 3976,
+    "server": {
+      "tickMs": 0.00650000000041473,
+      "tickP95Ms": 0.22879999999997835,
+      "tickP99Ms": 0.31520000000000437,
+      "backlogMs": 13.83899999999967,
+      "rejectedCommands": 0
+    }
+  }
+}

@@ -1,0 +1,329 @@
+{
+  "kind": "production-local-hardware-measurement",
+  "timestamp": "2026-09-06T15:42:04.353Z",
+  "scene": "orbit_day",
+  "browser": {
+    "channel": "chrome",
+    "version": "152.0.7977.82",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+    "headless": true
+  },
+  "os": "10.0.26200",
+  "cpu": "12th Gen Intel(R) Core(TM) i7-12700H",
+  "logicalCores": 20,
+  "ramGiB": 15.746795654296875,
+  "backend": "WebGL2",
+  "adapter": {
+    "renderer": "ANGLE (Intel, Intel(R) UHD Graphics (0x00004626) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "vendor": "Google Inc. (Intel)"
+  },
+  "viewport": [
+    1920,
+    1080
+  ],
+  "pixelRatio": 1,
+  "warmupSeconds": 60,
+  "sampleSeconds": 300,
+  "elapsedSeconds": 300.22575770000003,
+  "summary": {
+    "samples": 3703,
+    "meanMs": 81.0897920604913,
+    "fps": 12.332008438916956,
+    "p50Ms": 83.09999999999127,
+    "p95Ms": 90.39999999996508,
+    "p99Ms": 97.29999999998836,
+    "maxMs": 152.89999999996508
+  },
+  "drawCallsMax": 15,
+  "trianglesMax": 54454,
+  "rttMaxMs": 6.699999809265137,
+  "serverTickP95MaxMs": 0.38639999998849817,
+  "serverTickP99MaxMs": 0.5901999999769032,
+  "backlogMaxMs": 15.47146666667468,
+  "snapshots": [
+    {
+      "backend": "WebGL2",
+      "adapter": {
+        "renderer": "ANGLE (Intel, Intel(R) UHD Graphics (0x00004626) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+        "vendor": "Google Inc. (Intel)"
+      },
+      "drawCalls": 15,
+      "triangles": 54454,
+      "frameMs": 82.75416666666666,
+      "fps": 12.083983686622023,
+      "p95Ms": 97.20000000001164,
+      "frames": 1096,
+      "viewport": [
+        1920,
+        1080
+      ],
+      "pixelRatio": 1,
+      "rttMs": 3.5999999046325684,
+      "bytesIn": 938278,
+      "bytesOut": 187550,
+      "server": {
+        "tickMs": 0.20910000000731088,
+        "tickP95Ms": 0.3831999999965774,
+        "tickP99Ms": 0.5657999999966705,
+        "backlogMs": 4.4444333333356205,
+        "rejectedCommands": 0
+      }
+    },
+    {
+      "backend": "WebGL2",
+      "adapter": {
+        "renderer": "ANGLE (Intel, Intel(R) UHD Graphics (0x00004626) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+        "vendor": "Google Inc. (Intel)"
+      },
+      "drawCalls": 15,
+      "triangles": 54454,
+      "frameMs": 80.95999999999998,
+      "fps": 12.351778656126486,
+      "p95Ms": 90.30000000000291,
+      "frames": 1469,
+      "viewport": [
+        1920,
+        1080
+      ],
+      "pixelRatio": 1,
+      "rttMs": 4.400000095367432,
+      "bytesIn": 1240748,
+      "bytesOut": 250075,
+      "server": {
+        "tickMs": 0.2951000000030035,
+        "tickP95Ms": 0.3672999999980675,
+        "tickP99Ms": 0.5524999999906868,
+        "backlogMs": 7.445633333334853,
+        "rejectedCommands": 0
+      }
+    },
+    {
+      "backend": "WebGL2",
+      "adapter": {
+        "renderer": "ANGLE (Intel, Intel(R) UHD Graphics (0x00004626) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+        "vendor": "Google Inc. (Intel)"
+      },
+      "drawCalls": 15,
+      "triangles": 54454,
+      "frameMs": 80.15,
+      "fps": 12.476606363069244,
+      "p95Ms": 83.80000000001746,
+      "frames": 1842,
+      "viewport": [
+        1920,
+        1080
+      ],
+      "pixelRatio": 1,
+      "rttMs": 2.4000000953674316,
+      "bytesIn": 1545051,
+      "bytesOut": 312477,
+      "server": {
+        "tickMs": 0.33100000000558794,
+        "tickP95Ms": 0.3550000000104774,
+        "tickP99Ms": 0.5478999999759253,
+        "backlogMs": 7.305766666660985,
+        "rejectedCommands": 0
+      }
+    },
+    {
+      "backend": "WebGL2",
+      "adapter": {
+        "renderer": "ANGLE (Intel, Intel(R) UHD Graphics (0x00004626) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+        "vendor": "Google Inc. (Intel)"
+      },
+      "drawCalls": 15,
+      "triangles": 54454,
+      "frameMs": 79.22333333333323,
+      "fps": 12.622543863339942,
+      "p95Ms": 83.60000000000582,
+      "frames": 2217,
+      "viewport": [
+        1920,
+        1080
+      ],
+      "pixelRatio": 1,
+      "rttMs": 4.199999809265137,
+      "bytesIn": 1848890,
+      "bytesOut": 374853,
+      "server": {
+        "tickMs": 0.22160000001895241,
+        "tickP95Ms": 0.38639999998849817,
+        "tickP99Ms": 0.5770999999949709,
+        "backlogMs": 14.525466666677485,
+        "rejectedCommands": 0
+      }
+    },
+    {
+      "backend": "WebGL2",
+      "adapter": {
+        "renderer": "ANGLE (Intel, Intel(R) UHD Graphics (0x00004626) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+        "vendor": "Google Inc. (Intel)"
+      },
+      "drawCalls": 15,
+      "triangles": 54454,
+      "frameMs": 79.22458333333343,
+      "fps": 12.622344705715278,
+      "p95Ms": 83.60000000000582,
+      "frames": 2596,
+      "viewport": [
+        1920,
+        1080
+      ],
+      "pixelRatio": 1,
+      "rttMs": 6.699999809265137,
+      "bytesIn": 2153811,
+      "bytesOut": 437389,
+      "server": {
+        "tickMs": 0.20370000001275912,
+        "tickP95Ms": 0.3824000000022352,
+        "tickP99Ms": 0.5849999999918509,
+        "backlogMs": 8.134633333349319,
+        "rejectedCommands": 0
+      }
+    },
+    {
+      "backend": "WebGL2",
+      "adapter": {
+        "renderer": "ANGLE (Intel, Intel(R) UHD Graphics (0x00004626) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+        "vendor": "Google Inc. (Intel)"
+      },
+      "drawCalls": 15,
+      "triangles": 54454,
+      "frameMs": 79.51374999999994,
+      "fps": 12.576441181556659,
+      "p95Ms": 83.70000000001164,
+      "frames": 2975,
+      "viewport": [
+        1920,
+        1080
+      ],
+      "pixelRatio": 1,
+      "rttMs": 4.1000001430511475,
+      "bytesIn": 2458134,
+      "bytesOut": 499811,
+      "server": {
+        "tickMs": 0.58719999997993,
+        "tickP95Ms": 0.35670000000391155,
+        "tickP99Ms": 0.5607000000018161,
+        "backlogMs": 15.47146666667468,
+        "rejectedCommands": 0
+      }
+    },
+    {
+      "backend": "WebGL2",
+      "adapter": {
+        "renderer": "ANGLE (Intel, Intel(R) UHD Graphics (0x00004626) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+        "vendor": "Google Inc. (Intel)"
+      },
+      "drawCalls": 15,
+      "triangles": 54454,
+      "frameMs": 82.05916666666671,
+      "fps": 12.186328969950537,
+      "p95Ms": 90.59999999997672,
+      "frames": 3345,
+      "viewport": [
+        1920,
+        1080
+      ],
+      "pixelRatio": 1,
+      "rttMs": 3,
+      "bytesIn": 2761725,
+      "bytesOut": 562353,
+      "server": {
+        "tickMs": 0.18239999999059364,
+        "tickP95Ms": 0.3646000000007916,
+        "tickP99Ms": 0.5901999999769032,
+        "backlogMs": 12.179566666664126,
+        "rejectedCommands": 0
+      }
+    },
+    {
+      "backend": "WebGL2",
+      "adapter": {
+        "renderer": "ANGLE (Intel, Intel(R) UHD Graphics (0x00004626) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+        "vendor": "Google Inc. (Intel)"
+      },
+      "drawCalls": 15,
+      "triangles": 54454,
+      "frameMs": 82.92666666666676,
+      "fps": 12.05884717421013,
+      "p95Ms": 97.10000000003492,
+      "frames": 3713,
+      "viewport": [
+        1920,
+        1080
+      ],
+      "pixelRatio": 1,
+      "rttMs": 2.0999999046325684,
+      "bytesIn": 3065724,
+      "bytesOut": 624783,
+      "server": {
+        "tickMs": 0.21850000001722947,
+        "tickP95Ms": 0.3531000000075437,
+        "tickP99Ms": 0.560799999977462,
+        "backlogMs": 3.027900000011838,
+        "rejectedCommands": 0
+      }
+    },
+    {
+      "backend": "WebGL2",
+      "adapter": {
+        "renderer": "ANGLE (Intel, Intel(R) UHD Graphics (0x00004626) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+        "vendor": "Google Inc. (Intel)"
+      },
+      "drawCalls": 15,
+      "triangles": 54454,
+      "frameMs": 86.05374999999985,
+      "fps": 11.620644074197832,
+      "p95Ms": 97.20000000001164,
+      "frames": 4061,
+      "viewport": [
+        1920,
+        1080
+      ],
+      "pixelRatio": 1,
+      "rttMs": 4.200000047683716,
+      "bytesIn": 3368410,
+      "bytesOut": 687282,
+      "server": {
+        "tickMs": 0.15799999999580905,
+        "tickP95Ms": 0.35050000000046566,
+        "tickP99Ms": 0.4947999999858439,
+        "backlogMs": 5.958433333363943,
+        "rejectedCommands": 0
+      }
+    },
+    {
+      "backend": "WebGL2",
+      "adapter": {
+        "renderer": "ANGLE (Intel, Intel(R) UHD Graphics (0x00004626) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+        "vendor": "Google Inc. (Intel)"
+      },
+      "drawCalls": 15,
+      "triangles": 54454,
+      "frameMs": 79.5125,
+      "fps": 12.576638893255778,
+      "p95Ms": 83.60000000003492,
+      "frames": 4435,
+      "viewport": [
+        1920,
+        1080
+      ],
+      "pixelRatio": 1,
+      "rttMs": 3.8000001907348633,
+      "bytesIn": 3672057,
+      "bytesOut": 749692,
+      "server": {
+        "tickMs": 0.2604000000283122,
+        "tickP95Ms": 0.341199999966193,
+        "tickP99Ms": 0.5457999999634922,
+        "backlogMs": 10.965466666682431,
+        "rejectedCommands": 0
+      }
+    }
+  ],
+  "finalTick": 21781,
+  "errors": [],
+  "referenceGpuAcceptance": "UNVERIFIED: identify GPU against hardware.json; this is not a GTX 1660/RTX 2060 certificate.",
+  "buildManifest": "0.1.0"
+}

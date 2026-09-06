@@ -1,0 +1,31 @@
+{
+  "kind": "smoke-not-performance-acceptance",
+  "metrics": {
+    "backend": "WebGL2",
+    "adapter": {
+      "renderer": "ANGLE (Intel, Intel(R) UHD Graphics (0x00004626) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "vendor": "Google Inc. (Intel)"
+    },
+    "drawCalls": 16,
+    "triangles": 90550,
+    "frameMs": 91.27619047619048,
+    "fps": 10.95575959933222,
+    "p95Ms": 111.20000000000027,
+    "frames": 21,
+    "viewport": [
+      1920,
+      1080
+    ],
+    "pixelRatio": 1,
+    "rttMs": 5.299999952316284,
+    "bytesIn": 19002,
+    "bytesOut": 3475,
+    "server": {
+      "tickMs": 0.00650000000041473,
+      "tickP95Ms": 0.22879999999997835,
+      "tickP99Ms": 0.31520000000000437,
+      "backlogMs": 3.4104333333355163,
+      "rejectedCommands": 0
+    }
+  }
+}

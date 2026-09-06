@@ -1,0 +1,39 @@
+{
+  "name": "orbital",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "packageManager": "pnpm@11.19.0",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "check": "node scripts/check.mjs",
+    "test": "node node_modules/vitest/vitest.mjs run",
+    "test:unit": "node node_modules/vitest/vitest.mjs run",
+    "test:integration": "node node_modules/vitest/vitest.mjs run packages/server",
+    "test:e2e": "node node_modules/@playwright/test/cli.js test",
+    "test:visual": "node node_modules/@playwright/test/cli.js test orbit.visual",
+    "test:load": "node scripts/not-yet.mjs load 5",
+    "build": "node scripts/build.mjs",
+    "perf": "node --import tsx packages/test-tools/src/measure.ts",
+    "format": "node node_modules/prettier/bin/prettier.cjs --write .",
+    "format:check": "node node_modules/prettier/bin/prettier.cjs --check ."
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@playwright/test": "1.63.0",
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@types/three": "^0.185.0",
+    "@types/ws": "^8.18.0",
+    "eslint": "^10.10.0",
+    "prettier": "3.9.6",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.48.0",
+    "vitest": "5.0.0"
+  }
+}

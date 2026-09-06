@@ -1,0 +1,93 @@
+{
+  "schemaVersion": 1,
+  "assets": [
+    {
+      "id": "earth-day",
+      "path": "packages/client/public/textures/earth-day.jpg",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Land_ocean_ice_2048.jpg",
+      "downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/c/cd/Land_ocean_ice_2048.jpg",
+      "originalCatalog": "NASA G57730",
+      "author": "NASA Goddard Space Flight Center; Reto Stöckli; Robert Simmon; MODIS teams; Wikimedia uploader Brosen",
+      "license": "CC-BY-SA-3.0 (Commons distribution)",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
+      "licenseFile": "assets/licenses/earth-day.txt",
+      "downloadedAt": "2026-09-06",
+      "sha256": "d4dc80a6ef571939d0abe04a9bed3d3d1e6cd63e59514be1c5e43a6b069e6f1e",
+      "changes": "None. Original JPEG distributed unchanged; sRGB display, orientation and lighting applied at runtime.",
+      "usage": "Retained source; current renderer uses NASA 8K"
+    },
+    {
+      "id": "kestrel",
+      "source": "assets/source/starter-ship.recipe.json",
+      "generator": "packages/client/src/render/ship.ts",
+      "author": "Project original",
+      "license": "Project original; no external mesh",
+      "editable": true
+    },
+    {
+      "id": "art-direction",
+      "source": "assets/source/art-direction.svg",
+      "author": "Project original",
+      "license": "Project original"
+    },
+    {
+      "id": "stars-and-atmosphere",
+      "source": "packages/client/src/render",
+      "author": "Project original",
+      "license": "Project original; procedural"
+    },
+    {
+      "id": "earth-day-8k",
+      "path": "packages/client/public/textures/earth-day-8k.png",
+      "sourceUrl": "https://visibleearth.nasa.gov/images/57730/the-blue-marble-land-surface-ocean-color-and-sea-ice",
+      "downloadUrl": "https://eoimages.gsfc.nasa.gov/images/imagerecords/57000/57730/land_ocean_ice_8192.png",
+      "author": "NASA Goddard; Reto Stoeckli, Robert Simmon; MODIS teams",
+      "license": "NASA media usage guidelines; US government imagery",
+      "licenseUrl": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+      "licenseFile": "assets/licenses/earth-day-8k.txt",
+      "sha256": "aaddcd967a9f09fb2d7ef50ff452bebfcf10192c520465d5eb1ad8446c716e98",
+      "downloadedAt": "2026-09-06",
+      "changes": "None; original file preserved. Material and lighting applied at runtime."
+    },
+    {
+      "id": "earth-clouds",
+      "path": "packages/client/public/textures/earth-clouds.jpg",
+      "downloadUrl": "https://www.solarsystemscope.com/textures/download/2k_earth_clouds.jpg",
+      "author": "Solar System Scope / INOVE; based on NASA data",
+      "sourceUrl": "https://www.solarsystemscope.com/textures/",
+      "license": "CC-BY-4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "licenseFile": "assets/licenses/solar-system-scope.txt",
+      "sha256": "fffd7f68d41b37274822150e54a6ef605af1d3ec35624d9f628c3b896bfa42ed",
+      "downloadedAt": "2026-09-06",
+      "changes": "None; original file preserved. Material and lighting applied at runtime."
+    },
+    {
+      "id": "earth-night",
+      "path": "packages/client/public/textures/earth-night.jpg",
+      "downloadUrl": "https://www.solarsystemscope.com/textures/download/2k_earth_nightmap.jpg",
+      "usage": "Retained source; current renderer uses 8K",
+      "author": "Solar System Scope / INOVE; based on NASA data",
+      "sourceUrl": "https://www.solarsystemscope.com/textures/",
+      "license": "CC-BY-4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "licenseFile": "assets/licenses/solar-system-scope.txt",
+      "sha256": "c16fd1bc096ab91a5c5265c6ff9847c43f489f2e2ee790ccdbcbd03251cf3a5a",
+      "downloadedAt": "2026-09-06",
+      "changes": "None; original file preserved. Material and lighting applied at runtime."
+    },
+    {
+      "id": "earth-night-8k",
+      "path": "packages/client/public/textures/earth-night-8k.jpg",
+      "downloadUrl": "https://www.solarsystemscope.com/textures/download/8k_earth_nightmap.jpg",
+      "author": "Solar System Scope / INOVE; based on NASA data",
+      "sourceUrl": "https://www.solarsystemscope.com/textures/",
+      "license": "CC-BY-4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "licenseFile": "assets/licenses/solar-system-scope.txt",
+      "sha256": "9894e83a585a22c1c425e7ca4f987a9ba625bf08ecee45d3c9dcacae3c2ad5f7",
+      "downloadedAt": "2026-09-06",
+      "changes": "None; original file preserved. Material and lighting applied at runtime."
+    }
+  ]
+}

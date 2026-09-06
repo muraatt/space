@@ -1,0 +1,22 @@
+# Risk kaydı
+
+| Risk                                         | Etki ve tetikleyici                                               | Azaltım / doğrulama                                                                | Sahip oturum / durum                  |
+| -------------------------------------------- | ----------------------------------------------------------------- | ---------------------------------------------------------------------------------- | ------------------------------------- |
+| Tarayıcı farklı GPU seçiyor                  | Yüksek performans tercihi Intel seçimini garanti dışı bırakamıyor | adapterInfo + GL unmasked renderer + hardware.json; gerçek seçimi raporla          | O1 açık; referans GPU kabulü bekliyor |
+| Yakın Dünya doku çözünürlüğü                 | 400 km'de 2K bulanıklığı görünür                                  | 8K NASA yüzey/gece; bulutlar 2K, nihai doku/LOD ve sıkıştırma geçişi O6            | O1 iyileştirildi, final polish açık   |
+| Başlangıç varlık yükü                        | 8K kaynak PNG + GPU upload ilk açılışı uzatır                     | Yerel asset, açık yükleniyor durumu; performans ısınmayı ayırır; O6 KTX/LOD/kalite | O1 kayıtlı                            |
+| Atmosfer ufkunda bant                        | Ayrı sabit alfa kabukları şerit yapıyor                           | Tek katman, teğet irtifaya bağlı sürekli yoğunluk; iki backend incelemesi          | O1 düzeltildi                         |
+| Küçük desktop UI taşması                     | CTA footer altında kalıyor                                        | 720/855/1080 yüksekliği için CSS; gerçek CTA bounds testi                          | O1 düzeltildi                         |
+| Girdi odak kaybında takılı                   | Menü/pencere geçişinde itki devamı                                | Canvas/window blur, görünmezlik nötrü + server timeout; gerçek journey             | O1 doğrulanacak/rapora bak            |
+| Renderer hareketi 20 Hz snapshot ile sınırlı | FPS yüksekken dahi yön adımları sezilebilir                       | O1 otorite korunur; O5 interpolate/reconcile render katmanında                     | O5 açık                               |
+| Dünya yüzeyiyle temas tanımsız               | Geliştirme gemisi uzun aşağı itkiyle yüzeye yaklaşabilir          | O1 orbit test alanı; O2 uçuş sınırı/transfer güvenliği, O4 kayıp davranışı         | Kapsam limiti                         |
+| Yanlış/tekrarlı istemci sonuçları            | Sahte transform, duplicate komut, ödül istismarı                  | strict schema, owner/seq/rate/size; O5 transaction/idempotency                     | O1 temel; O3–5 genişler               |
+| Kalıcılık vaat edilmesi                      | Bellek adaptörü restartta silinir                                 | UI/README açık bilgi; DB restore sadece O5                                         | O1 bilinçli sınır                     |
+| Uzun transfer sıkıcı                         | Oyuncu 20–40 dakikada anlamlı hedefe ulaşamaz                     | O2 erişilebilir hedef/planner, O3 görev ekonomisi, O6 insan onboarding             | O2–6 açık                             |
+| Sigorta kaynak çoğaltır                      | Temel aracı/modülü satıp yeniden talep                            | Devredilemez temel ekipman, tek claim, ödül testi                                  | O4–5 açık                             |
+| Asset lisansı kaybolur                       | Dosya değişimi veya bilinmeyen kaynak                             | URL/author/license/SHA manifest, oyun içi atıf; orijinal kaynak sakla              | O1 kayıtlı                            |
+| WebGL2/WebGPU farkı                          | Shader/tonemapping/adapter sürümü farklı görüntü verir            | Ayrı baseline; fallback testi ve etiketli ölçüm                                    | O1–6 sürekli                          |
+| Test süreçleri kapanmaz                      | Windows'ta wrapper alt süreçleri portu meşgul bırakır             | Playwright iki doğrudan Node webServer yönetir; izole portlar, son çıkış kodu      | O1 düzeltildi                         |
+| Büyük scope                                  | Solo+Astra altı oturumda MMO yapmaya çalışır                      | Her oturumun açık sınırı, ücretli asset ve altyapı gerektirmeyen ilk dört oturum   | Bütün oturumlar                       |
+
+İnsan beğenisi/oyun hissi ve GTX1660/RTX2060/GTX1060 hedefleri henüz gözlenmediyse açık kalır. Kayıtlı limit test sonucu veya onay gibi sunulmaz.

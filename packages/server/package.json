@@ -1,0 +1,13 @@
+{
+  "name": "@orbital/server",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/main.ts"
+  },
+  "dependencies": {
+    "@orbital/shared": "workspace:*",
+    "@orbital/simulation": "workspace:*",
+    "ws": "^8.18.3"
+  }
+}

@@ -1,0 +1,6 @@
+node_modules
+dist
+artifacts
+pnpm-lock.yaml
+packages/test-tools/tests/baselines
+packages/client/public

@@ -1,0 +1,7 @@
+NASA Blue Marble G57730 (8192 x 4096)
+Source file: https://eoimages.gsfc.nasa.gov/images/imagerecords/57000/57730/land_ocean_ice_8192.png
+Credit: NASA Goddard Space Flight Center; Reto Stoeckli, Robert Simmon, MODIS teams.
+Use: unmodified factual Earth texture in a computer graphical simulation.
+Terms: https://www.nasa.gov/nasa-brand-center/images-and-media/ (checked 2026-09-06).
+NASA states government-produced media generally are not subject to US copyright and permits factual simulations without endorsement. NASA acknowledgment is retained. No NASA logo, person or third-party branded imagery is included. No endorsement is implied.
+See assets/manifest.json for SHA-256 and source records.

@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.env
+.cache/
+artifacts/**/traces/
+artifacts/**/test-output/
+*.log
+*.tsbuildinfo
+.pnpm-store/

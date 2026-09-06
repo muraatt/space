@@ -1,0 +1,10 @@
+{
+  "name": "@orbital/test-tools",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@orbital/shared": "workspace:*",
+    "@orbital/simulation": "workspace:*",
+    "ws": "^8.18.3"
+  }
+}

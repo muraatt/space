@@ -1,0 +1,351 @@
+{
+  "kind": "production-local-hardware-measurement",
+  "timestamp": "2026-09-06T15:34:27.938Z",
+  "scene": "orbit_day",
+  "browser": {
+    "channel": "chrome",
+    "version": "152.0.7977.82",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+    "headless": true
+  },
+  "os": "10.0.26200",
+  "cpu": "12th Gen Intel(R) Core(TM) i7-12700H",
+  "logicalCores": 20,
+  "ramGiB": 15.746795654296875,
+  "backend": "WebGPU",
+  "adapter": {
+    "vendor": "intel",
+    "architecture": "gen-12lp",
+    "device": "",
+    "description": ""
+  },
+  "viewport": [
+    1920,
+    1080
+  ],
+  "pixelRatio": 1,
+  "warmupSeconds": 60,
+  "sampleSeconds": 300,
+  "elapsedSeconds": 300.1749734,
+  "summary": {
+    "samples": 16108,
+    "meanMs": 18.63619940402261,
+    "fps": 53.659009453620186,
+    "p50Ms": 20.69999999999709,
+    "p95Ms": 34.60000000000582,
+    "p99Ms": 41.5,
+    "maxMs": 62.59999999997672
+  },
+  "drawCallsMax": 15,
+  "trianglesMax": 54454,
+  "rttMaxMs": 6.099999904632568,
+  "serverTickP95MaxMs": 0.37849999999889405,
+  "serverTickP99MaxMs": 0.5528999999805819,
+  "backlogMaxMs": 12.586000000014222,
+  "snapshots": [
+    {
+      "backend": "WebGPU",
+      "adapter": {
+        "vendor": "intel",
+        "architecture": "gen-12lp",
+        "device": "",
+        "description": ""
+      },
+      "drawCalls": 15,
+      "triangles": 54454,
+      "frameMs": 18.113333333333323,
+      "fps": 55.207949944792084,
+      "p95Ms": 34.39999999999418,
+      "frames": 4921,
+      "viewport": [
+        1920,
+        1080
+      ],
+      "pixelRatio": 1,
+      "rttMs": 2.700000047683716,
+      "bytesIn": 940985,
+      "bytesOut": 186963,
+      "server": {
+        "tickMs": 0.22199999999429565,
+        "tickP95Ms": 0.37849999999889405,
+        "tickP99Ms": 0.5464999999967404,
+        "backlogMs": 6.349566666669675,
+        "rejectedCommands": 0
+      }
+    },
+    {
+      "backend": "WebGPU",
+      "adapter": {
+        "vendor": "intel",
+        "architecture": "gen-12lp",
+        "device": "",
+        "description": ""
+      },
+      "drawCalls": 15,
+      "triangles": 54454,
+      "frameMs": 20.138750000000012,
+      "fps": 49.65551486561973,
+      "p95Ms": 34.80000000000291,
+      "frames": 6576,
+      "viewport": [
+        1920,
+        1080
+      ],
+      "pixelRatio": 1,
+      "rttMs": 4.3999998569488525,
+      "bytesIn": 1249256,
+      "bytesOut": 249389,
+      "server": {
+        "tickMs": 0.2646000000095228,
+        "tickP95Ms": 0.34350000000267755,
+        "tickP99Ms": 0.48739999999816064,
+        "backlogMs": 7.876666666662067,
+        "rejectedCommands": 0
+      }
+    },
+    {
+      "backend": "WebGPU",
+      "adapter": {
+        "vendor": "intel",
+        "architecture": "gen-12lp",
+        "device": "",
+        "description": ""
+      },
+      "drawCalls": 15,
+      "triangles": 54454,
+      "frameMs": 17.27583333333338,
+      "fps": 57.88432781824305,
+      "p95Ms": 28,
+      "frames": 8272,
+      "viewport": [
+        1920,
+        1080
+      ],
+      "pixelRatio": 1,
+      "rttMs": 3.700000047683716,
+      "bytesIn": 1558817,
+      "bytesOut": 311887,
+      "server": {
+        "tickMs": 0.22130000000470318,
+        "tickP95Ms": 0.3418999999994412,
+        "tickP99Ms": 0.4717999999993481,
+        "backlogMs": 12.586000000014222,
+        "rejectedCommands": 0
+      }
+    },
+    {
+      "backend": "WebGPU",
+      "adapter": {
+        "vendor": "intel",
+        "architecture": "gen-12lp",
+        "device": "",
+        "description": ""
+      },
+      "drawCalls": 15,
+      "triangles": 54454,
+      "frameMs": 18.314583333333335,
+      "fps": 54.60129678079854,
+      "p95Ms": 28.10000000000582,
+      "frames": 9857,
+      "viewport": [
+        1920,
+        1080
+      ],
+      "pixelRatio": 1,
+      "rttMs": 3.1999998092651367,
+      "bytesIn": 1868085,
+      "bytesOut": 374337,
+      "server": {
+        "tickMs": 0.3407000000006519,
+        "tickP95Ms": 0.3727999999828171,
+        "tickP99Ms": 0.5525999999954365,
+        "backlogMs": 10.621633333323308,
+        "rejectedCommands": 0
+      }
+    },
+    {
+      "backend": "WebGPU",
+      "adapter": {
+        "vendor": "intel",
+        "architecture": "gen-12lp",
+        "device": "",
+        "description": ""
+      },
+      "drawCalls": 15,
+      "triangles": 54454,
+      "frameMs": 17.621666666666595,
+      "fps": 56.7483211954982,
+      "p95Ms": 28,
+      "frames": 11490,
+      "viewport": [
+        1920,
+        1080
+      ],
+      "pixelRatio": 1,
+      "rttMs": 4.299999952316284,
+      "bytesIn": 2176784,
+      "bytesOut": 436773,
+      "server": {
+        "tickMs": 0.2118999999947846,
+        "tickP95Ms": 0.3754999999946449,
+        "tickP99Ms": 0.5528999999805819,
+        "backlogMs": 12.243433333346324,
+        "rejectedCommands": 0
+      }
+    },
+    {
+      "backend": "WebGPU",
+      "adapter": {
+        "vendor": "intel",
+        "architecture": "gen-12lp",
+        "device": "",
+        "description": ""
+      },
+      "drawCalls": 15,
+      "triangles": 54454,
+      "frameMs": 17.651666666666642,
+      "fps": 56.65187423283928,
+      "p95Ms": 34.60000000000582,
+      "frames": 13159,
+      "viewport": [
+        1920,
+        1080
+      ],
+      "pixelRatio": 1,
+      "rttMs": 2.6000001430511475,
+      "bytesIn": 2484836,
+      "bytesOut": 499177,
+      "server": {
+        "tickMs": 0.22229999999399297,
+        "tickP95Ms": 0.3407000000006519,
+        "tickP99Ms": 0.47719999999389984,
+        "backlogMs": 7.128166666676747,
+        "rejectedCommands": 0
+      }
+    },
+    {
+      "backend": "WebGPU",
+      "adapter": {
+        "vendor": "intel",
+        "architecture": "gen-12lp",
+        "device": "",
+        "description": ""
+      },
+      "drawCalls": 15,
+      "triangles": 54454,
+      "frameMs": 18.98125,
+      "fps": 52.683569311820875,
+      "p95Ms": 34.699999999953434,
+      "frames": 14785,
+      "viewport": [
+        1920,
+        1080
+      ],
+      "pixelRatio": 1,
+      "rttMs": 2.3000001907348633,
+      "bytesIn": 2793713,
+      "bytesOut": 561664,
+      "server": {
+        "tickMs": 0.12899999995715916,
+        "tickP95Ms": 0.3301999999966938,
+        "tickP99Ms": 0.452900000003865,
+        "backlogMs": 12.292499999986909,
+        "rejectedCommands": 0
+      }
+    },
+    {
+      "backend": "WebGPU",
+      "adapter": {
+        "vendor": "intel",
+        "architecture": "gen-12lp",
+        "device": "",
+        "description": ""
+      },
+      "drawCalls": 15,
+      "triangles": 54454,
+      "frameMs": 21.006666666666813,
+      "fps": 47.60393525864772,
+      "p95Ms": 34.800000000046566,
+      "frames": 16231,
+      "viewport": [
+        1920,
+        1080
+      ],
+      "pixelRatio": 1,
+      "rttMs": 6.099999904632568,
+      "bytesIn": 3104472,
+      "bytesOut": 624087,
+      "server": {
+        "tickMs": 0.09600000001955777,
+        "tickP95Ms": 0.33970000001136214,
+        "tickP99Ms": 0.45380000001750886,
+        "backlogMs": 8.235066666661899,
+        "rejectedCommands": 0
+      }
+    },
+    {
+      "backend": "WebGPU",
+      "adapter": {
+        "vendor": "intel",
+        "architecture": "gen-12lp",
+        "device": "",
+        "description": ""
+      },
+      "drawCalls": 15,
+      "triangles": 54454,
+      "frameMs": 18.517083333333236,
+      "fps": 54.00418532436292,
+      "p95Ms": 28,
+      "frames": 17787,
+      "viewport": [
+        1920,
+        1080
+      ],
+      "pixelRatio": 1,
+      "rttMs": 3.0999999046325684,
+      "bytesIn": 3412059,
+      "bytesOut": 686477,
+      "server": {
+        "tickMs": 0.09649999998509884,
+        "tickP95Ms": 0.3418999999994412,
+        "tickP99Ms": 0.47169999999459833,
+        "backlogMs": 8.271133333353998,
+        "rejectedCommands": 0
+      }
+    },
+    {
+      "backend": "WebGPU",
+      "adapter": {
+        "vendor": "intel",
+        "architecture": "gen-12lp",
+        "device": "",
+        "description": ""
+      },
+      "drawCalls": 15,
+      "triangles": 54454,
+      "frameMs": 18.54708333333353,
+      "fps": 53.91683328465785,
+      "p95Ms": 34.600000000034925,
+      "frames": 19372,
+      "viewport": [
+        1920,
+        1080
+      ],
+      "pixelRatio": 1,
+      "rttMs": 5.400000095367432,
+      "bytesIn": 3720986,
+      "bytesOut": 748969,
+      "server": {
+        "tickMs": 0.19479999999748543,
+        "tickP95Ms": 0.33779999997932464,
+        "tickP99Ms": 0.48420000000623986,
+        "backlogMs": 1.5025333333439812,
+        "rejectedCommands": 0
+      }
+    }
+  ],
+  "finalTick": 21723,
+  "errors": [],
+  "referenceGpuAcceptance": "UNVERIFIED: identify GPU against hardware.json; this is not a GTX 1660/RTX 2060 certificate.",
+  "buildManifest": "0.1.0"
+}

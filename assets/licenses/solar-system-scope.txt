@@ -1,0 +1,6 @@
+Earth clouds and night maps by Solar System Scope / INOVE, based on NASA data.
+Source: https://www.solarsystemscope.com/textures/
+License: Creative Commons Attribution 4.0 International (CC BY 4.0).
+License text: https://creativecommons.org/licenses/by/4.0/legalcode
+The source page explicitly offers use, adaptation and sharing, including commercial purposes. Retain this credit and license link on redistribution; identify changes to textures. Original JPEGs are unchanged. Shader lighting/opacity are applied at runtime.
+Downloaded 2026-09-06; individual source URLs and SHA-256 in assets/manifest.json.
