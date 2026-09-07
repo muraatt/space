@@ -111,6 +111,7 @@ export class GameRenderer {
     if (!this.ready || !this.earth) return;
     const frame = renderFrame(world.ship),
       q = new Quaternion(...world.ship.orientation);
+    this.ship.setVariant(world.ship.definitionId);
     this.ship.group.quaternion.copy(frame.eciToLocal).multiply(q);
     this.ship.setThrust(Math.max(0, -world.controls.translation[2]));
     this.earth.group.position.copy(frame.local([0, 0, 0])).multiplyScalar(0.001);

@@ -1,6 +1,8 @@
 import type { Quat, Vec3 } from './units';
 import type { SceneId } from './config';
 import type { ManeuverExecutionState, ManeuverPlanResult } from './maneuver';
+import type { LocalPlayerProfile, MissionAction, MissionInstance } from './mission';
+import type { ShipDefinitionId, ShipPerformance } from './hangar';
 export interface Controls {
   translation: Vec3;
   rotation: Vec3;
@@ -8,6 +10,7 @@ export interface Controls {
 export const neutralControls = (): Controls => ({ translation: [0, 0, 0], rotation: [0, 0, 0] });
 export interface ShipState {
   id: string;
+  definitionId: ShipDefinitionId;
   position: Vec3;
   velocity: Vec3;
   orientation: Quat;
@@ -15,6 +18,9 @@ export interface ShipState {
   /** Derived from mass; retained in snapshots as a convenient authoritative total. */
   massKg: number;
   mass: MassState;
+  performance: ShipPerformance;
+  conditionPercent: number;
+  installedUpgradeIds: string[];
 }
 export interface MassState {
   dryKg: number;
@@ -32,6 +38,12 @@ export interface WorldState {
   lastInputSeq: number;
   controls: Controls;
   maneuver?: ManeuverExecutionState;
+  profile: LocalPlayerProfile;
+  missions: MissionInstance[];
+  hangar: {
+    ships: ShipState[];
+    processedTransactionIds: string[];
+  };
 }
 export interface ServerMetrics {
   tickMs: number;
@@ -54,4 +66,11 @@ export type ServerMessage =
   | { type: 'error'; code: string }
   | { type: 'maneuver_plan'; requestId: string; result: ManeuverPlanResult }
   | { type: 'maneuver_ack'; action: 'EXECUTE' | 'CANCEL'; executionId: string }
+  | { type: 'mission_ack'; action: MissionAction; missionId?: string }
+  | {
+      type: 'economy_ack';
+      action: 'SELECT_SHIP' | 'FUEL' | 'REPAIR' | 'AMMUNITION' | 'UPGRADE';
+      transactionId: string;
+      credits: number;
+    }
   | { type: 'pong'; sentAt: number };

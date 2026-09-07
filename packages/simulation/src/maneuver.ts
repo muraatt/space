@@ -8,6 +8,7 @@ import {
   type MassState,
   type PlannedBurn,
   type ShipState,
+  type ShipPerformance,
   type Vec3,
 } from '@orbital/shared';
 import { add, cross, dot, length, normalize, rotate, scale, sub } from './coordinates';
@@ -81,9 +82,10 @@ function simulateFiniteBurn(
   initialMass: MassState,
   deltaVMps: number,
   directionAt: (state: OrbitalState) => Vec3,
+  performance: ShipPerformance,
 ): BurnResult {
   if (!Number.isFinite(deltaVMps) || deltaVMps < 0) throw new PlannerFailure('NO_FEASIBLE_TRANSFER');
-  const exhaustVelocity = CONFIG.specificImpulseSeconds * CONFIG.standardGravity,
+  const exhaustVelocity = performance.specificImpulseSeconds * CONFIG.standardGravity,
     initialTotal = totalMassKg(initialMass),
     requiredPropellant = initialTotal * (1 - Math.exp(-deltaVMps / exhaustVelocity));
   if (requiredPropellant > initialMass.propellantKg + 1e-9)
@@ -95,9 +97,9 @@ function simulateFiniteBurn(
     remaining = requiredPropellant,
     durationSeconds = 0;
   while (remaining > 1e-10) {
-    const duration = Math.min(CONFIG.fixedDt, (remaining * exhaustVelocity) / CONFIG.mainThrustN),
+    const duration = Math.min(CONFIG.fixedDt, (remaining * exhaustVelocity) / performance.mainThrustN),
       controls = { translation: [0, 0, -1] as Vec3, rotation: [0, 0, 0] as Vec3 },
-      propulsion = propulsionStep(mass, controls, duration),
+      propulsion = propulsionStep(mass, controls, duration, performance),
       orientation = orientationForBodyMinusZ(directionAt(state)),
       acceleration = rotate(propulsion.bodyAcceleration, orientation);
     state = integrate(state.position, state.velocity, acceleration, duration);
@@ -221,8 +223,12 @@ function runRadialTransfer(ship: ShipState, target: ResolvedTarget, departureDel
     raising = target.radiusM > radius1,
     departureSign = raising ? 1 : -1,
     runFrom = (start: OrbitalState, mass: MassState) => {
-      const departure = simulateFiniteBurn(start, mass, departureDeltaV, (state) =>
-          scale(tangential(state.position, target.normal, target.direction), departureSign),
+      const departure = simulateFiniteBurn(
+          start,
+          mass,
+          departureDeltaV,
+          (state) => scale(tangential(state.position, target.normal, target.direction), departureSign),
+          ship.performance,
         ),
         crossingSeconds = coastToRadius(departure.state, target.radiusM, raising),
         crossingState = propagateKepler(departure.state, crossingSeconds),
@@ -233,10 +239,11 @@ function runRadialTransfer(ship: ShipState, target: ResolvedTarget, departureDel
           target.radiusM,
         ),
         crossingDeltaV = length(sub(crossingVelocity, crossingState.velocity)),
-        exhaustVelocity = CONFIG.specificImpulseSeconds * CONFIG.standardGravity,
+        exhaustVelocity = ship.performance.specificImpulseSeconds * CONFIG.standardGravity,
         estimatedArrivalPropellant =
           totalMassKg(departure.mass) * (1 - Math.exp(-crossingDeltaV / exhaustVelocity)),
-        estimatedArrivalDuration = (estimatedArrivalPropellant * exhaustVelocity) / CONFIG.mainThrustN,
+        estimatedArrivalDuration =
+          (estimatedArrivalPropellant * exhaustVelocity) / ship.performance.mainThrustN,
         coastSeconds = Math.max(0, crossingSeconds - estimatedArrivalDuration / 2),
         arrivalState = propagateKepler(departure.state, coastSeconds),
         desiredVelocity = circularVelocity(
@@ -246,11 +253,16 @@ function runRadialTransfer(ship: ShipState, target: ResolvedTarget, departureDel
           target.radiusM,
         ),
         arrivalDeltaV = length(sub(desiredVelocity, arrivalState.velocity)),
-        arrival = simulateFiniteBurn(arrivalState, departure.mass, arrivalDeltaV, (state) =>
-          sub(
-            circularVelocity(state.position, target.normal, target.direction, target.radiusM),
-            state.velocity,
-          ),
+        arrival = simulateFiniteBurn(
+          arrivalState,
+          departure.mass,
+          arrivalDeltaV,
+          (state) =>
+            sub(
+              circularVelocity(state.position, target.normal, target.direction, target.radiusM),
+              state.velocity,
+            ),
+          ship.performance,
         );
       return { departure, coastSeconds, arrival, arrivalDeltaV };
     };
@@ -301,7 +313,7 @@ function runRadialTransfer(ship: ShipState, target: ResolvedTarget, departureDel
     burns,
     expectedFinalState: finalState,
     expectedFinalMass: executed.arrival.mass,
-    expectedReserveDeltaVMps: availableDeltaV(executed.arrival.mass),
+    expectedReserveDeltaVMps: availableDeltaV(executed.arrival.mass, ship.performance.specificImpulseSeconds),
     verification: { positionErrorM, radiusErrorM, velocityErrorMps },
   };
 }
@@ -319,8 +331,12 @@ function runPhasingTransfer(ship: ShipState, target: ResolvedTarget, revolutions
   const circularSpeed = Math.sqrt(CONFIG.earthMu / radius),
     phasingSpeed = Math.sqrt(CONFIG.earthMu * (2 / radius - 1 / semimajor)),
     departureDeltaV = circularSpeed - phasingSpeed,
-    departure = simulateFiniteBurn(initial, ship.mass, departureDeltaV, (state) =>
-      scale(tangential(state.position, target.normal, target.direction), -1),
+    departure = simulateFiniteBurn(
+      initial,
+      ship.mass,
+      departureDeltaV,
+      (state) => scale(tangential(state.position, target.normal, target.direction), -1),
+      ship.performance,
     ),
     energy =
       dot(departure.state.velocity, departure.state.velocity) / 2 -
@@ -333,8 +349,13 @@ function runPhasingTransfer(ship: ShipState, target: ResolvedTarget, revolutions
     arrivalState = propagateKepler(departure.state, coastSeconds),
     desiredVelocity = circularVelocity(arrivalState.position, target.normal, target.direction, radius),
     arrivalDeltaV = length(sub(desiredVelocity, arrivalState.velocity)),
-    arrival = simulateFiniteBurn(arrivalState, departure.mass, arrivalDeltaV, (state) =>
-      sub(circularVelocity(state.position, target.normal, target.direction, radius), state.velocity),
+    arrival = simulateFiniteBurn(
+      arrivalState,
+      departure.mass,
+      arrivalDeltaV,
+      (state) =>
+        sub(circularVelocity(state.position, target.normal, target.direction, radius), state.velocity),
+      ship.performance,
     ),
     etaSeconds = departure.durationSeconds + coastSeconds + arrival.durationSeconds,
     expectedTarget = targetAt(target, etaSeconds),
@@ -369,7 +390,7 @@ function runPhasingTransfer(ship: ShipState, target: ResolvedTarget, revolutions
     ],
     expectedFinalState: arrival.state,
     expectedFinalMass: arrival.mass,
-    expectedReserveDeltaVMps: availableDeltaV(arrival.mass),
+    expectedReserveDeltaVMps: availableDeltaV(arrival.mass, ship.performance.specificImpulseSeconds),
     verification: { positionErrorM, radiusErrorM, velocityErrorMps },
   };
 }

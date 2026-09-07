@@ -168,7 +168,11 @@ nav button span {
   position: absolute;
   left: 48px;
   top: 132px;
+  bottom: 126px;
   width: 251px;
+  overflow-y: auto;
+  padding-right: 8px;
+  scrollbar-width: thin;
 }
 .eyebrow {
   font:
@@ -348,6 +352,433 @@ h1 > span {
 }
 .planner-toggle:hover {
   background: #9bc2d018;
+}
+.mission-toggle {
+  width: 100%;
+  margin-top: 8px;
+  padding: 10px 13px;
+  border: 1px solid #7896a34d;
+  color: #b9cbd3;
+  background: #0b1721c7;
+  display: flex;
+  justify-content: space-between;
+  font: 9px Consolas;
+  letter-spacing: 1.1px;
+}
+.mission-toggle:hover {
+  border-color: #d5a96b99;
+  color: #ead8be;
+}
+.mission-panel {
+  position: absolute;
+  z-index: 4;
+  left: 330px;
+  top: 116px;
+  bottom: 126px;
+  width: 430px;
+  overflow-y: auto;
+  padding: 21px;
+  border: 1px solid #7896a34d;
+  background: #07121dea;
+  backdrop-filter: blur(18px);
+  box-shadow: 0 24px 80px #0008;
+}
+.faction-select > p,
+.empty-offers {
+  color: #9aafba;
+  font-size: 11px;
+  line-height: 1.6;
+}
+.faction-select > button {
+  width: 100%;
+  margin-top: 10px;
+  padding: 15px;
+  display: flex;
+  gap: 14px;
+  text-align: left;
+  color: #d1dee3;
+  border: 1px solid #73909e4d;
+  background: #10202bba;
+}
+.faction-select > button:hover {
+  border-color: #d3aa7199;
+  background: #172a35dd;
+}
+.faction-select i,
+.profile-strip > i {
+  color: #dfb577;
+  font: 25px Georgia;
+  font-style: normal;
+}
+.faction-select strong,
+.faction-select small {
+  display: block;
+}
+.faction-select strong {
+  font-size: 13px;
+  letter-spacing: 0.4px;
+}
+.faction-select small {
+  margin-top: 5px;
+  color: #8fa5b0;
+  font-size: 9px;
+  line-height: 1.5;
+}
+.profile-strip {
+  display: grid;
+  grid-template-columns: 34px 1fr auto auto;
+  align-items: center;
+  gap: 14px;
+  padding: 12px;
+  margin-bottom: 13px;
+  border: 1px solid #d0a46842;
+  background: #15232db5;
+}
+.profile-strip div {
+  min-width: 58px;
+}
+.profile-strip small {
+  display: block;
+  color: #8098a5;
+  font: 7px Consolas;
+  letter-spacing: 1px;
+}
+.profile-strip strong {
+  display: block;
+  margin-top: 4px;
+  color: #d7e1e5;
+  font: 11px Consolas;
+  font-weight: 400;
+}
+.offer-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 8px 0;
+  color: #91a8b3;
+  font: 8px Consolas;
+  letter-spacing: 1.2px;
+}
+.offer-heading button {
+  color: #dcb77e;
+  font: 8px Consolas;
+}
+.mission-card,
+.active-mission {
+  margin-top: 10px;
+  padding: 14px;
+  border: 1px solid #77929e45;
+  background: #0d1a24d9;
+}
+.mission-card-top {
+  display: flex;
+  justify-content: space-between;
+  color: #d6af76;
+  font: 8px Consolas;
+  letter-spacing: 1px;
+}
+.mission-card-top b {
+  color: #829aa6;
+  font-weight: 400;
+}
+.mission-card h3,
+.active-mission h3 {
+  margin: 9px 0 6px;
+  color: #e0e7e9;
+  font-size: 16px;
+  font-weight: 450;
+}
+.mission-card p,
+.active-mission p {
+  margin: 0 0 10px;
+  color: #91a6b1;
+  font-size: 10px;
+  line-height: 1.5;
+}
+.mission-card dl {
+  margin: 8px 0;
+  grid-template-columns: 1fr 1.8fr;
+  gap: 5px;
+  font-size: 8px;
+}
+.mission-card dd {
+  color: #c7d4da;
+}
+.mission-accept,
+.mission-navigate,
+.mission-complete {
+  width: 100%;
+  margin-top: 9px;
+  padding: 10px;
+  border: 1px solid #d3a96b80;
+  background: #a8753026;
+  color: #e7c995;
+  font: 9px Consolas;
+  letter-spacing: 1px;
+}
+.mission-accept:disabled,
+.mission-complete:disabled {
+  opacity: 0.38;
+}
+.destination-state,
+.objective-status,
+.scan-status {
+  margin-top: 10px;
+  padding: 10px;
+  border-left: 2px solid #718996;
+  background: #101f29;
+}
+.destination-state.ready {
+  border-color: #79bc9a;
+}
+.destination-state small,
+.objective-status small,
+.scan-status small {
+  display: block;
+  color: #8097a3;
+  font: 7px Consolas;
+  letter-spacing: 1px;
+}
+.destination-state strong,
+.objective-status strong,
+.scan-status strong {
+  display: block;
+  margin: 5px 0;
+  color: #d2dee2;
+  font: 10px Consolas;
+  font-weight: 400;
+}
+.destination-state span,
+.objective-status span {
+  color: #91bca3;
+  font: 8px Consolas;
+}
+.scan-status > div {
+  height: 3px;
+  margin-top: 8px;
+  background: #78909c30;
+}
+.scan-status > div span {
+  display: block;
+  height: 100%;
+  background: #d7ad70;
+}
+.mission-abandon {
+  width: 100%;
+  margin-top: 8px;
+  padding: 7px;
+  color: #9caeb6;
+  font: 8px Consolas;
+}
+.mission-result {
+  margin-top: 10px;
+  padding: 11px;
+  border: 1px solid #7993a044;
+  font: 9px Consolas;
+}
+.mission-result strong,
+.mission-result span {
+  display: block;
+}
+.mission-result.completed strong {
+  color: #79bc9a;
+}
+.mission-result.failed strong {
+  color: #d28f72;
+}
+.mission-result span {
+  margin-top: 5px;
+  color: #a3b5bd;
+}
+.hangar-panel {
+  position: absolute;
+  z-index: 4;
+  left: 330px;
+  top: 116px;
+  bottom: 126px;
+  width: 780px;
+  overflow-y: auto;
+  padding: 21px;
+  border: 1px solid #7896a34d;
+  background: #07121df2;
+  backdrop-filter: blur(18px);
+  box-shadow: 0 24px 80px #0009;
+}
+.hangar-balance {
+  display: flex;
+  justify-content: space-between;
+  margin: 8px 0 12px;
+  padding: 11px;
+  border: 1px solid #d2a66b45;
+  background: #14232d;
+  font: 9px Consolas;
+  color: #8fa5b0;
+}
+.hangar-balance strong {
+  color: #e3bf88;
+  font-weight: 400;
+}
+.hangar-fleet {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.hangar-ship-card {
+  padding: 13px;
+  border: 1px solid #6f8b9940;
+  background: #0e1c26;
+}
+.hangar-ship-card.active {
+  border-color: #d1a76d75;
+  box-shadow: inset 2px 0 #d1a76d;
+}
+.ship-identity {
+  display: flex;
+  gap: 11px;
+  align-items: center;
+}
+.ship-identity i {
+  color: #ddb274;
+  font: 27px Georgia;
+  font-style: normal;
+}
+.ship-identity span > * {
+  display: block;
+}
+.ship-identity small {
+  color: #839aa5;
+  font: 7px Consolas;
+  letter-spacing: 1px;
+}
+.ship-identity strong {
+  color: #e0e7e9;
+  font-size: 16px;
+  font-weight: 450;
+}
+.ship-identity em {
+  color: #c7a16e;
+  font: 8px Consolas;
+  font-style: normal;
+}
+.hangar-ship-card p {
+  color: #8ea4af;
+  font-size: 9px;
+  min-height: 28px;
+}
+.hangar-ship-card dl {
+  margin: 8px 0;
+  gap: 4px;
+  font-size: 8px;
+}
+.hangar-ship-card button {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #b9946260;
+  color: #dfbd88;
+  font: 8px Consolas;
+}
+.hangar-ship-card button:disabled {
+  color: #7f929b;
+  border-color: #62798538;
+}
+.service-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 9px;
+  margin-top: 13px;
+}
+.service-heading {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: space-between;
+  color: #91a7b2;
+  font: 8px Consolas;
+  letter-spacing: 1px;
+}
+.service-heading b {
+  color: #caa46f;
+  font-weight: 400;
+}
+.service-grid article {
+  padding: 11px;
+  border: 1px solid #6d879340;
+  background: #0d1a24;
+}
+.service-grid article > * {
+  display: block;
+}
+.service-grid small {
+  color: #8299a4;
+  font: 7px Consolas;
+  letter-spacing: 1px;
+}
+.service-grid strong {
+  margin: 7px 0 4px;
+  color: #d7e2e5;
+  font: 16px Consolas;
+  font-weight: 400;
+}
+.service-grid span {
+  color: #94a8b1;
+  font: 8px Consolas;
+}
+.service-grid button {
+  width: 100%;
+  margin-top: 9px;
+  padding: 8px;
+  border: 1px solid #b9936260;
+  color: #dfbd88;
+  font: 8px Consolas;
+}
+.service-grid button:disabled {
+  opacity: 0.38;
+}
+.upgrade-list {
+  margin-top: 14px;
+}
+.upgrade-card {
+  display: grid;
+  grid-template-columns: 1fr 160px;
+  align-items: center;
+  gap: 12px;
+  margin-top: 7px;
+  padding: 10px 11px;
+  border: 1px solid #6d87933b;
+  background: #0d1a24;
+}
+.upgrade-card small {
+  color: #c6a06e;
+  font: 7px Consolas;
+}
+.upgrade-card strong {
+  display: block;
+  color: #d8e2e5;
+  font-size: 11px;
+  font-weight: 450;
+}
+.upgrade-card p {
+  margin: 3px 0;
+  color: #879da8;
+  font-size: 8px;
+}
+.upgrade-card em {
+  color: #9fc4b0;
+  font: 8px Consolas;
+  font-style: normal;
+}
+.upgrade-card button {
+  padding: 9px;
+  border: 1px solid #c29a6560;
+  color: #e0bc85;
+  font: 8px Consolas;
+}
+.upgrade-card button:disabled {
+  opacity: 0.38;
+}
+.hangar-limit {
+  color: #738b97;
+  font-size: 8px;
+  line-height: 1.5;
 }
 .scope-note {
   font: 8px/1.9 Consolas;

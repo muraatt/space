@@ -4,9 +4,7 @@
       "C:\\Users\\Murat\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\node\\bin\\node.exe",
       "C:\\Users\\Murat\\Desktop\\Oyun\\node_modules\\@playwright\\test\\cli.js",
       "test",
-      "orbit.visual.spec.ts",
-      "--grep",
-      "orbit_day / webgl2|orbit_night / webgpu"
+      "packages/test-tools/tests/hangar.visual.spec.ts"
     ],
     "configFile": "C:\\Users\\Murat\\Desktop\\Oyun\\playwright.config.ts",
     "rootDir": "C:/Users/Murat/Desktop/Oyun/packages/test-tools/tests",
@@ -68,13 +66,13 @@
   },
   "suites": [
     {
-      "title": "orbit.visual.spec.ts",
-      "file": "orbit.visual.spec.ts",
+      "title": "hangar.visual.spec.ts",
+      "file": "hangar.visual.spec.ts",
       "column": 0,
       "line": 0,
       "specs": [
         {
-          "title": "orbit_night / webgpu: image, telemetry and bounded draw count",
+          "title": "Session 3 hangar, serviced Raptor and interception evidence",
           "ok": true,
           "tags": [],
           "tests": [
@@ -89,12 +87,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 9966,
+                  "duration": 13350,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-09-06T20:20:03.110Z",
+                  "startTime": "2026-09-07T10:57:10.203Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -102,53 +100,19 @@
               "status": "expected"
             }
           ],
-          "id": "51ae25db774d89ff8a62-0ae57015f842743b5c0a",
-          "file": "orbit.visual.spec.ts",
-          "line": 8,
-          "column": 5
-        },
-        {
-          "title": "orbit_day / webgl2: image, telemetry and bounded draw count",
-          "ok": true,
-          "tags": [],
-          "tests": [
-            {
-              "timeout": 45000,
-              "annotations": [],
-              "expectedStatus": "passed",
-              "projectId": "",
-              "projectName": "",
-              "results": [
-                {
-                  "workerIndex": 0,
-                  "parallelIndex": 0,
-                  "status": "passed",
-                  "duration": 9786,
-                  "errors": [],
-                  "stdout": [],
-                  "stderr": [],
-                  "retry": 0,
-                  "startTime": "2026-09-06T20:20:14.183Z",
-                  "annotations": [],
-                  "attachments": []
-                }
-              ],
-              "status": "expected"
-            }
-          ],
-          "id": "51ae25db774d89ff8a62-6f698fd14ff1f63129d3",
-          "file": "orbit.visual.spec.ts",
-          "line": 8,
-          "column": 5
+          "id": "66149b87f643fade1374-45f5d9a0b28a287687af",
+          "file": "hangar.visual.spec.ts",
+          "line": 5,
+          "column": 1
         }
       ]
     }
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-09-06T20:19:57.424Z",
-    "duration": 29912.028,
-    "expected": 2,
+    "startTime": "2026-09-07T10:57:07.669Z",
+    "duration": 41975.316,
+    "expected": 1,
     "skipped": 0,
     "unexpected": 0,
     "flaky": 0

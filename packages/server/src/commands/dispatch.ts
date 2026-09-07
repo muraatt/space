@@ -21,6 +21,53 @@ export function dispatch(world: WorldState, data: unknown, ownedShipId: string) 
       ok: true as const,
       cancelRequest: { executionId: c.executionId },
     };
+  if (c.type === 'choose_faction') return { ok: true as const, factionRequest: { factionId: c.factionId } };
+  if (c.type === 'request_missions') return { ok: true as const, missionListRequest: true as const };
+  if (c.type === 'accept_mission')
+    return { ok: true as const, missionAcceptRequest: { missionId: c.missionId } };
+  if (c.type === 'deliver_cargo')
+    return {
+      ok: true as const,
+      cargoDeliveryRequest: {
+        missionId: c.missionId,
+        cargoId: c.cargoId,
+        destinationId: c.destinationId,
+      },
+    };
+  if (c.type === 'start_scan')
+    return {
+      ok: true as const,
+      scanRequest: { missionId: c.missionId, destinationId: c.destinationId },
+    };
+  if (c.type === 'abandon_mission')
+    return { ok: true as const, missionAbandonRequest: { missionId: c.missionId } };
+  if (c.type === 'identify_target')
+    return {
+      ok: true as const,
+      identifyRequest: { missionId: c.missionId, destinationId: c.destinationId },
+    };
+  if (c.type === 'select_ship')
+    return {
+      ok: true as const,
+      shipSelectionRequest: { targetShipId: c.targetShipId, transactionId: c.transactionId },
+    };
+  if (c.type === 'buy_fuel')
+    return {
+      ok: true as const,
+      fuelRequest: { amountKg: c.amountKg, transactionId: c.transactionId },
+    };
+  if (c.type === 'repair_ship')
+    return { ok: true as const, repairRequest: { transactionId: c.transactionId } };
+  if (c.type === 'buy_ammunition')
+    return {
+      ok: true as const,
+      ammunitionRequest: { amountKg: c.amountKg, transactionId: c.transactionId },
+    };
+  if (c.type === 'install_upgrade')
+    return {
+      ok: true as const,
+      upgradeRequest: { upgradeId: c.upgradeId, transactionId: c.transactionId },
+    };
   if (
     world.maneuver &&
     ['PLANNED', 'EXECUTING_BURN', 'COASTING', 'ARRIVAL_BURN'].includes(world.maneuver.status)

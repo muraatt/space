@@ -1,10 +1,10 @@
 # ORBITAL / Production rules
 
-Current milestone: Session 2, maneuver UI/execution pass. Session 1, the Session 2 foundation pass and maneuver-solver pass were accepted by the user.
+Current milestone: Session 3, economy/hangar completion and final acceptance. Sessions 1 and 2 were accepted by the user.
 
 - Read README, docs/roadmap.md, docs/vertical_slice.md and the latest session report before work.
 - State the session scope briefly, then implement, integrate, run tests, inspect screenshots and update documentation in the same session.
-- This pass adds only target selection, maneuver comparison UI, orbit visualization, authoritative execution/cancel, timestamped coast state, fuel HUD and Session 2 scenarios. No missions, economy, weapons, account system or database integration.
+- Session 3 now includes two factions, a local authoritative profile, cargo/reconnaissance/non-combat interception, a two-ship hangar, fuel/repair/ammunition services and four fixed upgrades. Do not add weapons, combat damage, insurance, accounts, database integration or Session 4 systems during final acceptance.
 - Use the local Node authoritative command path from the beginning. Never make client transforms authoritative.
 - simulation is pure TypeScript: no Three.js, React, network, database or wall clock imports. Time, commands and randomness are injected. SI units and ECI coordinates are canonical.
 - shared owns runtime schemas, units and versioned configuration. Documents link to definitions instead of duplicating tunable values.

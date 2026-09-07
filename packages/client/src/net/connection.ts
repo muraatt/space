@@ -21,6 +21,9 @@ export class Connection {
   plan?: ManeuverPlanResult;
   planPending = false;
   lastManeuverAck = '';
+  lastMissionAck = '';
+  lastEconomyAck = '';
+  missionPending = false;
   maneuverCommandActive = false;
   private requestSequence = 0;
   private pingTimer?: ReturnType<typeof setInterval>;
@@ -52,9 +55,15 @@ export class Connection {
         this.planPending = false;
       }
       if (data.type === 'maneuver_ack') this.lastManeuverAck = `${data.action}:${data.executionId}`;
+      if (data.type === 'mission_ack') {
+        this.lastMissionAck = `${data.action}:${data.missionId ?? ''}`;
+        this.missionPending = false;
+      }
+      if (data.type === 'economy_ack') this.lastEconomyAck = `${data.action}:${data.transactionId}`;
       if (data.type === 'error') {
         this.lastError = data.code;
         this.planPending = false;
+        this.missionPending = false;
       }
     };
     ws.onclose = (event) => {
@@ -78,7 +87,13 @@ export class Connection {
     }
   }
   input(c: Controls) {
-    this.send({ type: 'input', version: 1, shipId: CONFIG.shipId, seq: this.seq++, ...c });
+    this.send({ type: 'input', version: 1, shipId: this.activeShipId(), seq: this.seq++, ...c });
+  }
+  private activeShipId() {
+    return this.snapshot?.state.profile.activeShipId ?? CONFIG.shipId;
+  }
+  private transactionId(action: string) {
+    return `${action}-${Date.now().toString(36)}-${++this.requestSequence}`;
   }
   requestPlan(target: ManeuverTarget) {
     this.planId = `plan-${Date.now().toString(36)}-${++this.requestSequence}`;
@@ -88,7 +103,7 @@ export class Connection {
     this.send({
       type: 'plan_maneuver',
       version: 1,
-      shipId: CONFIG.shipId,
+      shipId: this.activeShipId(),
       requestId: this.planId,
       target,
     });
@@ -99,7 +114,7 @@ export class Connection {
     this.send({
       type: 'execute_maneuver',
       version: 1,
-      shipId: CONFIG.shipId,
+      shipId: this.activeShipId(),
       planId: this.planId,
       candidateType,
     });
@@ -109,8 +124,99 @@ export class Connection {
     this.send({
       type: 'cancel_maneuver',
       version: 1,
-      shipId: CONFIG.shipId,
+      shipId: this.activeShipId(),
       executionId,
+    });
+  }
+  chooseFaction(factionId: 'AURORA' | 'VANGUARD') {
+    this.lastError = '';
+    this.send({ type: 'choose_faction', version: 1, shipId: this.activeShipId(), factionId });
+  }
+  requestMissions() {
+    this.lastError = '';
+    this.missionPending = true;
+    this.send({ type: 'request_missions', version: 1, shipId: this.activeShipId() });
+  }
+  acceptMission(missionId: string) {
+    this.lastError = '';
+    this.send({ type: 'accept_mission', version: 1, shipId: this.activeShipId(), missionId });
+  }
+  deliverCargo(missionId: string, cargoId: string, destinationId: string) {
+    this.lastError = '';
+    this.send({
+      type: 'deliver_cargo',
+      version: 1,
+      shipId: this.activeShipId(),
+      missionId,
+      cargoId,
+      destinationId,
+    });
+  }
+  startScan(missionId: string, destinationId: string) {
+    this.lastError = '';
+    this.send({ type: 'start_scan', version: 1, shipId: this.activeShipId(), missionId, destinationId });
+  }
+  identifyTarget(missionId: string, destinationId: string) {
+    this.lastError = '';
+    this.send({
+      type: 'identify_target',
+      version: 1,
+      shipId: this.activeShipId(),
+      missionId,
+      destinationId,
+    });
+  }
+  abandonMission(missionId: string) {
+    this.lastError = '';
+    this.send({ type: 'abandon_mission', version: 1, shipId: this.activeShipId(), missionId });
+  }
+  selectShip(targetShipId: string) {
+    this.lastError = '';
+    this.send({
+      type: 'select_ship',
+      version: 1,
+      shipId: this.activeShipId(),
+      targetShipId,
+      transactionId: this.transactionId('ship'),
+    });
+  }
+  buyFuel(amountKg: number) {
+    this.lastError = '';
+    this.send({
+      type: 'buy_fuel',
+      version: 1,
+      shipId: this.activeShipId(),
+      amountKg,
+      transactionId: this.transactionId('fuel'),
+    });
+  }
+  repairShip() {
+    this.lastError = '';
+    this.send({
+      type: 'repair_ship',
+      version: 1,
+      shipId: this.activeShipId(),
+      transactionId: this.transactionId('repair'),
+    });
+  }
+  buyAmmunition(amountKg: number) {
+    this.lastError = '';
+    this.send({
+      type: 'buy_ammunition',
+      version: 1,
+      shipId: this.activeShipId(),
+      amountKg,
+      transactionId: this.transactionId('ammo'),
+    });
+  }
+  installUpgrade(upgradeId: string) {
+    this.lastError = '';
+    this.send({
+      type: 'install_upgrade',
+      version: 1,
+      shipId: this.activeShipId(),
+      upgradeId,
+      transactionId: this.transactionId('upgrade'),
     });
   }
   flightInputAllowed() {

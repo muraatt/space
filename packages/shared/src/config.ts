@@ -19,6 +19,19 @@ export const CONFIG = Object.freeze({
   initialAmmunitionMassKg: 0,
   lowFuelPropellantKg: 80,
   lowReserveDeltaVMps: 100,
+  startingCredits: 2500,
+  cargoMissionMassKg: 320,
+  cargoMissionRewardCredits: 1400,
+  cargoMissionRewardReputation: 8,
+  reconMissionRewardCredits: 1050,
+  reconMissionRewardReputation: 6,
+  reconScanSeconds: 5,
+  interceptRewardCredits: 1250,
+  interceptRewardReputation: 7,
+  missionOrbitToleranceM: 20_000,
+  fuelCreditsPerKg: 0.35,
+  ammunitionCreditsPerKg: 2,
+  repairCreditsPerPercent: 10,
   mainThrustN: 24000,
   translationThrustN: 8000,
   angularRate: 0.35,
@@ -27,5 +40,5 @@ export const CONFIG = Object.freeze({
   maxPayloadBytes: 4096,
   maxCommandsPerSecond: 100,
 });
-export const SCENES = ['orbit_day', 'orbit_night', 'orbit_maneuver', 'low_fuel'] as const;
+export const SCENES = ['orbit_day', 'orbit_night', 'orbit_maneuver', 'low_fuel', 'cargo_mission'] as const;
 export type SceneId = (typeof SCENES)[number];

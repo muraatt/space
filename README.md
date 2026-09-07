@@ -1,6 +1,6 @@
 # ORBITAL · Earth Operations
 
-Tarayıcıda çalışan, bilimsel temelli bir yörünge oyunu. **Mevcut kapsam Oturum 2:** Dünya yörüngesinde tek geliştirme gemisi, yerel otoriter sunucu, yakıtlı doğrudan itki, manevra planlama/yürütme, üçüncü şahıs kamera ve telemetri. Henüz görev, ekonomi, kalıcı ilerleme veya çok oyunculu oyun yoktur.
+Tarayıcıda çalışan, bilimsel temelli bir yörünge oyunu. **Mevcut kapsam Oturum 3 ekonomi/hangar geçişi:** Dünya yörüngesinde yerel otoriter sunucu, yakıtlı doğrudan itki, manevra planlama/yürütme, iki fraksiyon, kargo/keşif/silahsız önleme görevleri, iki araçlı hangar, ikmal hizmetleri ve dört sabit yükseltme bulunur. Savaş, silahlar, gerçek hasar, kalıcı hesap ve çok oyunculu oyun henüz yoktur.
 
 ## Yerel çalıştırma
 
@@ -19,6 +19,8 @@ WebGPU tercih edilir. Kullanılamıyorsa Three.js WebGL2'ye geçer; alt sağ kö
 **Kumandayı devral** düğmesine bas. W/S ileri/geri, A/D yanal, R/F dikey itki; oklar yön, Q/E yatış. Fareyi sürükle ve tekerlekle yaklaş/uzaklaş. C kamerayı toparlar, F3 ayrıntıları açar. Space girdileri bırakır; fiziksel hızı sıfırlamaz. Arayüze odaklanınca itki kesilir. Başka bir yerel sekme açılırsa tek geliştirme pilotu yeni sekmeye geçer. Yenileme ve gündüz/gece geçişi uçuşu sıfırlar; bu bir kayıt veya yeniden bağlanma sistemi değildir.
 
 **Manevra bilgisayarı** hedef yörüngeyi seçer, sunucudan ekonomik/dengeli/hızlı seçenekleri ister ve seçilen planı otoriter sunucuda yürütür. Yanma veya coast sırasında panelden iptal edilebilir. `?scene=orbit_maneuver` oynanabilir plan akışını, `?scene=low_fuel` gerçek Δv/yakıt reddini açar.
+
+**Görev kontrolü** iki başlangıç fraksiyonundan birini seçtirir; kargo, keşif ve silahsız önleme işlerini mevcut manevra bilgisayarına bağlar. `?scene=cargo_mission` hızlı ekonomi testi için teslim halkasında başlar. İki başlangıç kargo işinden sonra **Hangar ve servis** panelinden Raptor'a geçilebilir, yakıt/tamir/mühimmat tamamlanabilir ve ilk yükseltme kurulabilir. Bu geliştirme evreni bellek tabanlıdır; sunucu yeniden başlatılınca profil sıfırlanır.
 
 ## Doğrulama
 
@@ -55,7 +57,7 @@ Varsayılan her koşu: Chrome, 1920×1080, DPR 1, 60 saniye ısınma + 300 saniy
 | `packages/client`     | React DOM arayüzü, bağımsız Three.js renderer, girdi toplama     |
 | `packages/test-tools` | Senaryolar, gerçek kumanda yolculukları, görsel/perf kanıtı      |
 
-Önce [AGENTS](AGENTS.md), [yol haritası](docs/roadmap.md), [vertical slice](docs/vertical_slice.md) ve [son oturum raporu](docs/sessions/01-report.md) okunur. Sayısal çalışma değerlerinin tek kaynağı [config](packages/shared/src/config.ts); belgelerdeki gelecek kuralları uygulanmış özellik sayılmaz.
+Önce [AGENTS](AGENTS.md), [yol haritası](docs/roadmap.md), [vertical slice](docs/vertical_slice.md) ve [son oturum raporu](docs/sessions/03-economy-hangar-report.md) okunur. Sayısal çalışma değerlerinin tek kaynağı [config](packages/shared/src/config.ts); belgelerdeki gelecek kuralları uygulanmış özellik sayılmaz.
 
 [Vizyon](docs/vision.md) · [oyun tasarımı](docs/game_design.md) · [fizik sözleşmesi](docs/physics_contract.md) · [multiplayer](docs/multiplayer_architecture.md) · [ekonomi](docs/economy.md) · [art bible](docs/art_bible.md) · [arayüz](docs/user_interface.md) · [test](docs/testing.md) · [riskler](docs/risk_register.md) · [ADR](docs/decisions/0001-stack-and-boundaries.md).
 

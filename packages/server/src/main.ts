@@ -4,7 +4,8 @@ import { World } from './world';
 import { attachGateway } from './net/gateway';
 import { testEndpoint } from './debug/test-endpoints';
 const host = process.env.HOST ?? '127.0.0.1';
-if (host !== '127.0.0.1' && host !== 'localhost') throw new Error('Session 1 is loopback only.');
+if (host !== '127.0.0.1' && host !== 'localhost')
+  throw new Error('Local development server is loopback only.');
 const testToken = process.env.TEST_MODE === '1' ? process.env.TEST_TOKEN : undefined;
 if (process.env.TEST_MODE === '1' && !testToken) throw new Error('Test server requires TEST_TOKEN');
 const world = new World();
@@ -12,7 +13,7 @@ const server = createServer(async (req, res) => {
   if (await testEndpoint(req, res, world, testToken)) return;
   if (req.url === '/health') {
     res.setHeader('Content-Type', 'application/json');
-    res.end(JSON.stringify({ status: 'ok', session: 1, persistence: 'memory', testMode: !!testToken }));
+    res.end(JSON.stringify({ status: 'ok', session: 3, persistence: 'memory', testMode: !!testToken }));
     return;
   }
   res.writeHead(404);

@@ -16,6 +16,7 @@ import {
   DoubleSide,
 } from 'three/webgpu';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import type { ShipDefinitionId } from '@orbital/shared';
 import recipe from '../../../../assets/source/starter-ship.recipe.json';
 export function makeShip() {
   const group = new Group();
@@ -121,12 +122,16 @@ export function makeShip() {
   canvas.width = 512;
   canvas.height = 160;
   const ctx = canvas.getContext('2d')!;
-  ctx.fillStyle = '#e7e9df';
-  ctx.font = 'bold 54px Consolas';
-  ctx.fillText('KESTREL', 20, 66);
-  ctx.fillStyle = '#d4a064';
-  ctx.font = '26px Consolas';
-  ctx.fillText('ST–01  /  EARTH OPS', 22, 115);
+  const drawLabel = (name: string, callsign: string) => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#e7e9df';
+    ctx.font = 'bold 54px Consolas';
+    ctx.fillText(name, 20, 66);
+    ctx.fillStyle = '#d4a064';
+    ctx.font = '26px Consolas';
+    ctx.fillText(`${callsign}  /  EARTH OPS`, 22, 115);
+  };
+  drawLabel('KESTREL', 'ST–01');
   const decal = new CanvasTexture(canvas);
   decal.colorSpace = SRGBColorSpace;
   const label = new Mesh(
@@ -136,6 +141,7 @@ export function makeShip() {
   label.rotation.x = -Math.PI / 2;
   label.position.set(0, 1.17, 0.25);
   group.add(label);
+  let variant: ShipDefinitionId = 'KESTREL_LOGISTICS';
   return {
     group,
     plumes,
@@ -144,6 +150,18 @@ export function makeShip() {
         p.visible = value > 0;
         p.scale.y = 0.5 + value * 0.5;
       }
+    },
+    setVariant(next: ShipDefinitionId) {
+      if (next === variant) return;
+      variant = next;
+      if (next === 'RAPTOR_COMBAT') {
+        group.scale.set(0.82, 0.78, 1.13);
+        drawLabel('RAPTOR', 'CT–02');
+      } else {
+        group.scale.set(1, 1, 1);
+        drawLabel('KESTREL', 'ST–01');
+      }
+      decal.needsUpdate = true;
     },
   };
 }

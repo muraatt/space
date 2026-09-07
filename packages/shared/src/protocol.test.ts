@@ -52,4 +52,57 @@ describe('untrusted wire commands', () => {
       }).success,
     ).toBe(true);
   });
+  it('accepts mission intent while rejecting forged completion and reward fields', () => {
+    const accept = {
+      type: 'accept_mission',
+      version: 1,
+      shipId: 'kestrel-01',
+      missionId: 'cargo-aurora-450-01',
+    };
+    expect(clientMessageSchema.safeParse(accept).success).toBe(true);
+    expect(clientMessageSchema.safeParse({ ...accept, credits: 999999 }).success).toBe(false);
+    expect(
+      clientMessageSchema.safeParse({
+        type: 'complete_mission',
+        version: 1,
+        shipId: 'kestrel-01',
+        missionId: accept.missionId,
+        reward: 999999,
+      }).success,
+    ).toBe(false);
+    expect(
+      clientMessageSchema.safeParse({
+        type: 'deliver_cargo',
+        version: 1,
+        shipId: 'kestrel-01',
+        missionId: accept.missionId,
+        cargoId: 'cargo-1',
+        destinationId: 'inspection-ring-450',
+        delivered: true,
+      }).success,
+    ).toBe(false);
+  });
+  it('accepts economic intents without accepting client prices or resulting balances', () => {
+    const fuel = {
+      type: 'buy_fuel',
+      version: 1,
+      shipId: 'kestrel-01',
+      amountKg: 100,
+      transactionId: 'fuel-1',
+    };
+    expect(clientMessageSchema.safeParse(fuel).success).toBe(true);
+    expect(clientMessageSchema.safeParse({ ...fuel, price: 0 }).success).toBe(false);
+    expect(clientMessageSchema.safeParse({ ...fuel, credits: 999999 }).success).toBe(false);
+    expect(clientMessageSchema.safeParse({ ...fuel, amountKg: -1 }).success).toBe(false);
+    expect(
+      clientMessageSchema.safeParse({
+        type: 'install_upgrade',
+        version: 1,
+        shipId: 'kestrel-01',
+        upgradeId: 'survey-sensor-array',
+        transactionId: 'upgrade-1',
+        installed: true,
+      }).success,
+    ).toBe(false);
+  });
 });

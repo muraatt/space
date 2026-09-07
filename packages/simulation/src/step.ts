@@ -1,11 +1,52 @@
-import { CONFIG, neutralControls, type WorldState, type SceneId, type Vec3 } from '@orbital/shared';
+import {
+  CONFIG,
+  neutralControls,
+  shipDefinition,
+  shipPerformance,
+  type ShipDefinitionId,
+  type ShipState,
+  type WorldState,
+  type SceneId,
+  type Vec3,
+} from '@orbital/shared';
 import { integrate } from './integrate';
 import { length, multiplyQuat, normalizedQuat, rotate } from './coordinates';
 import { propulsionStep } from './propulsion';
 import { totalMassKg } from './mass';
 export function initialWorld(scene: SceneId = 'orbit_day', seed = 4401): WorldState {
-  const r = CONFIG.earthRadius + CONFIG.initialAltitude,
-    propellantKg = scene === 'low_fuel' ? CONFIG.lowFuelPropellantKg : CONFIG.initialPropellantKg;
+  const initialAltitude = scene === 'cargo_mission' ? 450_000 : CONFIG.initialAltitude,
+    r = CONFIG.earthRadius + initialAltitude,
+    velocity: Vec3 = [0, 0, -Math.sqrt(CONFIG.earthMu / r)];
+  const makeShip = (definitionId: ShipDefinitionId, id: string): ShipState => {
+    const definition = shipDefinition(definitionId),
+      performance = shipPerformance(definitionId, []),
+      propellantKg =
+        definitionId === 'KESTREL_LOGISTICS' && scene === 'low_fuel'
+          ? CONFIG.lowFuelPropellantKg
+          : definition.initialPropellantKg,
+      mass = {
+        dryKg: performance.dryMassKg,
+        modulesKg: 0,
+        cargoKg: 0,
+        ammunitionKg: definition.initialAmmunitionKg,
+        propellantKg,
+      };
+    return {
+      id,
+      definitionId,
+      position: [r, 0, 0],
+      velocity: [...velocity],
+      orientation: [0, 0, -Math.SQRT1_2, Math.SQRT1_2],
+      angularVelocity: [0, 0, 0],
+      massKg: totalMassKg(mass),
+      mass,
+      performance,
+      conditionPercent: definition.initialConditionPercent,
+      installedUpgradeIds: [],
+    };
+  };
+  const kestrel = makeShip('KESTREL_LOGISTICS', CONFIG.shipId),
+    raptor = makeShip('RAPTOR_COMBAT', 'raptor-01');
   return {
     universeId: CONFIG.universeId,
     scene,
@@ -13,26 +54,16 @@ export function initialWorld(scene: SceneId = 'orbit_day', seed = 4401): WorldSt
     tick: 0,
     lastInputSeq: -1,
     controls: neutralControls(),
-    ship: {
-      id: CONFIG.shipId,
-      position: [r, 0, 0],
-      velocity: [0, 0, -Math.sqrt(CONFIG.earthMu / r)],
-      orientation: [0, 0, -Math.SQRT1_2, Math.SQRT1_2],
-      angularVelocity: [0, 0, 0],
-      massKg:
-        CONFIG.dryMassKg +
-        CONFIG.initialModuleMassKg +
-        CONFIG.initialCargoMassKg +
-        CONFIG.initialAmmunitionMassKg +
-        propellantKg,
-      mass: {
-        dryKg: CONFIG.dryMassKg,
-        modulesKg: CONFIG.initialModuleMassKg,
-        cargoKg: CONFIG.initialCargoMassKg,
-        ammunitionKg: CONFIG.initialAmmunitionMassKg,
-        propellantKg,
-      },
+    profile: {
+      playerId: 'local-pilot-01',
+      credits: CONFIG.startingCredits,
+      reputation: 0,
+      ownedShipIds: [CONFIG.shipId, 'raptor-01'],
+      activeShipId: CONFIG.shipId,
     },
+    missions: [],
+    ship: structuredClone(kestrel),
+    hangar: { ships: [kestrel, raptor], processedTransactionIds: [] },
   };
 }
 export function step(world: WorldState): WorldState {
@@ -58,7 +89,7 @@ export function step(world: WorldState): WorldState {
         ])
       : ([0, 0, 0, 1] as [number, number, number, number]);
   const orientation = normalizedQuat(multiplyQuat(ship.orientation, delta));
-  const propulsion = propulsionStep(ship.mass, world.controls, dt);
+  const propulsion = propulsionStep(ship.mass, world.controls, dt, ship.performance);
   const thrust = rotate(propulsion.bodyAcceleration, orientation);
   const motion = integrate(ship.position, ship.velocity, thrust, dt);
   return {

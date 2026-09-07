@@ -4,6 +4,7 @@ import { CONFIG, SCENES, neutralControls, type ServerMessage, type SceneId } fro
 import type { World } from '../world';
 import { dispatch } from '../commands/dispatch';
 import { PlannerService } from '../planner/service';
+import { generateMissionPool, MISSION_TARGETS } from '../missions/generator';
 export function attachGateway(server: Server, world: World, testMode: boolean) {
   const planner = new PlannerService();
   const plans = new Map<string, Awaited<ReturnType<PlannerService['plan']>>>(),
@@ -57,7 +58,7 @@ export function attachGateway(server: Server, world: World, testMode: boolean) {
         return;
       }
       try {
-        const result = dispatch(world.state, JSON.parse(raw.toString()), CONFIG.shipId);
+        const result = dispatch(world.state, JSON.parse(raw.toString()), world.state.profile.activeShipId);
         if (!result.ok) {
           world.rejectedCommands++;
           send(ws, { type: 'error', code: result.code });
@@ -98,6 +99,141 @@ export function attachGateway(server: Server, world: World, testMode: boolean) {
             return;
           }
           send(ws, { type: 'maneuver_ack', action: 'CANCEL', executionId: cancelled.executionId });
+        } else if ('factionRequest' in result && result.factionRequest !== undefined) {
+          const selected = world.chooseFaction(result.factionRequest.factionId);
+          if (!selected.ok) send(ws, { type: 'error', code: selected.code });
+          else send(ws, { type: 'mission_ack', action: 'FACTION' });
+        } else if ('missionListRequest' in result && result.missionListRequest !== undefined) {
+          const factionId = world.state.profile.factionId;
+          if (!factionId) {
+            send(ws, { type: 'error', code: 'FACTION_REQUIRED' });
+            return;
+          }
+          const [cargoPlan, reconnaissancePlan, interceptionPlan] = await Promise.all([
+            planner.plan(world.state.ship, MISSION_TARGETS.cargo),
+            planner.plan(world.state.ship, MISSION_TARGETS.reconnaissance),
+            planner.plan(world.state.ship, MISSION_TARGETS.interception),
+          ]);
+          const refreshed = world.setMissionOffers(
+            generateMissionPool(
+              factionId,
+              cargoPlan,
+              reconnaissancePlan,
+              (Math.hypot(...world.state.ship.position) - CONFIG.earthRadius) / 1000,
+              world.state.ship.performance.cargoCapacityKg,
+              interceptionPlan,
+            ),
+          );
+          if (!refreshed.ok) send(ws, { type: 'error', code: refreshed.code });
+          else send(ws, { type: 'mission_ack', action: 'REFRESH' });
+        } else if ('missionAcceptRequest' in result && result.missionAcceptRequest !== undefined) {
+          const accepted = world.acceptMission(result.missionAcceptRequest.missionId, Date.now());
+          if (!accepted.ok) send(ws, { type: 'error', code: accepted.code });
+          else
+            send(ws, {
+              type: 'mission_ack',
+              action: 'ACCEPT',
+              missionId: result.missionAcceptRequest.missionId,
+            });
+        } else if ('cargoDeliveryRequest' in result && result.cargoDeliveryRequest !== undefined) {
+          const delivered = world.deliverCargo(
+            result.cargoDeliveryRequest.missionId,
+            result.cargoDeliveryRequest.cargoId,
+            result.cargoDeliveryRequest.destinationId,
+            Date.now(),
+          );
+          if (!delivered.ok) send(ws, { type: 'error', code: delivered.code });
+          else
+            send(ws, {
+              type: 'mission_ack',
+              action: 'DELIVER',
+              missionId: result.cargoDeliveryRequest.missionId,
+            });
+        } else if ('scanRequest' in result && result.scanRequest !== undefined) {
+          const scanning = world.startScan(result.scanRequest.missionId, result.scanRequest.destinationId);
+          if (!scanning.ok) send(ws, { type: 'error', code: scanning.code });
+          else send(ws, { type: 'mission_ack', action: 'SCAN', missionId: result.scanRequest.missionId });
+        } else if ('missionAbandonRequest' in result && result.missionAbandonRequest !== undefined) {
+          const abandoned = world.abandonMission(result.missionAbandonRequest.missionId, Date.now());
+          if (!abandoned.ok) send(ws, { type: 'error', code: abandoned.code });
+          else
+            send(ws, {
+              type: 'mission_ack',
+              action: 'ABANDON',
+              missionId: result.missionAbandonRequest.missionId,
+            });
+        } else if ('identifyRequest' in result && result.identifyRequest !== undefined) {
+          const identified = world.identifyTarget(
+            result.identifyRequest.missionId,
+            result.identifyRequest.destinationId,
+            Date.now(),
+          );
+          if (!identified.ok) send(ws, { type: 'error', code: identified.code });
+          else
+            send(ws, {
+              type: 'mission_ack',
+              action: 'IDENTIFY',
+              missionId: result.identifyRequest.missionId,
+            });
+        } else if ('shipSelectionRequest' in result && result.shipSelectionRequest !== undefined) {
+          const selected = world.selectShip(
+            result.shipSelectionRequest.targetShipId,
+            result.shipSelectionRequest.transactionId,
+          );
+          if (!selected.ok) send(ws, { type: 'error', code: selected.code });
+          else
+            send(ws, {
+              type: 'economy_ack',
+              action: 'SELECT_SHIP',
+              transactionId: result.shipSelectionRequest.transactionId,
+              credits: world.state.profile.credits,
+            });
+        } else if ('fuelRequest' in result && result.fuelRequest !== undefined) {
+          const purchased = world.buyFuel(result.fuelRequest.amountKg, result.fuelRequest.transactionId);
+          if (!purchased.ok) send(ws, { type: 'error', code: purchased.code });
+          else
+            send(ws, {
+              type: 'economy_ack',
+              action: 'FUEL',
+              transactionId: result.fuelRequest.transactionId,
+              credits: world.state.profile.credits,
+            });
+        } else if ('repairRequest' in result && result.repairRequest !== undefined) {
+          const repaired = world.repairShip(result.repairRequest.transactionId);
+          if (!repaired.ok) send(ws, { type: 'error', code: repaired.code });
+          else
+            send(ws, {
+              type: 'economy_ack',
+              action: 'REPAIR',
+              transactionId: result.repairRequest.transactionId,
+              credits: world.state.profile.credits,
+            });
+        } else if ('ammunitionRequest' in result && result.ammunitionRequest !== undefined) {
+          const purchased = world.buyAmmunition(
+            result.ammunitionRequest.amountKg,
+            result.ammunitionRequest.transactionId,
+          );
+          if (!purchased.ok) send(ws, { type: 'error', code: purchased.code });
+          else
+            send(ws, {
+              type: 'economy_ack',
+              action: 'AMMUNITION',
+              transactionId: result.ammunitionRequest.transactionId,
+              credits: world.state.profile.credits,
+            });
+        } else if ('upgradeRequest' in result && result.upgradeRequest !== undefined) {
+          const installed = world.installUpgrade(
+            result.upgradeRequest.upgradeId,
+            result.upgradeRequest.transactionId,
+          );
+          if (!installed.ok) send(ws, { type: 'error', code: installed.code });
+          else
+            send(ws, {
+              type: 'economy_ack',
+              action: 'UPGRADE',
+              transactionId: result.upgradeRequest.transactionId,
+              credits: world.state.profile.credits,
+            });
         } else world.lastInputAt = now;
       } catch {
         world.rejectedCommands++;

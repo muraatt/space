@@ -2,9 +2,12 @@ import { useEffect, useRef, useState } from 'react';
 import {
   CONFIG,
   SCENES,
+  shipDefinition,
   type ManeuverCandidateType,
   type ManeuverPlanResult,
   type SceneId,
+  type FactionId,
+  type MissionInstance,
   type WorldState,
   type ServerMetrics,
 } from '@orbital/shared';
@@ -15,6 +18,8 @@ import { GameRenderer } from './render/renderer';
 import { installTestBridge } from './debug/test-bridge';
 import { DebugHud } from './ui/debug-hud';
 import { ManeuverPanel, ORBIT_TARGETS } from './ui/maneuver-panel';
+import { MissionPanel } from './ui/mission-panel';
+import { HangarPanel } from './ui/hangar-panel';
 import './styles.css';
 type View = {
   state?: WorldState;
@@ -26,6 +31,7 @@ type View = {
   plan?: ManeuverPlanResult;
   planId: string;
   planPending: boolean;
+  missionPending: boolean;
 };
 function OrbitMark() {
   return (
@@ -36,7 +42,7 @@ function OrbitMark() {
     </svg>
   );
 }
-function OrbitDiagram() {
+function OrbitDiagram({ altitudeKm }: { altitudeKm: number }) {
   return (
     <svg className="orbit-diagram" viewBox="0 0 230 125" aria-label="Yörünge şeması, ölçekli değildir">
       <defs>
@@ -54,7 +60,7 @@ function OrbitDiagram() {
         ECI / DÜNYA
       </text>
       <text x="150" y="121">
-        400 km
+        {altitudeKm.toFixed(0)} km
       </text>
     </svg>
   );
@@ -71,6 +77,7 @@ export default function App() {
     error: '',
     planId: '',
     planPending: false,
+    missionPending: false,
   });
   const [ready, setReady] = useState(false),
     [active, setActive] = useState(false),
@@ -78,6 +85,8 @@ export default function App() {
     [credits, setCredits] = useState(false),
     [debug, setDebug] = useState(false),
     [plannerOpen, setPlannerOpen] = useState(false),
+    [missionOpen, setMissionOpen] = useState(false),
+    [hangarOpen, setHangarOpen] = useState(false),
     [targetId, setTargetId] = useState('service-800'),
     [selectedType, setSelectedType] = useState<ManeuverCandidateType>();
   const params = new URLSearchParams(location.search),
@@ -130,6 +139,7 @@ export default function App() {
               plan: connection.plan,
               planId: connection.planId,
               planPending: connection.planPending,
+              missionPending: connection.missionPending,
             });
         }, 250);
         let shown = false;
@@ -164,6 +174,7 @@ export default function App() {
   }, [scene, forceWebGL]);
   useEffect(() => {
     if (scene === 'orbit_maneuver' || scene === 'low_fuel') setPlannerOpen(true);
+    if (scene === 'cargo_mission') setMissionOpen(true);
   }, [scene]);
   useEffect(() => {
     if (!selectedType && view.plan?.candidates[0]) setSelectedType(view.plan.candidates[0].type);
@@ -196,12 +207,13 @@ export default function App() {
     canvasRef.current?.focus();
   };
   const state = view.state,
+    activeDefinition = state ? shipDefinition(state.ship.definitionId) : undefined,
     alt = state ? (length(state.ship.position) - CONFIG.earthRadius) / 1000 : 400,
     speed = state ? length(state.ship.velocity) / 1000 : 0,
     radial = state ? dot(state.ship.velocity, normalize(state.ship.position)) : 0,
     propellant = state?.ship.mass.propellantKg ?? CONFIG.initialPropellantKg,
-    propellantPercent = (propellant / CONFIG.initialPropellantKg) * 100,
-    shipDeltaV = state ? availableDeltaV(state.ship.mass) : 0,
+    propellantPercent = state ? (propellant / state.ship.performance.propellantCapacityKg) * 100 : 0,
+    shipDeltaV = state ? availableDeltaV(state.ship.mass, state.ship.performance.specificImpulseSeconds) : 0,
     target = ORBIT_TARGETS.find((option) => option.id === targetId) ?? ORBIT_TARGETS[0],
     selectedCandidate =
       state?.maneuver?.candidate ??
@@ -239,6 +251,26 @@ export default function App() {
   const cancelPlan = () => {
     const executionId = state?.maneuver?.executionId;
     if (executionId) engine.current?.connection.cancel(executionId);
+  };
+  const openPlanner = () => {
+    setMissionOpen(false);
+    setHangarOpen(false);
+    setPlannerOpen(true);
+  };
+  const openMissions = () => {
+    setPlannerOpen(false);
+    setHangarOpen(false);
+    setMissionOpen(true);
+  };
+  const openHangar = () => {
+    setPlannerOpen(false);
+    setMissionOpen(false);
+    setHangarOpen(true);
+  };
+  const navigateMission = (mission: MissionInstance) => {
+    const matching = ORBIT_TARGETS.find((option) => option.altitudeKm === mission.destination.altitudeKm);
+    if (matching) chooseTarget(matching.id);
+    openPlanner();
   };
   return (
     <main className="app-shell">
@@ -283,15 +315,15 @@ export default function App() {
         </p>
         <section className="vehicle-card">
           <div className="section-label">
-            AKTİF ARAÇ <span>ST—01</span>
+            AKTİF ARAÇ <span>{activeDefinition?.callsign ?? '—'}</span>
           </div>
-          <h2>Kestrel</h2>
-          <p>Yörünge servis aracı</p>
+          <h2>{activeDefinition?.name ?? 'Bağlanıyor'}</h2>
+          <p>{activeDefinition?.role === 'COMBAT' ? 'Yörünge devriye aracı' : 'Yörünge servis aracı'}</p>
           <div className="vehicle-meta">
             <span>12 m GÖVDE</span>
             <span>{state ? `${state.ship.massKg.toFixed(0)} kg` : 'KÜTLE'}</span>
           </div>
-          <OrbitDiagram />
+          <OrbitDiagram altitudeKm={alt} />
           <div className="orbit-numbers">
             <div>
               <small>İRTİFA</small>
@@ -325,11 +357,17 @@ export default function App() {
           {active ? 'UÇUŞA ODAKLAN' : 'KUMANDAYI DEVRAL'}
           <span>↗</span>
         </button>
-        <button className="planner-toggle" disabled={!ready} onClick={() => setPlannerOpen(true)}>
+        <button className="planner-toggle" disabled={!ready} onClick={openPlanner}>
           MANEVRA BİLGİSAYARI <span>⌁</span>
         </button>
+        <button className="mission-toggle" disabled={!ready} onClick={openMissions}>
+          GÖREV KONTROLÜ <span>▣</span>
+        </button>
+        <button className="mission-toggle" disabled={!ready} onClick={openHangar}>
+          HANGAR VE SERVİS <span>◇</span>
+        </button>
         <p className="scope-note">
-          OTURUM 2 · Yörünge operasyonları
+          OTURUM 3 · Görev operasyonları
           <br />
           İlerleme bu oturumda kalıcı değildir.
         </p>
@@ -349,13 +387,57 @@ export default function App() {
         onExecute={executePlan}
         onCancel={cancelPlan}
       />
+      <MissionPanel
+        open={missionOpen}
+        state={state}
+        pending={view.missionPending}
+        error={view.error}
+        onClose={() => setMissionOpen(false)}
+        onFaction={(faction: FactionId) => engine.current?.connection.chooseFaction(faction)}
+        onRefresh={() => engine.current?.connection.requestMissions()}
+        onAccept={(missionId) => engine.current?.connection.acceptMission(missionId)}
+        onNavigate={navigateMission}
+        onDeliver={(mission) =>
+          engine.current?.connection.deliverCargo(mission.id, mission.cargo!.id, mission.destination.id)
+        }
+        onScan={(mission) => engine.current?.connection.startScan(mission.id, mission.destination.id)}
+        onIdentify={(mission) =>
+          engine.current?.connection.identifyTarget(mission.id, mission.destination.id)
+        }
+        onAbandon={(missionId) => engine.current?.connection.abandonMission(missionId)}
+      />
+      <HangarPanel
+        open={hangarOpen}
+        state={state}
+        error={view.error}
+        onClose={() => setHangarOpen(false)}
+        onSelectShip={(shipId) => engine.current?.connection.selectShip(shipId)}
+        onFuel={(amountKg) => engine.current?.connection.buyFuel(amountKg)}
+        onRepair={() => engine.current?.connection.repairShip()}
+        onAmmunition={(amountKg) => engine.current?.connection.buyAmmunition(amountKg)}
+        onUpgrade={(upgradeId) => engine.current?.connection.installUpgrade(upgradeId)}
+      />
       <section className="scene-caption">
-        <span className="eyebrow">{scene === 'orbit_night' ? 'DÜNYA GÖLGESİ' : 'ALÇAK DÜNYA YÖRÜNGESİ'}</span>
-        <h2>{scene === 'orbit_night' ? 'Gece vardiyası' : 'Sessizliğin üzerinde'}</h2>
+        <span className="eyebrow">
+          {scene === 'orbit_night'
+            ? 'DÜNYA GÖLGESİ'
+            : scene === 'cargo_mission'
+              ? 'DENETİM HALKASI'
+              : 'ALÇAK DÜNYA YÖRÜNGESİ'}
+        </span>
+        <h2>
+          {scene === 'orbit_night'
+            ? 'Gece vardiyası'
+            : scene === 'cargo_mission'
+              ? 'Denetim halkası varışı'
+              : 'Sessizliğin üzerinde'}
+        </h2>
         <p>
           {scene === 'orbit_night'
             ? 'Güneş hattının ötesinde. Seyir ışıkları etkin.'
-            : '400 kilometre yukarıda. Her hareketin bir karşılığı var.'}
+            : scene === 'cargo_mission'
+              ? '450 kilometrede. Görev kontrolü teslimat için bağlantıda.'
+              : '400 kilometre yukarıda. Her hareketin bir karşılığı var.'}
         </p>
       </section>
       <div className="center-reticle" aria-hidden="true">
@@ -473,7 +555,9 @@ export default function App() {
             <button className="modal-close" onClick={() => setHelp(false)} aria-label="Kapat">
               ×
             </button>
-            <div className="eyebrow">KESTREL / KISA UÇUŞ KILAVUZU</div>
+            <div className="eyebrow">
+              {activeDefinition?.name.toUpperCase() ?? 'ARAÇ'} / KISA UÇUŞ KILAVUZU
+            </div>
             <h2>Hareketi hisset.</h2>
             <p>
               Önce kumandayı devral, ardından uzay görünümüne tıkla. İtki kesilince gemi hareketini korur.
@@ -497,7 +581,8 @@ export default function App() {
               <dd>Kamerayı toparla / debug telemetri</dd>
             </dl>
             <p className="fine">
-              Oturum 2: yakıt ve manevra bilgisayarı etkindir. Ücret, görev ve silah sistemi henüz yoktur.
+              Oturum 3: yakıt, manevra bilgisayarı ve yerel NPC görevleri etkindir. Silah sistemi henüz
+              yoktur.
             </p>
           </section>
         </div>
