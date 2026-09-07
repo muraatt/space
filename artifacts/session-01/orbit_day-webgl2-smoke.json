@@ -2,30 +2,36 @@
   "kind": "smoke-not-performance-acceptance",
   "metrics": {
     "backend": "WebGL2",
+    "antialiasSamples": 0,
     "adapter": {
       "renderer": "ANGLE (Intel, Intel(R) UHD Graphics (0x00004626) Direct3D11 vs_5_0 ps_5_0, D3D11)",
       "vendor": "Google Inc. (Intel)"
     },
-    "drawCalls": 16,
-    "triangles": 90550,
-    "frameMs": 102.28636363636365,
-    "fps": 9.77647424787806,
-    "p95Ms": 125.10000000000036,
-    "frames": 22,
+    "drawCalls": 15,
+    "triangles": 54454,
+    "frameMs": 148.56363636363636,
+    "fps": 6.73112226165708,
+    "p95Ms": 97.30000000000018,
+    "frames": 33,
     "viewport": [
       1920,
       1080
     ],
     "pixelRatio": 1,
-    "rttMs": 4.099999904632568,
-    "bytesIn": 21794,
-    "bytesOut": 3576,
+    "rttMs": 3.6000001430511475,
+    "bytesIn": 48670,
+    "bytesOut": 2975,
     "server": {
-      "tickMs": 0.00650000000041473,
-      "tickP95Ms": 0.22879999999997835,
-      "tickP99Ms": 0.31520000000000437,
-      "backlogMs": 14.827966666666224,
+      "tickMs": 0.25,
+      "tickP95Ms": 0.391500000000633,
+      "tickP99Ms": 0.6886999999996988,
+      "backlogMs": 4.670566666666966,
       "rejectedCommands": 0
     }
+  },
+  "pixelComparison": "NOT_RUN",
+  "memory": {
+    "usedJSHeapSize": 46071623,
+    "totalJSHeapSize": 57624851
   }
 }

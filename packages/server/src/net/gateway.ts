@@ -3,7 +3,11 @@ import type { Server } from 'node:http';
 import { CONFIG, SCENES, neutralControls, type ServerMessage, type SceneId } from '@orbital/shared';
 import type { World } from '../world';
 import { dispatch } from '../commands/dispatch';
+import { PlannerService } from '../planner/service';
 export function attachGateway(server: Server, world: World, testMode: boolean) {
+  const planner = new PlannerService();
+  const plans = new Map<string, Awaited<ReturnType<PlannerService['plan']>>>(),
+    consumedPlans = new Set<string>();
   const wss = new WebSocketServer({
     noServer: true,
     maxPayload: CONFIG.maxPayloadBytes,
@@ -23,6 +27,8 @@ export function attachGateway(server: Server, world: World, testMode: boolean) {
     wss.handleUpgrade(req, socket, head, (ws) => {
       // A refreshed/new local tab takes the single development pilot lease.
       owner?.close(4001, 'Pilot moved to another local tab');
+      plans.clear();
+      consumedPlans.clear();
       world.state.controls = neutralControls();
       owner = ws;
       const scene = url.searchParams.get('scene');
@@ -38,7 +44,7 @@ export function attachGateway(server: Server, world: World, testMode: boolean) {
     let windowAt = performance.now(),
       count = 0;
     ws.on('error', () => {});
-    ws.on('message', (raw) => {
+    ws.on('message', async (raw) => {
       if (owner !== ws) return;
       const now = performance.now();
       if (now - windowAt >= 1000) {
@@ -58,7 +64,41 @@ export function attachGateway(server: Server, world: World, testMode: boolean) {
           return;
         }
         if ('pong' in result && result.pong !== undefined) send(ws, { type: 'pong', sentAt: result.pong });
-        else world.lastInputAt = now;
+        else if ('planRequest' in result && result.planRequest !== undefined) {
+          const plan = await planner.plan(world.state.ship, result.planRequest.target);
+          plans.set(result.planRequest.requestId, plan);
+          send(ws, {
+            type: 'maneuver_plan',
+            requestId: result.planRequest.requestId,
+            result: plan,
+          });
+        } else if ('executeRequest' in result && result.executeRequest !== undefined) {
+          if (consumedPlans.has(result.executeRequest.planId)) {
+            send(ws, { type: 'error', code: 'DUPLICATE_EXECUTION' });
+            return;
+          }
+          const plan = plans.get(result.executeRequest.planId),
+            candidate = plan?.candidates.find((item) => item.type === result.executeRequest.candidateType);
+          if (!candidate) {
+            send(ws, { type: 'error', code: 'UNKNOWN_PLAN' });
+            return;
+          }
+          const started = world.startManeuver(result.executeRequest.planId, candidate, Date.now());
+          if (!started.ok) {
+            send(ws, { type: 'error', code: started.code });
+            return;
+          }
+          plans.delete(result.executeRequest.planId);
+          consumedPlans.add(result.executeRequest.planId);
+          send(ws, { type: 'maneuver_ack', action: 'EXECUTE', executionId: started.executionId });
+        } else if ('cancelRequest' in result && result.cancelRequest !== undefined) {
+          const cancelled = world.cancelManeuver(result.cancelRequest.executionId, Date.now());
+          if (!cancelled.ok) {
+            send(ws, { type: 'error', code: cancelled.code });
+            return;
+          }
+          send(ws, { type: 'maneuver_ack', action: 'CANCEL', executionId: cancelled.executionId });
+        } else world.lastInputAt = now;
       } catch {
         world.rejectedCommands++;
         send(ws, { type: 'error', code: 'INVALID_JSON' });
@@ -92,6 +132,7 @@ export function attachGateway(server: Server, world: World, testMode: boolean) {
     close() {
       for (const ws of wss.clients) ws.close();
       wss.close();
+      void planner.close();
     },
   };
 }

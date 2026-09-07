@@ -4,3 +4,7 @@ export * from './integrate';
 export * from './clock';
 export * from './rng';
 export * from './step';
+export * from './mass';
+export * from './orbit';
+export * from './propulsion';
+export * from './maneuver';

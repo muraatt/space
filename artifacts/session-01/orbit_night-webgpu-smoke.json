@@ -2,32 +2,38 @@
   "kind": "smoke-not-performance-acceptance",
   "metrics": {
     "backend": "WebGPU",
+    "antialiasSamples": 4,
     "adapter": {
       "vendor": "intel",
       "architecture": "gen-12lp",
       "device": "",
       "description": ""
     },
-    "drawCalls": 16,
-    "triangles": 90550,
-    "frameMs": 40.422000000000004,
-    "fps": 24.739003512938496,
-    "p95Ms": 62.5,
-    "frames": 50,
+    "drawCalls": 15,
+    "triangles": 54454,
+    "frameMs": 155.55000000000004,
+    "fps": 6.428801028608163,
+    "p95Ms": 1541.6000000000004,
+    "frames": 30,
     "viewport": [
       1920,
       1080
     ],
     "pixelRatio": 1,
-    "rttMs": 8.599999904632568,
-    "bytesIn": 19571,
-    "bytesOut": 3976,
+    "rttMs": 4.299999952316284,
+    "bytesIn": 49464,
+    "bytesOut": 6359,
     "server": {
-      "tickMs": 0.00650000000041473,
-      "tickP95Ms": 0.22879999999997835,
-      "tickP99Ms": 0.31520000000000437,
-      "backlogMs": 13.83899999999967,
+      "tickMs": 0.25,
+      "tickP95Ms": 0.391500000000633,
+      "tickP99Ms": 0.6886999999996988,
+      "backlogMs": 6.036833333333371,
       "rejectedCommands": 0
     }
+  },
+  "pixelComparison": "NOT_RUN",
+  "memory": {
+    "usedJSHeapSize": 50764506,
+    "totalJSHeapSize": 60018998
   }
 }

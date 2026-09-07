@@ -10,7 +10,15 @@ export const CONFIG = Object.freeze({
   snapshotHz: 20,
   inputHz: 20,
   inputTimeoutMs: 250,
-  massKg: 8000,
+  standardGravity: 9.80665,
+  specificImpulseSeconds: 320,
+  dryMassKg: 6000,
+  initialPropellantKg: 2000,
+  initialModuleMassKg: 0,
+  initialCargoMassKg: 0,
+  initialAmmunitionMassKg: 0,
+  lowFuelPropellantKg: 80,
+  lowReserveDeltaVMps: 100,
   mainThrustN: 24000,
   translationThrustN: 8000,
   angularRate: 0.35,
@@ -19,5 +27,5 @@ export const CONFIG = Object.freeze({
   maxPayloadBytes: 4096,
   maxCommandsPerSecond: 100,
 });
-export const SCENES = ['orbit_day', 'orbit_night'] as const;
+export const SCENES = ['orbit_day', 'orbit_night', 'orbit_maneuver', 'low_fuel'] as const;
 export type SceneId = (typeof SCENES)[number];

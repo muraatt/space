@@ -1,0 +1,12 @@
+{
+  "case": "400 km circular LEO, Earth two-body, Float64",
+  "energyDurationSeconds": 21600,
+  "comparisonDurationSeconds": 600,
+  "numericalStepSeconds": 0.016666666666666666,
+  "energyRelativeError": 2.9140065252087843e-15,
+  "angularMomentumRelativeError": 1.3210173573224763e-15,
+  "tenMinutePositionDifferenceM": 7.014040046841923e-8,
+  "initialAvailableDeltaVMps": 902.783166658962,
+  "oneSecondPropellantKg": 7.647871597334462,
+  "oneSecondMassKg": 7992.352128402666
+}

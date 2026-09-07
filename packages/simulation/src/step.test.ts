@@ -22,9 +22,10 @@ describe('fixed-step central gravity', () => {
       coast = step(coast);
       powered = step(powered);
     }
-    expect(length(sub(powered.ship.velocity, coast.ship.velocity))).toBeCloseTo(3, 3);
+    expect(length(sub(powered.ship.velocity, coast.ship.velocity))).toBeGreaterThan(2.99);
     expect(length(powered.ship.velocity)).toBeGreaterThan(7600);
-    expect(powered.ship.massKg).toBe(CONFIG.massKg);
+    expect(powered.ship.massKg).toBeLessThan(coast.ship.massKg);
+    expect(powered.ship.mass.propellantKg).toBeLessThan(CONFIG.initialPropellantKg);
   });
   it('bounds attitude actuation and keeps orientation normalized', () => {
     let w = initialWorld();
@@ -32,6 +33,23 @@ describe('fixed-step central gravity', () => {
     for (let i = 0; i < 600; i++) w = step(w);
     expect(Math.hypot(...w.ship.orientation)).toBeCloseTo(1, 12);
     expect(Math.max(...w.ship.angularVelocity.map(Math.abs))).toBeLessThanOrEqual(CONFIG.angularRate);
+  });
+  it('executes an orientation-driven finite burn and stops consuming when the command ends', () => {
+    let powered = initialWorld(),
+      coast = initialWorld();
+    powered.ship.orientation = [0, Math.SQRT1_2, 0, Math.SQRT1_2];
+    coast.ship.orientation = powered.ship.orientation;
+    powered.controls.translation = [0, 0, -1];
+    for (let i = 0; i < 60; i++) {
+      powered = step(powered);
+      coast = step(coast);
+    }
+    const burnEndPropellant = powered.ship.mass.propellantKg;
+    expect(powered.ship.velocity[0] - coast.ship.velocity[0]).toBeLessThan(-2.99);
+    powered.controls.translation = [0, 0, 0];
+    for (let i = 0; i < 60; i++) powered = step(powered);
+    expect(powered.ship.mass.propellantKg).toBe(burnEndPropellant);
+    expect(powered.ship.massKg).toBeCloseTo(powered.ship.mass.dryKg + powered.ship.mass.propellantKg, 12);
   });
   it('replays the same commands and seed exactly in the pinned runtime', () => {
     const run = () => {

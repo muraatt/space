@@ -9,13 +9,14 @@ import {
   WebGPURenderer,
   ACESFilmicToneMapping,
 } from 'three/webgpu';
-import { CONFIG, type WorldState } from '@orbital/shared';
+import { CONFIG, type ManeuverCandidate, type WorldState } from '@orbital/shared';
 import { length, dot } from '@orbital/simulation';
 import { makeEarth } from './earth';
 import { makeStars } from './stars';
 import { makeShip } from './ship';
 import { FlightCamera } from './camera';
 import { renderFrame } from './render-frame';
+import { ManeuverOverlay } from './maneuver-overlay';
 export class GameRenderer {
   renderer: WebGPURenderer;
   camera: FlightCamera;
@@ -24,6 +25,7 @@ export class GameRenderer {
   far = new Scene();
   near = new Scene();
   ship = makeShip();
+  maneuver = new ManeuverOverlay();
   earth?: Awaited<ReturnType<typeof makeEarth>>;
   sunNear = new DirectionalLight('#fff3de', 3.8);
   sunFar = new DirectionalLight('#fff5e7', 3.0);
@@ -54,7 +56,7 @@ export class GameRenderer {
     this.renderer.autoClear = false;
     this.camera = new FlightCamera(canvas);
     this.far.background = new Color('#03070c');
-    this.far.add(makeStars());
+    this.far.add(makeStars(), this.maneuver.group);
     this.near.add(this.ship.group, this.sunNear, new AmbientLight('#9faebc', 0.85));
     const fill = new DirectionalLight('#b6c9dc', 1.25);
     fill.position.set(-12, 8, 12);
@@ -113,6 +115,7 @@ export class GameRenderer {
     this.ship.setThrust(Math.max(0, -world.controls.translation[2]));
     this.earth.group.position.copy(frame.local([0, 0, 0])).multiplyScalar(0.001);
     this.earth.group.quaternion.copy(frame.eciToLocal);
+    this.maneuver.update(world, frame);
     // Scene sunlight is ECI-fixed; night is a genuinely eclipsed initial orbit location.
     const sunDirection = world.scene === 'orbit_night' ? [-0.8, 0.15, -0.6] : [0.55, 0.5, -1];
     this.sunEci.set(sunDirection[0], sunDirection[1], sunDirection[2]).normalize();
@@ -141,6 +144,9 @@ export class GameRenderer {
       if (this.frameTimes.length > 30000) this.frameTimes.shift();
     }
     this.previousFrame = now;
+  }
+  setManeuverVisual(targetRadiusM?: number, candidate?: ManeuverCandidate) {
+    this.maneuver.setPlan(targetRadiusM, candidate);
   }
   metrics() {
     const values = this.frameTimes.slice(-240).sort((a, b) => a - b),

@@ -1,11 +1,20 @@
 import { useEffect, useRef, useState } from 'react';
-import { CONFIG, type WorldState, type ServerMetrics } from '@orbital/shared';
-import { dot, length, normalize } from '@orbital/simulation';
+import {
+  CONFIG,
+  SCENES,
+  type ManeuverCandidateType,
+  type ManeuverPlanResult,
+  type SceneId,
+  type WorldState,
+  type ServerMetrics,
+} from '@orbital/shared';
+import { availableDeltaV, dot, length, normalize } from '@orbital/simulation';
 import { Connection } from './net/connection';
 import { FlightControls } from './input/flight-controls';
 import { GameRenderer } from './render/renderer';
 import { installTestBridge } from './debug/test-bridge';
 import { DebugHud } from './ui/debug-hud';
+import { ManeuverPanel, ORBIT_TARGETS } from './ui/maneuver-panel';
 import './styles.css';
 type View = {
   state?: WorldState;
@@ -14,6 +23,9 @@ type View = {
   status: string;
   rtt: number;
   error: string;
+  plan?: ManeuverPlanResult;
+  planId: string;
+  planPending: boolean;
 };
 function OrbitMark() {
   return (
@@ -52,14 +64,25 @@ export default function App() {
     engine = useRef<{ renderer: GameRenderer; controls: FlightControls; connection: Connection } | null>(
       null,
     );
-  const [view, setView] = useState<View>({ metrics: null, status: 'Bağlanıyor', rtt: 0, error: '' });
+  const [view, setView] = useState<View>({
+    metrics: null,
+    status: 'Bağlanıyor',
+    rtt: 0,
+    error: '',
+    planId: '',
+    planPending: false,
+  });
   const [ready, setReady] = useState(false),
     [active, setActive] = useState(false),
     [help, setHelp] = useState(false),
     [credits, setCredits] = useState(false),
-    [debug, setDebug] = useState(false);
+    [debug, setDebug] = useState(false),
+    [plannerOpen, setPlannerOpen] = useState(false),
+    [targetId, setTargetId] = useState('service-800'),
+    [selectedType, setSelectedType] = useState<ManeuverCandidateType>();
   const params = new URLSearchParams(location.search),
-    scene = params.get('scene') === 'orbit_night' ? 'orbit_night' : 'orbit_day';
+    requestedScene = params.get('scene'),
+    scene: SceneId = SCENES.includes(requestedScene as SceneId) ? (requestedScene as SceneId) : 'orbit_day';
   const forceWebGL = params.get('backend') === 'webgl2';
   useEffect(() => {
     const canvas = canvasRef.current!;
@@ -92,7 +115,9 @@ export default function App() {
         engine.current = { renderer, controls, connection };
         connection.connect(scene);
         disposeBridge = installTestBridge(renderer, connection);
-        inputTimer = setInterval(() => connection.input(controls!.read()), 1000 / CONFIG.inputHz);
+        inputTimer = setInterval(() => {
+          if (connection.flightInputAllowed()) connection.input(controls!.read());
+        }, 1000 / CONFIG.inputHz);
         uiTimer = setInterval(() => {
           if (alive)
             setView({
@@ -102,6 +127,9 @@ export default function App() {
               status: connection.status,
               rtt: connection.rttMs,
               error: connection.lastError,
+              plan: connection.plan,
+              planId: connection.planId,
+              planPending: connection.planPending,
             });
         }, 250);
         let shown = false;
@@ -135,6 +163,12 @@ export default function App() {
     };
   }, [scene, forceWebGL]);
   useEffect(() => {
+    if (scene === 'orbit_maneuver' || scene === 'low_fuel') setPlannerOpen(true);
+  }, [scene]);
+  useEffect(() => {
+    if (!selectedType && view.plan?.candidates[0]) setSelectedType(view.plan.candidates[0].type);
+  }, [selectedType, view.plan]);
+  useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.code === 'F3') {
         e.preventDefault();
@@ -164,13 +198,47 @@ export default function App() {
   const state = view.state,
     alt = state ? (length(state.ship.position) - CONFIG.earthRadius) / 1000 : 400,
     speed = state ? length(state.ship.velocity) / 1000 : 0,
-    radial = state ? dot(state.ship.velocity, normalize(state.ship.position)) : 0;
+    radial = state ? dot(state.ship.velocity, normalize(state.ship.position)) : 0,
+    propellant = state?.ship.mass.propellantKg ?? CONFIG.initialPropellantKg,
+    propellantPercent = (propellant / CONFIG.initialPropellantKg) * 100,
+    shipDeltaV = state ? availableDeltaV(state.ship.mass) : 0,
+    target = ORBIT_TARGETS.find((option) => option.id === targetId) ?? ORBIT_TARGETS[0],
+    selectedCandidate =
+      state?.maneuver?.candidate ??
+      view.plan?.candidates.find((candidate) => candidate.type === selectedType),
+    maneuverStatus = state?.maneuver?.status ?? 'IDLE';
+  useEffect(() => {
+    engine.current?.renderer.setManeuverVisual(
+      plannerOpen ? CONFIG.earthRadius + target.altitudeKm * 1000 : undefined,
+      plannerOpen ? selectedCandidate : undefined,
+    );
+  }, [plannerOpen, selectedCandidate, target.altitudeKm]);
   const elapsed = Math.floor((state?.tick ?? 0) * CONFIG.fixedDt),
     clock = `${String(Math.floor(elapsed / 3600)).padStart(2, '0')}:${String(Math.floor(elapsed / 60) % 60).padStart(2, '0')}:${String(elapsed % 60).padStart(2, '0')}`;
   const goScene = (night: boolean) => {
     const p = new URLSearchParams(location.search);
     p.set('scene', night ? 'orbit_night' : 'orbit_day');
     location.search = p.toString();
+  };
+  const requestPlan = () => {
+    setSelectedType(undefined);
+    engine.current?.connection.requestPlan({
+      kind: 'CIRCULAR_ORBIT',
+      radiusM: CONFIG.earthRadius + target.altitudeKm * 1000,
+      phaseAheadRad: target.phaseAheadRad,
+    });
+  };
+  const chooseTarget = (id: string) => {
+    setTargetId(id);
+    setSelectedType(undefined);
+    if (engine.current) engine.current.connection.plan = undefined;
+  };
+  const executePlan = () => {
+    if (selectedType) engine.current?.connection.execute(selectedType);
+  };
+  const cancelPlan = () => {
+    const executionId = state?.maneuver?.executionId;
+    if (executionId) engine.current?.connection.cancel(executionId);
   };
   return (
     <main className="app-shell">
@@ -221,7 +289,7 @@ export default function App() {
           <p>Yörünge servis aracı</p>
           <div className="vehicle-meta">
             <span>12 m GÖVDE</span>
-            <span>SABİT KÜTLE</span>
+            <span>{state ? `${state.ship.massKg.toFixed(0)} kg` : 'KÜTLE'}</span>
           </div>
           <OrbitDiagram />
           <div className="orbit-numbers">
@@ -257,12 +325,30 @@ export default function App() {
           {active ? 'UÇUŞA ODAKLAN' : 'KUMANDAYI DEVRAL'}
           <span>↗</span>
         </button>
+        <button className="planner-toggle" disabled={!ready} onClick={() => setPlannerOpen(true)}>
+          MANEVRA BİLGİSAYARI <span>⌁</span>
+        </button>
         <p className="scope-note">
-          OTURUM 1 · Uçuş ve görsel temel
+          OTURUM 2 · Yörünge operasyonları
           <br />
           İlerleme bu oturumda kalıcı değildir.
         </p>
       </aside>
+      <ManeuverPanel
+        open={plannerOpen}
+        target={target}
+        plan={view.plan}
+        pending={view.planPending}
+        selectedType={selectedType}
+        execution={state?.maneuver}
+        error={view.error}
+        onClose={() => setPlannerOpen(false)}
+        onTarget={chooseTarget}
+        onPlan={requestPlan}
+        onSelect={setSelectedType}
+        onExecute={executePlan}
+        onCancel={cancelPlan}
+      />
       <section className="scene-caption">
         <span className="eyebrow">{scene === 'orbit_night' ? 'DÜNYA GÖLGESİ' : 'ALÇAK DÜNYA YÖRÜNGESİ'}</span>
         <h2>{scene === 'orbit_night' ? 'Gece vardiyası' : 'Sessizliğin üzerinde'}</h2>
@@ -286,6 +372,10 @@ export default function App() {
             <em>m/s</em>
           </strong>
           <div className="scale-lines" />
+        </div>
+        <div className="telemetry-reading maneuver-reading">
+          <small>MANEVRA DURUMU</small>
+          <strong>{maneuverStatus.replaceAll('_', ' ')}</strong>
         </div>
         <div className="telemetry-reading">
           <small>GEÇEN SÜRE</small>
@@ -320,16 +410,26 @@ export default function App() {
           </div>
         </div>
         <div className="strip-stat">
-          <small>AÇISAL HIZ</small>
+          <small>YAKIT</small>
           <strong>
-            {(state ? (length(state.ship.angularVelocity) * 180) / Math.PI : 0).toFixed(1)}
-            <em> °/s</em>
+            {propellant.toFixed(0)}
+            <em> kg · {propellantPercent.toFixed(0)}%</em>
           </strong>
         </div>
         <div className="strip-stat">
-          <small>FİZİK ADIMI</small>
+          <small>KULLANILABİLİR Δv</small>
           <strong>
-            60<em> Hz</em>
+            {shipDeltaV.toFixed(0)}
+            <em> m/s</em>
+          </strong>
+        </div>
+        <div className="strip-stat selected-plan-stat">
+          <small>SEÇİLİ PLAN / REZERV</small>
+          <strong>
+            {selectedCandidate ? selectedCandidate.estimatedPropellantKg.toFixed(0) : '—'}
+            <em>
+              {selectedCandidate ? ` kg / ${selectedCandidate.expectedReserveDeltaVMps.toFixed(0)} m/s` : ''}
+            </em>
           </strong>
         </div>
         <div className="controls-inline">
@@ -397,8 +497,7 @@ export default function App() {
               <dd>Kamerayı toparla / debug telemetri</dd>
             </dl>
             <p className="fine">
-              Oturum 1: kütle sabittir. Yakıt ve manevra bilgisayarı Oturum 2 kapsamındadır. Ücret, görev ve
-              silah sistemi henüz yoktur.
+              Oturum 2: yakıt ve manevra bilgisayarı etkindir. Ücret, görev ve silah sistemi henüz yoktur.
             </p>
           </section>
         </div>

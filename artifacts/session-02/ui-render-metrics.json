@@ -1,0 +1,29 @@
+{
+  "kind": "short-visual-smoke-not-reference-gpu-performance",
+  "browser": "Chrome",
+  "backend": "WebGL2",
+  "adapter": {
+    "renderer": "ANGLE (Intel, Intel(R) UHD Graphics (0x00004626) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "vendor": "Google Inc. (Intel)"
+  },
+  "viewport": [
+    1920,
+    1080
+  ],
+  "baseline": {
+    "drawCalls": 15,
+    "triangles": 54454
+  },
+  "selection": {
+    "drawCalls": 19,
+    "triangles": 54454,
+    "frameMs": 130.6818181818182,
+    "p95Ms": 145.90000000000146
+  },
+  "active": {
+    "drawCalls": 27,
+    "triangles": 54582,
+    "frameMs": 99.16021505376344,
+    "p95Ms": 125
+  }
+}

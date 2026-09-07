@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { CONFIG } from '@orbital/shared';
 import { initialWorld } from '@orbital/simulation';
 import { dispatch } from './dispatch';
 import { World } from '../world';
@@ -38,5 +39,29 @@ describe('authoritative dispatch', () => {
     w.tick(351);
     expect(w.state.controls.translation).toEqual([0, 0, 0]);
     expect(Math.hypot(...w.state.ship.velocity)).toBeGreaterThan(7600);
+  });
+  it('plans on the server without mutating authoritative state', () => {
+    const w = initialWorld(),
+      before = structuredClone(w),
+      result = dispatch(
+        w,
+        {
+          type: 'plan_maneuver',
+          version: 1,
+          shipId: w.ship.id,
+          requestId: 'planner-test-1',
+          target: {
+            kind: 'CIRCULAR_ORBIT',
+            radiusM: CONFIG.earthRadius + 800_000,
+            phaseAheadRad: 0.5,
+          },
+        },
+        w.ship.id,
+      );
+    expect(result).toMatchObject({
+      ok: true,
+      planRequest: { requestId: 'planner-test-1', target: { kind: 'CIRCULAR_ORBIT' } },
+    });
+    expect(w).toEqual(before);
   });
 });

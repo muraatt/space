@@ -22,4 +22,34 @@ describe('untrusted wire commands', () => {
     expect(controlSchema.safeParse({ ...input, version: 2 }).success).toBe(false);
     expect(controlSchema.safeParse({ ...input, seq: 0.5 }).success).toBe(false);
   });
+  it('accepts versioned maneuver intent but rejects forged planner output', () => {
+    const request = {
+      type: 'plan_maneuver',
+      version: 1,
+      shipId: 'kestrel-01',
+      requestId: 'plan-1',
+      target: { kind: 'CIRCULAR_ORBIT', radiusM: 7_178_137, phaseAheadRad: 0.5 },
+    };
+    expect(clientMessageSchema.safeParse(request).success).toBe(true);
+    expect(clientMessageSchema.safeParse({ ...request, estimatedDeltaVMps: 0 }).success).toBe(false);
+  });
+  it('accepts plan references for execute/cancel and rejects authoritative payloads', () => {
+    const execute = {
+      type: 'execute_maneuver',
+      version: 1,
+      shipId: 'kestrel-01',
+      planId: 'plan-1',
+      candidateType: 'ECONOMIC',
+    };
+    expect(clientMessageSchema.safeParse(execute).success).toBe(true);
+    expect(clientMessageSchema.safeParse({ ...execute, propellantKg: 2000 }).success).toBe(false);
+    expect(
+      clientMessageSchema.safeParse({
+        type: 'cancel_maneuver',
+        version: 1,
+        shipId: 'kestrel-01',
+        executionId: 'plan-1:ECONOMIC',
+      }).success,
+    ).toBe(true);
+  });
 });

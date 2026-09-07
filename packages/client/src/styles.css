@@ -335,6 +335,20 @@ h1 > span {
 .primary-action span {
   font-size: 18px;
 }
+.planner-toggle {
+  width: 100%;
+  margin-top: 9px;
+  padding: 11px 14px;
+  border: 1px solid #87a7b64f;
+  display: flex;
+  justify-content: space-between;
+  color: #bed0d8;
+  font: 9px Consolas;
+  letter-spacing: 1px;
+}
+.planner-toggle:hover {
+  background: #9bc2d018;
+}
 .scope-note {
   font: 8px/1.9 Consolas;
   color: #778d9b;
@@ -388,6 +402,195 @@ h1 > span {
   right: 43px;
   top: 39%;
   width: 157px;
+}
+.maneuver-reading strong {
+  font-size: 11px;
+  letter-spacing: 0.6px;
+  color: #d7b483;
+}
+.maneuver-panel {
+  position: absolute;
+  z-index: 4;
+  left: 330px;
+  top: 112px;
+  bottom: 118px;
+  width: 390px;
+  padding: 22px;
+  overflow: auto;
+  background: #07131eed;
+  border: 1px solid #7696a855;
+  box-shadow: 0 24px 70px #0008;
+  backdrop-filter: blur(16px);
+}
+.maneuver-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-bottom: 1px solid #91adbb35;
+  padding-bottom: 15px;
+}
+.maneuver-heading h2 {
+  font-size: 24px;
+  font-weight: 350;
+  margin: 9px 0 0;
+}
+.maneuver-heading > button {
+  color: #9db2bd;
+  font-size: 23px;
+}
+.target-select {
+  display: block;
+  margin-top: 18px;
+}
+.target-select > span,
+.candidate-card small,
+.maneuver-status small {
+  display: block;
+  font: 8px Consolas;
+  letter-spacing: 1.3px;
+  color: #829ba8;
+}
+.target-select select {
+  width: 100%;
+  margin: 8px 0 5px;
+  border: 1px solid #7895a54d;
+  border-radius: 2px;
+  background: #0d1d29;
+  color: #dbe6e8;
+  padding: 10px;
+  font: 11px Consolas;
+}
+.target-select small {
+  color: #89a0ac;
+  font-size: 10px;
+}
+.plan-action,
+.execute-action {
+  width: 100%;
+  background: #d3a16c;
+  color: #111a21;
+  margin-top: 15px;
+  padding: 11px 13px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+}
+.candidate-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+}
+.candidate-card {
+  display: grid;
+  grid-template-columns: 1.15fr 1.35fr 1fr;
+  gap: 8px 12px;
+  width: 100%;
+  padding: 12px;
+  text-align: left;
+  border: 1px solid #7894a23b;
+  background: #0b1a25c9;
+  color: #c8d6db;
+  font: 10px Consolas;
+}
+.candidate-card:hover,
+.candidate-card.selected {
+  border-color: #d3a16caa;
+  background: #172735e8;
+}
+.candidate-name {
+  grid-row: span 2;
+  color: #e1b681;
+  font-size: 11px;
+  letter-spacing: 1px;
+  align-self: center;
+}
+.candidate-card small {
+  margin-bottom: 3px;
+  font-size: 7px;
+}
+.candidate-card .warning,
+.selection-summary b {
+  color: #efa36c;
+}
+.candidate-unavailable {
+  display: flex;
+  justify-content: space-between;
+  border: 1px dashed #a56f5966;
+  padding: 9px 11px;
+  color: #8f9da4;
+  font: 9px Consolas;
+}
+.candidate-unavailable strong {
+  color: #b88c74;
+}
+.selection-summary,
+.maneuver-status {
+  margin-top: 14px;
+  padding-top: 13px;
+  border-top: 1px solid #88a6b43a;
+  display: grid;
+  gap: 6px;
+  font-size: 10px;
+  color: #95aab5;
+}
+.selection-summary strong,
+.maneuver-status strong {
+  color: #dfbb8b;
+}
+.selection-summary b {
+  font: 9px Consolas;
+}
+.plan-orbit-map {
+  width: 100%;
+  height: 108px;
+  margin: 12px 0 4px;
+  fill: none;
+  stroke-width: 1;
+  overflow: visible;
+}
+.plan-orbit-map text {
+  fill: #8199a5;
+  stroke: none;
+  font: 7px Consolas;
+  letter-spacing: 0.8px;
+}
+.map-current-orbit {
+  stroke: #79a9bd;
+  opacity: 0.65;
+}
+.map-target-orbit {
+  stroke: #d7a36d;
+  opacity: 0.75;
+  stroke-dasharray: 4 4;
+}
+.map-earth {
+  fill: #173041;
+  stroke: #7198aa;
+}
+.map-transfer {
+  stroke: #f0ca91;
+  stroke-width: 1.6;
+}
+.map-burn,
+.map-arrival {
+  fill: #f0ca91;
+  stroke: #f0ca91;
+}
+.maneuver-status button {
+  margin-top: 7px;
+  border: 1px solid #b47e6066;
+  padding: 9px;
+  color: #e2ad8c;
+  font: 9px Consolas;
+}
+.status-complete strong {
+  color: #9dd5bf;
+}
+.planner-error {
+  border-left: 2px solid #d88e61;
+  padding-left: 10px;
+  color: #e3aa84;
+  font-size: 10px;
 }
 .vertical-label {
   font: 8px Consolas;
@@ -725,6 +928,11 @@ dd {
   .topbar {
     height: 86px;
   }
+  .maneuver-panel {
+    top: 96px;
+    bottom: 96px;
+    padding: 16px;
+  }
 }
 @media (max-width: 1200px) {
   .topbar {
@@ -751,6 +959,13 @@ dd {
   }
   .left-rail {
     left: 35px;
+  }
+  .maneuver-panel {
+    left: 285px;
+    width: 365px;
+  }
+  .selected-plan-stat {
+    display: none;
   }
 }
 @media (max-width: 850px) {

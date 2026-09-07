@@ -18,15 +18,34 @@ for (const backend of ['webgpu', 'webgl2'])
       expect(m.drawCalls).toBeLessThanOrEqual(150);
       expect(m.triangles).toBeGreaterThan(10000);
       const connection = page.locator('.connection');
-      await expect(page).toHaveScreenshot(`${scene.id}-${backend}.png`, {
-        mask: [connection],
-        animations: 'disabled',
-      });
+      // Closure mode records one image for human inspection; it is not a pixel-regression pass.
+      if (process.env.FINAL_CAPTURE_ONLY !== '1') {
+        await expect(page).toHaveScreenshot(`${scene.id}-${backend}.png`, {
+          mask: [connection],
+          animations: 'disabled',
+        });
+      }
       await mkdir('artifacts/session-01', { recursive: true });
       await page.screenshot({ path: `artifacts/session-01/${scene.id}-${backend}.png` });
       await writeFile(
         `artifacts/session-01/${scene.id}-${backend}-smoke.json`,
-        JSON.stringify({ kind: 'smoke-not-performance-acceptance', metrics: m }, null, 2),
+        JSON.stringify(
+          {
+            kind: 'smoke-not-performance-acceptance',
+            metrics: m,
+            pixelComparison: process.env.FINAL_CAPTURE_ONLY === '1' ? 'NOT_RUN' : 'PASS',
+            memory: await page.evaluate(() => {
+              const memory = (
+                performance as Performance & { memory?: { usedJSHeapSize: number; totalJSHeapSize: number } }
+              ).memory;
+              return memory
+                ? { usedJSHeapSize: memory.usedJSHeapSize, totalJSHeapSize: memory.totalJSHeapSize }
+                : null;
+            }),
+          },
+          null,
+          2,
+        ),
       );
       expect(errors).toEqual([]);
     });

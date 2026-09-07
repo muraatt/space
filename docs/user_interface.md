@@ -8,4 +8,8 @@ Başlangıçta gözlem modu, görünür **Kumandayı devral** düğmesi vardır.
 
 O1'de gösterilmeyen yakıt/görev/para verileri için sahte sayılar veya çalışmayan menüler eklenmez. Debug'da backend, draw/üçgen, FPS/frame p95, sunucu tick ve komut reddi okunur. Bağlantı hatası ve başka sekmeye pilot devri açık mesajdır. Gün/gece seçimi uçuş reset uyarısı taşır. İlerleme kalıcı değildir bilgisi görünür.
 
+O2 manevra paneli üç sınırlı hedef sunar ve yalnızca sunucudan gelen adayları gösterir. Kartlarda ETA, transfer süresi, toplam Δv, yakıt tüketimi ve varış rezervi bulunur. Seçim istemci tercihidir; yürütme sonucu değildir. Yürüt/iptal komutları plan ve execution kimliği taşır. Snapshot'taki otoriter durum kalkış yanması, coast, varış yanması, tamamlanma, iptal veya hatayı gösterir. Alt HUD gerçek yakıt kütlesi/yüzdesi, mevcut Δv ve seçili planın tüketim/rezervini gösterir. Düşük yakıt uyarısı tank yüzdesinden değil adayın yapılabilirliği ve beklenen kalan Δv'den gelir.
+
+Plan paneli açıkken Three.js far pass mevcut yörüngeyi mavi-gri, hedef yörüngeyi kehribar, seçili transferi açık kehribar çizgiyle gösterir; iki nokta ilk yanma ve varışı işaretler. Geometri React render döngüsünde üretilmez ve ECI noktaları her frame kamera-bağıl kilometre koordinatlarına çevrilir.
+
 Viewport kabulü: 1920×1080 ve 1280×720; kısa desktop'ta sol aksiyonlar footer'a taşmaz. Mobil oyun desteği bu slice'ın hedefi değildir. O2 manevra süre/yakıt/risk arayüzü; O3 fraksiyon, profil, hangar ve görev akışı; O4 hedef/hasar/kayıp/güvenli bölge bildirimi; O5 squad ve bağlantı durumu; O6 onboarding, ses ve grafik kalite seçenekleri. Onboarding final kabulünde yeni insan oyuncunun rehber almadan döngüyü bitirmesi ölçülür.

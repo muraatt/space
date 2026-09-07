@@ -1,5 +1,6 @@
 import type { Quat, Vec3 } from './units';
 import type { SceneId } from './config';
+import type { ManeuverExecutionState, ManeuverPlanResult } from './maneuver';
 export interface Controls {
   translation: Vec3;
   rotation: Vec3;
@@ -11,7 +12,16 @@ export interface ShipState {
   velocity: Vec3;
   orientation: Quat;
   angularVelocity: Vec3;
+  /** Derived from mass; retained in snapshots as a convenient authoritative total. */
   massKg: number;
+  mass: MassState;
+}
+export interface MassState {
+  dryKg: number;
+  modulesKg: number;
+  cargoKg: number;
+  ammunitionKg: number;
+  propellantKg: number;
 }
 export interface WorldState {
   universeId: string;
@@ -21,6 +31,7 @@ export interface WorldState {
   ship: ShipState;
   lastInputSeq: number;
   controls: Controls;
+  maneuver?: ManeuverExecutionState;
 }
 export interface ServerMetrics {
   tickMs: number;
@@ -41,4 +52,6 @@ export type ServerMessage =
   | Snapshot
   | { type: 'welcome'; version: 1; shipId: string; testMode: boolean }
   | { type: 'error'; code: string }
+  | { type: 'maneuver_plan'; requestId: string; result: ManeuverPlanResult }
+  | { type: 'maneuver_ack'; action: 'EXECUTE' | 'CANCEL'; executionId: string }
   | { type: 'pong'; sentAt: number };

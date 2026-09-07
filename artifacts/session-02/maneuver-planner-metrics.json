@@ -1,0 +1,33 @@
+{
+  "scenario": "orbit_maneuver: 400 km to 800 km, phase ahead 0.5 rad",
+  "coldMs": 560.1089,
+  "medianWarmMs": 445.3177999999998,
+  "p95WarmMs": 465.4970999999996,
+  "liveServerWebSocketMs": 455.47350000000006,
+  "candidates": [
+    {
+      "type": "ECONOMIC",
+      "deltaVMps": 216.66781469585175,
+      "propellantKg": 533.7124780474794,
+      "etaSeconds": 6902.492646156172,
+      "reserveDeltaVMps": 686.1153519633037,
+      "positionErrorM": 60.069311051118156
+    },
+    {
+      "type": "BALANCED",
+      "deltaVMps": 317.9467294002833,
+      "propellantKg": 770.8300855881469,
+      "etaSeconds": 6221.58056560118,
+      "reserveDeltaVMps": 584.8364372589674,
+      "positionErrorM": 40.931149490516894
+    },
+    {
+      "type": "FAST",
+      "deltaVMps": 616.5290488544832,
+      "propellantKg": 1426.952450773775,
+      "etaSeconds": 5698.830827316772,
+      "reserveDeltaVMps": 286.2541178048649,
+      "positionErrorM": 497.242258860667
+    }
+  ]
+}

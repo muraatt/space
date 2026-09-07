@@ -1,6 +1,6 @@
 # ORBITAL · Earth Operations
 
-Tarayıcıda çalışan, bilimsel temelli bir yörünge oyunu. **Mevcut kapsam Oturum 1:** Dünya yörüngesinde tek geliştirme gemisi, yerel otoriter sunucu, doğrudan itki, üçüncü şahıs kamera ve telemetri. Henüz kalıcı ilerleme veya çok oyunculu oyun yoktur.
+Tarayıcıda çalışan, bilimsel temelli bir yörünge oyunu. **Mevcut kapsam Oturum 2:** Dünya yörüngesinde tek geliştirme gemisi, yerel otoriter sunucu, yakıtlı doğrudan itki, manevra planlama/yürütme, üçüncü şahıs kamera ve telemetri. Henüz görev, ekonomi, kalıcı ilerleme veya çok oyunculu oyun yoktur.
 
 ## Yerel çalıştırma
 
@@ -17,6 +17,8 @@ Tarayıcı: **http://127.0.0.1:5173**. Sunucu sağlık kontrolü: http://127.0.0
 WebGPU tercih edilir. Kullanılamıyorsa Three.js WebGL2'ye geçer; alt sağ köşe gerçek backend'i gösterir. WebGL2'yi açıkça denemek için http://127.0.0.1:5173/?backend=webgl2 kullan. Yüksek performanslı GPU istenir; işletim sistemi son seçimi yapar.
 
 **Kumandayı devral** düğmesine bas. W/S ileri/geri, A/D yanal, R/F dikey itki; oklar yön, Q/E yatış. Fareyi sürükle ve tekerlekle yaklaş/uzaklaş. C kamerayı toparlar, F3 ayrıntıları açar. Space girdileri bırakır; fiziksel hızı sıfırlamaz. Arayüze odaklanınca itki kesilir. Başka bir yerel sekme açılırsa tek geliştirme pilotu yeni sekmeye geçer. Yenileme ve gündüz/gece geçişi uçuşu sıfırlar; bu bir kayıt veya yeniden bağlanma sistemi değildir.
+
+**Manevra bilgisayarı** hedef yörüngeyi seçer, sunucudan ekonomik/dengeli/hızlı seçenekleri ister ve seçilen planı otoriter sunucuda yürütür. Yanma veya coast sırasında panelden iptal edilebilir. `?scene=orbit_maneuver` oynanabilir plan akışını, `?scene=low_fuel` gerçek Δv/yakıt reddini açar.
 
 ## Doğrulama
 
