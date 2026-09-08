@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { ready, reset } from '../src/runner';
-import { cargoMission } from '../src/scenarios/cargo_mission';
+import { stationDocking } from '../src/scenarios/station_docking';
 
 async function completeCargo(page: Page) {
   const cargo = page.getByTestId('mission-cargo').first();
@@ -16,9 +16,10 @@ test('earn, service the second vehicle, install upgrade and return to intercepti
 }) => {
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
-  await reset(request, cargoMission);
-  await page.goto('/?scene=cargo_mission&backend=webgl2');
+  await reset(request, stationDocking);
+  await page.goto('/?scene=station_docking&backend=webgl2');
   await ready(page);
+  await page.getByRole('button', { name: 'GÖREV KONTROLÜ' }).click();
   await page.getByTestId('faction-aurora').click();
   await page.getByLabel('Görev kontrolü').getByRole('button', { name: 'YENİLE' }).click();
   await expect(page.getByTestId('mission-cargo')).toHaveCount(2, { timeout: 10000 });
@@ -27,7 +28,18 @@ test('earn, service the second vehicle, install upgrade and return to intercepti
   await expect(page.getByTestId('profile-credits')).toHaveText('5.300');
 
   await page.getByRole('button', { name: 'Görev panelini kapat' }).click();
-  await page.getByRole('button', { name: 'HANGAR VE SERVİS' }).click();
+  await page.getByRole('button', { name: 'İSTASYONU HEDEFLE' }).click();
+  await expect(page.getByTestId('docking-telemetry')).toContainText('FINAL APPROACH');
+  await page.getByLabel('Uçuş görünümü').click({ position: { x: 1000, y: 500 } });
+  await page.keyboard.down('w');
+  await page.waitForTimeout(150);
+  await page.keyboard.up('w');
+  await expect.poll(() => page.evaluate(() => window.__ORBITAL__!.getState()!.docking.metrics!.rangeM), { timeout: 15000 }).toBeLessThan(3.1);
+  const ops = page.getByLabel('Operasyon paneli');
+  await ops.getByRole('button', { name: /OPS/ }).click();
+  await page.getByTestId('request-dock').click();
+  await expect.poll(() => page.evaluate(() => window.__ORBITAL__!.getState()!.docking.phase)).toBe('DOCKED');
+  await page.getByTestId('station-services').click();
   const hangar = page.getByLabel('Hangar ve servisler');
   await expect(hangar).toBeVisible();
   await expect(hangar.getByLabel('Sahip olunan araçlar')).toContainText('Kestrel');
@@ -53,6 +65,8 @@ test('earn, service the second vehicle, install upgrade and return to intercepti
   ).toBe(0.65);
 
   await page.getByRole('button', { name: 'Hangarı kapat' }).click();
+  await page.getByTestId('undock').click();
+  await expect.poll(() => page.evaluate(() => window.__ORBITAL__!.getState()!.docking.phase)).toBe('FINAL_APPROACH');
   await page.getByRole('button', { name: 'GÖREV KONTROLÜ' }).click();
   const intercept = page.getByTestId('mission-intercept');
   await expect(intercept).toBeVisible();

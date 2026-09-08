@@ -4,6 +4,7 @@ import type { ManeuverExecutionState, ManeuverPlanResult } from './maneuver';
 import type { LocalPlayerProfile, MissionAction, MissionInstance } from './mission';
 import type { ShipDefinitionId, ShipPerformance } from './hangar';
 import type { CombatAction, CombatState } from './combat';
+import type { DockingAction, DockingState, StationState } from './station';
 export interface Controls {
   translation: Vec3;
   rotation: Vec3;
@@ -23,6 +24,19 @@ export interface ShipState {
   conditionPercent: number;
   installedUpgradeIds: string[];
 }
+export type PlayerPresence = 'ONLINE' | 'RECONNECTING' | 'OFFLINE';
+export interface RemotePlayerState {
+  playerId: string;
+  callsign: string;
+  shipId: string;
+  presence: PlayerPresence;
+  ship: ShipState;
+}
+export interface PublicPlayerIdentity {
+  playerId: string;
+  callsign: string;
+  shipId: string;
+}
 export interface MassState {
   dryKg: number;
   modulesKg: number;
@@ -36,6 +50,8 @@ export interface WorldState {
   seed: number;
   tick: number;
   ship: ShipState;
+  /** Other pilots in this authoritative runtime; the local ship is excluded. */
+  remotePlayers: RemotePlayerState[];
   lastInputSeq: number;
   controls: Controls;
   maneuver?: ManeuverExecutionState;
@@ -46,6 +62,8 @@ export interface WorldState {
     processedTransactionIds: string[];
   };
   combat: CombatState;
+  station: StationState;
+  docking: DockingState;
 }
 export interface ServerMetrics {
   tickMs: number;
@@ -65,6 +83,9 @@ export interface Snapshot {
 export type ServerMessage =
   | Snapshot
   | { type: 'welcome'; version: 1; shipId: string; testMode: boolean }
+  | { type: 'identity_required'; reason: 'MISSING_CREDENTIAL' | 'INVALID_CREDENTIAL'; registrationCredential: string }
+  | { type: 'identity_established'; identity: PublicPlayerIdentity; credential?: string; restored: boolean }
+  | { type: 'identity_error'; code: 'USERNAME_INVALID' | 'USERNAME_TAKEN' | 'INVALID_CREDENTIAL' }
   | { type: 'error'; code: string }
   | { type: 'maneuver_plan'; requestId: string; result: ManeuverPlanResult }
   | { type: 'maneuver_ack'; action: 'EXECUTE' | 'CANCEL'; executionId: string }
@@ -76,4 +97,5 @@ export type ServerMessage =
       credits: number;
     }
   | { type: 'combat_ack'; action: CombatAction; commandId: string }
+  | { type: 'docking_ack'; action: DockingAction; commandId: string }
   | { type: 'pong'; sentAt: number };

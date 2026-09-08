@@ -30,7 +30,7 @@ export const FACTIONS: readonly FactionDefinition[] = Object.freeze([
   },
 ]);
 
-export type MissionType = 'CARGO' | 'RECONNAISSANCE' | 'INTERCEPT';
+export type MissionType = 'CARGO' | 'RECONNAISSANCE' | 'INTERCEPT' | 'BOUNTY';
 export type MissionStatus = 'AVAILABLE' | 'ACCEPTED' | 'ACTIVE' | 'COMPLETED' | 'FAILED';
 
 export interface MissionDestination {
@@ -69,6 +69,29 @@ export interface InterceptObjective {
   neutralized: boolean;
 }
 
+export type BountyTargetClass = 'SCOUT' | 'FIGHTER' | 'HEAVY';
+export type BountyThreat = 'LOW' | 'MEDIUM' | 'HIGH';
+
+export interface BountyObjective {
+  targetId: string;
+  targetLabel: string;
+  targetClass: BountyTargetClass;
+  threat: BountyThreat;
+  acquired: boolean;
+  neutralized: boolean;
+  rewardIssued: boolean;
+  estimatedDeltaVMps: number;
+  estimatedPropellantKg: number;
+  acceptedFuelKg?: number;
+  acceptedAmmunitionKg?: number;
+  acceptedConditionPercent?: number;
+  fuelUsedKg?: number;
+  ammunitionUsedKg?: number;
+  damagePercent?: number;
+  operationalCostCredits?: number;
+  netCredits?: number;
+}
+
 export interface MissionInstance {
   id: string;
   type: MissionType;
@@ -85,6 +108,7 @@ export interface MissionInstance {
   cargo?: MissionCargo;
   recon?: ReconObjective;
   intercept?: InterceptObjective;
+  bounty?: BountyObjective;
   acceptedAtMs?: number;
   completedAtMs?: number;
   failedAtMs?: number;

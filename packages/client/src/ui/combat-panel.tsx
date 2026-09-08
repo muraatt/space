@@ -53,7 +53,9 @@ export function CombatPanel({
 }) {
   if (!open || !state) return null;
   const combat = state.combat,
-    contact = combat.contacts[0],
+    mission = state.missions.find((item) => item.id === state.profile.activeMissionId),
+    missionTargetId = mission?.intercept?.targetId ?? mission?.bounty?.targetId,
+    contact = combat.contacts.find((item) => item.id === (combat.selectedTargetId ?? missionTargetId)) ?? combat.contacts[0],
     selected = combat.contacts.find((item) => item.id === combat.selectedTargetId),
     now = combat.serverNowMs,
     laserCooldown = seconds(combat.laserCooldownUntilMs, now),
@@ -128,6 +130,7 @@ export function CombatPanel({
         <dl>
           <dt>MENZİL</dt>
           <dd data-testid="target-range">{contact.rangeM.toFixed(0)} m</dd>
+          {contact.bountyClass && <><dt>SINIF / TEHDİT</dt><dd>{contact.bountyClass} / {contact.threat}</dd></>}
           <dt>GÖRÜŞ HATTI</dt>
           <dd>{contact.lineOfSight ? 'AÇIK' : 'KAPALI'}</dd>
           <dt>ATEŞ YETKİSİ</dt>

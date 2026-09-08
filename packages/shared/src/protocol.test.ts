@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { controlSchema, clientMessageSchema } from './protocol';
+import { controlSchema, clientMessageSchema, identityMessageSchema } from './protocol';
 const input = {
   type: 'input',
   version: 1,
@@ -9,6 +9,11 @@ const input = {
   rotation: [0, 0, 0],
 };
 describe('untrusted wire commands', () => {
+  it('accepts bounded identity intent and rejects a forged player id', () => {
+    expect(identityMessageSchema.safeParse({ type: 'register_identity', version: 1, requestId: 'r-1', username: 'MURAT_01', credential: 'x'.repeat(43) }).success).toBe(true);
+    expect(identityMessageSchema.safeParse({ type: 'register_identity', version: 1, requestId: 'r-1', username: 'x'.repeat(65), credential: 'x'.repeat(43) }).success).toBe(false);
+    expect(identityMessageSchema.safeParse({ type: 'resume_identity', version: 1, credential: 'x'.repeat(43), playerId: 'forged' }).success).toBe(false);
+  });
   it('accepts bounded control intent', () => expect(controlSchema.safeParse(input).success).toBe(true));
   it.each([NaN, Infinity, -Infinity, 1.01, -1.01])('rejects invalid axis %s', (value) =>
     expect(controlSchema.safeParse({ ...input, translation: [value, 0, 0] }).success).toBe(false),
@@ -32,6 +37,16 @@ describe('untrusted wire commands', () => {
     };
     expect(clientMessageSchema.safeParse(request).success).toBe(true);
     expect(clientMessageSchema.safeParse({ ...request, estimatedDeltaVMps: 0 }).success).toBe(false);
+    const bountyReference = {
+      ...request,
+      requestId: 'bounty-plan-1',
+      target: { kind: 'ORBITAL_ENTITY_INTERCEPT', entityId: 'bounty-target-scout-01' },
+    };
+    expect(clientMessageSchema.safeParse(bountyReference).success).toBe(true);
+    expect(clientMessageSchema.safeParse({
+      ...bountyReference,
+      target: { ...bountyReference.target, state: { position: [0, 0, 0], velocity: [0, 0, 0] } },
+    }).success).toBe(false);
   });
   it('accepts plan references for execute/cancel and rejects authoritative payloads', () => {
     const execute = {
@@ -61,6 +76,9 @@ describe('untrusted wire commands', () => {
     };
     expect(clientMessageSchema.safeParse(accept).success).toBe(true);
     expect(clientMessageSchema.safeParse({ ...accept, credits: 999999 }).success).toBe(false);
+    expect(clientMessageSchema.safeParse({
+      type: 'create_bounty', version: 1, shipId: 'kestrel-01', reward: 999999,
+    }).success).toBe(false);
     expect(
       clientMessageSchema.safeParse({
         type: 'complete_mission',
@@ -88,6 +106,7 @@ describe('untrusted wire commands', () => {
       version: 1,
       shipId: 'kestrel-01',
       amountKg: 100,
+      stationId: 'aegis-service-01',
       transactionId: 'fuel-1',
     };
     expect(clientMessageSchema.safeParse(fuel).success).toBe(true);
@@ -124,5 +143,18 @@ describe('untrusted wire commands', () => {
         damage: 9999,
       }).success,
     ).toBe(false);
+  });
+  it('accepts station intent but rejects forged docking state and station service omission', () => {
+    const select = {
+      type: 'select_station', version: 1, shipId: 'kestrel-01', stationId: 'aegis-service-01', commandId: 'station-1',
+    };
+    expect(clientMessageSchema.safeParse(select).success).toBe(true);
+    expect(clientMessageSchema.safeParse({ ...select, phase: 'DOCKED' }).success).toBe(false);
+    expect(clientMessageSchema.safeParse({
+      type: 'request_dock', version: 1, shipId: 'kestrel-01', stationId: 'aegis-service-01', portId: 'aegis-port-alpha', commandId: 'dock-1',
+    }).success).toBe(true);
+    expect(clientMessageSchema.safeParse({
+      type: 'buy_fuel', version: 1, shipId: 'kestrel-01', amountKg: 10, transactionId: 'fuel-no-station',
+    }).success).toBe(false);
   });
 });

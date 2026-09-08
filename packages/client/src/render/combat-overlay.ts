@@ -37,14 +37,20 @@ export class CombatOverlay {
     this.laser.visible = false;
   }
   update(world: WorldState, frame: ReturnType<typeof renderFrame>) {
-    const contact = world.combat.contacts[0];
+    const mission = world.missions.find((item) => item.id === world.profile.activeMissionId),
+      missionTargetId = mission?.intercept?.targetId ?? mission?.bounty?.targetId,
+      contact = world.combat.contacts.find((item) => item.id === (world.combat.selectedTargetId ?? missionTargetId))
+        ?? world.combat.contacts[0];
     this.target.visible = contact.eligible;
     if (contact.eligible) {
       this.target.position.copy(frame.local(contact.position));
       this.target.quaternion.copy(frame.eciToLocal);
+      this.target.scale.setScalar(contact.bountyClass === 'SCOUT' ? 0.72 : contact.bountyClass === 'HEAVY' ? 1.45 : 1);
       this.ring.lookAt(new Vector3(0, 0, 0));
       const selected = world.combat.selectedTargetId === contact.id;
-      (this.core.material as MeshBasicMaterial).color.set(selected ? '#ff815f' : '#d78d69');
+      (this.core.material as MeshBasicMaterial).color.set(selected ? '#ff815f'
+        : contact.bountyClass === 'SCOUT' ? '#e4c56d'
+          : contact.bountyClass === 'HEAVY' ? '#dc5f52' : '#d78d69');
       this.ring.scale.setScalar(selected ? 1.25 : 1);
     }
     const activeIds = new Set<string>();

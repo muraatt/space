@@ -1,0 +1,21 @@
+{
+  "staticCheck": "passed",
+  "unitIntegration": {
+    "files": 18,
+    "passed": 95,
+    "failed": 0
+  },
+  "productionBuild": "passed",
+  "bountyJourney": {
+    "passed": 1,
+    "failed": 0,
+    "duration": "2.0m"
+  },
+  "existingJourneyRegression": {
+    "passed": 24,
+    "failed": 0,
+    "duration": "4.8m"
+  },
+  "visualCapturesInspected": 4,
+  "blockingVisualDefects": 0
+}

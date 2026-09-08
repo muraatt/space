@@ -11,6 +11,14 @@ function combatWorld() {
   return world;
 }
 
+function switchToRaptor(world: World, transactionId: string) {
+  world.state.docking.phase = 'DOCKED';
+  world.state.docking.selectedStationId = world.state.station.id;
+  world.state.docking.portId = world.state.station.ports[0].id;
+  expect(world.selectShip('raptor-01', transactionId).ok).toBe(true);
+  world.state.docking.phase = 'NONE';
+}
+
 function armedIntercept() {
   const world = new World();
   world.reset('intercept');
@@ -99,7 +107,7 @@ describe('authoritative combat foundation', () => {
 
   it('consumes missile ammunition and rejects duplicate launch commands', () => {
     const world = combatWorld();
-    expect(world.selectShip('raptor-01', 'switch-combat').ok).toBe(true);
+    switchToRaptor(world, 'switch-combat');
     world.setCombatRegion('CONTESTED');
     expect(world.selectCombatTarget('relay-contact-r17', 'retarget', 2000).ok).toBe(true);
     const before = world.state.ship.mass.ammunitionKg;
@@ -117,7 +125,7 @@ describe('authoritative combat foundation', () => {
 
   it('expires a missile and applies a swept hit only once', () => {
     const world = combatWorld();
-    world.selectShip('raptor-01', 'switch-missile');
+    switchToRaptor(world, 'switch-missile');
     world.setCombatRegion('CONTESTED');
     world.selectCombatTarget('relay-contact-r17', 'target-missile', 2000);
     expect(world.fireMissile('expire-launch', 2100).ok).toBe(true);

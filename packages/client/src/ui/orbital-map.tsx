@@ -47,23 +47,30 @@ export function OrbitalMap({
   state,
   targetRadiusM,
   targetPosition,
+  targetVelocity,
   candidate,
 }: {
   state?: WorldState;
   targetRadiusM?: number;
   targetPosition?: Vec3;
+  targetVelocity?: Vec3;
   candidate?: ManeuverCandidate;
 }) {
   if (!state) return <section className="orbital-map" aria-label="Canlı 3B yörünge haritası">BAĞLANTI</section>;
   const currentRadius = length(state.ship.position),
+    stationRadius = length(state.station.position),
     finalRadius = candidate ? length(candidate.expectedFinalState.position) : 0,
-    scaleM = Math.max(currentRadius, targetRadiusM ?? 0, finalRadius, CONFIG.earthRadius * 1.08),
+    scaleM = Math.max(currentRadius, stationRadius, targetRadiusM ?? 0, finalRadius, ...state.remotePlayers.map(player => length(player.ship.position)), CONFIG.earthRadius * 1.08),
     player = project(state.ship.position, scaleM),
+    station = project(state.station.position, scaleM),
     target = targetPosition ? project(targetPosition, scaleM) : targetRadiusM
       ? project([targetRadiusM * Math.cos(0.65), 0, -targetRadiusM * Math.sin(0.65)], scaleM)
       : undefined,
     currentPath = osculatingPath(state.ship.position, state.ship.velocity, scaleM),
-    targetPath = targetRadiusM ? circularPath(targetRadiusM, scaleM) : '',
+    stationPath = osculatingPath(state.station.position, state.station.velocity, scaleM),
+    targetPath = targetPosition && targetVelocity
+      ? osculatingPath(targetPosition, targetVelocity, scaleM)
+      : targetRadiusM ? circularPath(targetRadiusM, scaleM) : '',
     transferPath = candidate
       ? `M${player[0].toFixed(1)},${player[1].toFixed(1)} Q128,22 ${project(candidate.expectedFinalState.position, scaleM).map(v => v.toFixed(1)).join(',')}`
       : '';
@@ -79,10 +86,20 @@ export function OrbitalMap({
         <circle cx="128" cy="94" r="35" fill="url(#map-earth)" className="map-earth-live" />
         <path d="M95 91 Q128 107 160 84 M115 61 Q101 95 136 127" className="map-grid" />
         {targetPath && <path d={targetPath} className="map-target-live" />}
+        {stationPath && <path d={stationPath} className="map-station-orbit" />}
         {currentPath && <path d={currentPath} className="map-current-live" />}
         {transferPath && <path d={transferPath} className="map-transfer-live" />}
         {target && <g transform={`translate(${target[0]} ${target[1]})`} className="map-target-marker"><circle r="5"/><path d="M-9 0H9M0-9V9"/></g>}
+        <g
+          transform={`translate(${station[0]} ${station[1]})`}
+          className={`map-station-marker ${state.docking.selectedStationId === state.station.id ? 'selected' : ''}`}
+          data-testid="orbit-map-station"
+        ><rect x="-4" y="-4" width="8" height="8"/><path d="M-8 0H8M0-8V8"/></g>
         <g transform={`translate(${player[0]} ${player[1]})`} className="map-player" data-testid="orbit-map-player"><circle r="4"/><path d="M-8 0H8M0-8V8"/></g>
+        {state.remotePlayers.map((remote) => {
+          const point = project(remote.ship.position, scaleM);
+          return <g key={remote.playerId} transform={`translate(${point[0]} ${point[1]})`} className="map-remote-player" data-testid={`orbit-map-remote-${remote.playerId}`}><circle r="3"/><path d="M-6 0H6M0-6V6"/><text x="7" y="-5">{remote.callsign}</text></g>;
+        })}
       </svg>
       <footer><span>ALT {(currentRadius - CONFIG.earthRadius).toFixed(0)} m</span><span>{candidate ? candidate.type : state.maneuver?.status ?? 'FREE'}</span></footer>
     </section>

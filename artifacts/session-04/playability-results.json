@@ -4,7 +4,16 @@
       "C:\\Users\\Murat\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\node\\bin\\node.exe",
       "C:\\Users\\Murat\\Desktop\\Oyun\\node_modules\\@playwright\\test\\cli.js",
       "test",
-      "journey|authority",
+      "packages/test-tools/tests/authority.spec.ts",
+      "packages/test-tools/tests/flight.journey.spec.ts",
+      "packages/test-tools/tests/interaction.journey.spec.ts",
+      "packages/test-tools/tests/maneuver.journey.spec.ts",
+      "packages/test-tools/tests/mission.journey.spec.ts",
+      "packages/test-tools/tests/hangar.journey.spec.ts",
+      "packages/test-tools/tests/intercept.journey.spec.ts",
+      "packages/test-tools/tests/missile-hit.journey.spec.ts",
+      "packages/test-tools/tests/ui-architecture.journey.spec.ts",
+      "packages/test-tools/tests/station.journey.spec.ts",
       "--config",
       "artifacts/session-04/playability.config.ts"
     ],
@@ -89,12 +98,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 273,
+                  "duration": 43,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-09-07T16:53:29.840Z",
+                  "startTime": "2026-09-08T13:39:38.245Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -123,12 +132,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 299,
+                  "duration": 148,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-09-07T16:53:30.271Z",
+                  "startTime": "2026-09-08T13:39:38.323Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -157,12 +166,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 162,
+                  "duration": 32,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-09-07T16:53:30.632Z",
+                  "startTime": "2026-09-08T13:39:38.494Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -199,12 +208,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 20343,
+                  "duration": 10698,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-09-07T16:53:30.910Z",
+                  "startTime": "2026-09-08T13:39:38.569Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -233,12 +242,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 17807,
+                  "duration": 6598,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-09-07T16:53:53.075Z",
+                  "startTime": "2026-09-08T13:39:49.916Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -267,12 +276,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 11805,
+                  "duration": 5398,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-09-07T16:54:10.972Z",
+                  "startTime": "2026-09-08T13:39:56.541Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -301,12 +310,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 8813,
+                  "duration": 3738,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-09-07T16:54:22.889Z",
+                  "startTime": "2026-09-08T13:40:01.975Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -335,12 +344,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 18015,
+                  "duration": 9368,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-09-07T16:54:31.747Z",
+                  "startTime": "2026-09-08T13:40:05.767Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -377,12 +386,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 17441,
+                  "duration": 20729,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-09-07T16:54:49.867Z",
+                  "startTime": "2026-09-08T13:40:15.204Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -419,12 +428,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 16429,
+                  "duration": 9728,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-09-07T16:55:07.411Z",
+                  "startTime": "2026-09-08T13:40:36.025Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -453,12 +462,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 19692,
+                  "duration": 6642,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-09-07T16:55:23.896Z",
+                  "startTime": "2026-09-08T13:40:45.790Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -487,12 +496,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 22249,
+                  "duration": 10008,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-09-07T16:55:43.659Z",
+                  "startTime": "2026-09-08T13:40:52.489Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -502,7 +511,7 @@
           ],
           "id": "911cba546cd320c8f07f-07ad90b33729c99f1d17",
           "file": "interaction.journey.spec.ts",
-          "line": 79,
+          "line": 81,
           "column": 1
         },
         {
@@ -521,12 +530,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 12496,
+                  "duration": 6964,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-09-07T16:56:05.979Z",
+                  "startTime": "2026-09-08T13:41:02.537Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -536,7 +545,7 @@
           ],
           "id": "911cba546cd320c8f07f-6fd256f4253aeadf50b4",
           "file": "interaction.journey.spec.ts",
-          "line": 100,
+          "line": 103,
           "column": 1
         }
       ]
@@ -549,7 +558,7 @@
       "specs": [
         {
           "title": "identifies and neutralizes an intercept target through authoritative combat UI",
-          "ok": false,
+          "ok": true,
           "tags": [],
           "tests": [
             {
@@ -562,45 +571,18 @@
                 {
                   "workerIndex": 0,
                   "parallelIndex": 0,
-                  "status": "timedOut",
-                  "duration": 49868,
-                  "error": {
-                    "message": "\u001b[31mTest timeout of 45000ms exceeded.\u001b[39m",
-                    "stack": "\u001b[31mTest timeout of 45000ms exceeded.\u001b[39m"
-                  },
-                  "errors": [
-                    {
-                      "message": "\u001b[31mTest timeout of 45000ms exceeded.\u001b[39m"
-                    },
-                    {
-                      "location": {
-                        "file": "C:\\Users\\Murat\\Desktop\\Oyun\\packages\\test-tools\\tests\\intercept.journey.spec.ts",
-                        "column": 64,
-                        "line": 61
-                      },
-                      "message": "Error: locator.click: Test timeout of 45000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: 'KUMANDAYI DEVRAL' })\u001b[22m\n\n\n  59 |   expect(await page.evaluate(() => window.__ORBITAL__!.getState()!.combat.contacts[0].health)).toBe(0);\n  60 |   expect(await page.evaluate(() => window.__ORBITAL__!.getState()!.combat.contacts[0].destroyed)).toBe(true);\n> 61 |   await page.getByRole('button', { name: 'KUMANDAYI DEVRAL' }).click();\n     |                                                                ^\n  62 |   await page.keyboard.down('w');\n  63 |   await expect.poll(() => page.evaluate(() => window.__ORBITAL__!.getState()!.controls.translation[2])).toBe(-1);\n  64 |   await page.keyboard.up('w');\n    at C:\\Users\\Murat\\Desktop\\Oyun\\packages\\test-tools\\tests\\intercept.journey.spec.ts:61:64"
-                    }
-                  ],
+                  "status": "passed",
+                  "duration": 14659,
+                  "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-09-07T16:56:18.626Z",
+                  "startTime": "2026-09-08T13:41:09.588Z",
                   "annotations": [],
-                  "attachments": [
-                    {
-                      "name": "error-context",
-                      "contentType": "text/markdown",
-                      "path": "C:\\Users\\Murat\\Desktop\\Oyun\\artifacts\\session-04\\playability-test-output\\intercept.journey-identifi-1b302-ugh-authoritative-combat-UI\\error-context.md"
-                    },
-                    {
-                      "name": "trace",
-                      "contentType": "application/zip",
-                      "path": "C:\\Users\\Murat\\Desktop\\Oyun\\artifacts\\session-04\\playability-test-output\\intercept.journey-identifi-1b302-ugh-authoritative-combat-UI\\trace.zip"
-                    }
-                  ]
+                  "attachments": []
                 }
               ],
-              "status": "unexpected"
+              "status": "expected"
             }
           ],
           "id": "61ebad75e48dddfcdfb9-20e613c130edcd793b84",
@@ -621,15 +603,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 1,
+                  "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 26582,
+                  "duration": 18724,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-09-07T16:57:17.071Z",
+                  "startTime": "2026-09-08T13:41:24.279Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -639,7 +621,7 @@
           ],
           "id": "61ebad75e48dddfcdfb9-24b4abf3d14c8057ae71",
           "file": "intercept.journey.spec.ts",
-          "line": 68,
+          "line": 97,
           "column": 1
         }
       ]
@@ -663,15 +645,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 1,
+                  "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 11798,
+                  "duration": 7226,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-09-07T16:57:45.303Z",
+                  "startTime": "2026-09-08T13:41:43.112Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -697,15 +679,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 1,
+                  "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 7577,
+                  "duration": 4184,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-09-07T16:57:57.157Z",
+                  "startTime": "2026-09-08T13:41:50.396Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -739,15 +721,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 1,
+                  "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 16109,
+                  "duration": 14234,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-09-07T16:58:04.859Z",
+                  "startTime": "2026-09-08T13:41:54.694Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -781,15 +763,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 1,
+                  "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 11566,
+                  "duration": 7120,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-09-07T16:58:21.647Z",
+                  "startTime": "2026-09-08T13:42:09.227Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -815,15 +797,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 1,
+                  "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 10013,
+                  "duration": 6533,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-09-07T16:58:33.261Z",
+                  "startTime": "2026-09-08T13:42:16.374Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -849,15 +831,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 1,
+                  "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 17426,
+                  "duration": 13048,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-09-07T16:58:43.322Z",
+                  "startTime": "2026-09-08T13:42:22.944Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -871,15 +853,133 @@
           "column": 1
         }
       ]
+    },
+    {
+      "title": "station.journey.spec.ts",
+      "file": "station.journey.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "station target, rendezvous, manual capture, service, undock and restored flight",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 150000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 93212,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-08T13:42:36.088Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d17858cc53c8815477e8-b9556d1563e0874fa2c1",
+          "file": "station.journey.spec.ts",
+          "line": 11,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "ui-architecture.journey.spec.ts",
+      "file": "ui-architecture.journey.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "three HUD layers keep live space telemetry and restore flight after every system overlay",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 8019,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-08T13:44:09.390Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "1212420686cd524b91b4-7f87ee7f89ea4772b4ae",
+          "file": "ui-architecture.journey.spec.ts",
+          "line": 5,
+          "column": 1
+        },
+        {
+          "title": "selected target adds stable relative and combat telemetry to the flight HUD",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4784,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-08T13:44:17.436Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "1212420686cd524b91b4-2f1fb74c6b4439526690",
+          "file": "ui-architecture.journey.spec.ts",
+          "line": 46,
+          "column": 1
+        }
+      ]
     }
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-09-07T16:53:23.878Z",
-    "duration": 338376.229,
-    "expected": 20,
+    "startTime": "2026-09-08T13:39:36.663Z",
+    "duration": 287206.124,
+    "expected": 24,
     "skipped": 0,
-    "unexpected": 1,
+    "unexpected": 0,
     "flaky": 0
   }
 }

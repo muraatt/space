@@ -2,6 +2,18 @@ import { z } from 'zod';
 const axis = z.number().finite().min(-1).max(1);
 const axes = z.tuple([axis, axis, axis]);
 const finiteVec3 = z.tuple([z.number().finite(), z.number().finite(), z.number().finite()]);
+export const identityMessageSchema = z.discriminatedUnion('type', [
+  z.strictObject({
+    type: z.literal('register_identity'), version: z.literal(1),
+    requestId: z.string().min(1).max(96), username: z.string().max(64),
+    credential: z.string().min(32).max(256),
+  }),
+  z.strictObject({
+    type: z.literal('resume_identity'), version: z.literal(1),
+    credential: z.string().min(32).max(256),
+  }),
+]);
+export type IdentityClientMessage = z.infer<typeof identityMessageSchema>;
 export const controlSchema = z.strictObject({
   type: z.literal('input'),
   version: z.literal(1),
@@ -27,6 +39,14 @@ export const clientMessageSchema = z.discriminatedUnion('type', [
       z.strictObject({
         kind: z.literal('NEAR_RENDEZVOUS_STATE'),
         state: z.strictObject({ position: finiteVec3, velocity: finiteVec3 }),
+      }),
+      z.strictObject({
+        kind: z.literal('STATION_RENDEZVOUS'),
+        stationId: z.string().min(1).max(96),
+      }),
+      z.strictObject({
+        kind: z.literal('ORBITAL_ENTITY_INTERCEPT'),
+        entityId: z.string().min(1).max(96),
       }),
     ]),
   }),
@@ -126,10 +146,33 @@ export const clientMessageSchema = z.discriminatedUnion('type', [
     transactionId: z.string().min(1).max(96),
   }),
   z.strictObject({
+    type: z.literal('select_station'),
+    version: z.literal(1),
+    shipId: z.string().max(64),
+    stationId: z.string().min(1).max(96),
+    commandId: z.string().min(1).max(96),
+  }),
+  z.strictObject({
+    type: z.literal('request_dock'),
+    version: z.literal(1),
+    shipId: z.string().max(64),
+    stationId: z.string().min(1).max(96),
+    portId: z.string().min(1).max(96),
+    commandId: z.string().min(1).max(96),
+  }),
+  z.strictObject({
+    type: z.literal('undock'),
+    version: z.literal(1),
+    shipId: z.string().max(64),
+    stationId: z.string().min(1).max(96),
+    commandId: z.string().min(1).max(96),
+  }),
+  z.strictObject({
     type: z.literal('select_ship'),
     version: z.literal(1),
     shipId: z.string().max(64),
     targetShipId: z.string().min(1).max(64),
+    stationId: z.string().min(1).max(96),
     transactionId: z.string().min(1).max(96),
   }),
   z.strictObject({
@@ -137,12 +180,14 @@ export const clientMessageSchema = z.discriminatedUnion('type', [
     version: z.literal(1),
     shipId: z.string().max(64),
     amountKg: z.number().finite().positive().max(10_000),
+    stationId: z.string().min(1).max(96),
     transactionId: z.string().min(1).max(96),
   }),
   z.strictObject({
     type: z.literal('repair_ship'),
     version: z.literal(1),
     shipId: z.string().max(64),
+    stationId: z.string().min(1).max(96),
     transactionId: z.string().min(1).max(96),
   }),
   z.strictObject({
@@ -150,6 +195,7 @@ export const clientMessageSchema = z.discriminatedUnion('type', [
     version: z.literal(1),
     shipId: z.string().max(64),
     amountKg: z.number().finite().positive().max(10_000),
+    stationId: z.string().min(1).max(96),
     transactionId: z.string().min(1).max(96),
   }),
   z.strictObject({
@@ -157,6 +203,7 @@ export const clientMessageSchema = z.discriminatedUnion('type', [
     version: z.literal(1),
     shipId: z.string().max(64),
     upgradeId: z.string().min(1).max(96),
+    stationId: z.string().min(1).max(96),
     transactionId: z.string().min(1).max(96),
   }),
 ]);
@@ -171,6 +218,9 @@ export const scenarioResetSchema = z.strictObject({
     'cargo_mission',
     'intercept',
     'missile_hit',
+    'station_rendezvous',
+    'station_docking',
+    'bounty_sandbox',
   ]),
   paused: z.boolean().default(false),
   seed: z.number().int().default(4401),

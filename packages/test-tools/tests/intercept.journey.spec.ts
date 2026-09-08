@@ -56,9 +56,15 @@ test('identifies and neutralizes an intercept target through authoritative comba
     });
     if (status.targetDestroyed || status.playerDestroyed) break;
     const countermeasure = page.getByTestId('countermeasure').getByRole('button', { name: 'KARŞI TEDBİR' });
-    if (status.incoming && await countermeasure.isEnabled()) await countermeasure.click();
-    if (await missile.isEnabled()) await missile.click();
-    if (await fire.isEnabled()) await fire.click();
+    if (status.incoming) await countermeasure.evaluate((button: HTMLButtonElement) => {
+      if (!button.disabled) button.click();
+    });
+    await missile.evaluate((button: HTMLButtonElement) => {
+      if (!button.disabled) button.click();
+    });
+    await fire.evaluate((button: HTMLButtonElement) => {
+      if (!button.disabled) button.click();
+    });
     await page.waitForTimeout(150);
   }
   expect(await page.evaluate(() => window.__ORBITAL__!.getState()!.combat.playerDestroyed)).toBe(false);

@@ -3,9 +3,17 @@ import { CONFIG, UPGRADE_DEFINITIONS } from '@orbital/shared';
 import { availableDeltaV } from '@orbital/simulation';
 import { World } from './world';
 
+function dockedWorld() {
+  const world = new World();
+  world.state.docking.phase = 'DOCKED';
+  world.state.docking.selectedStationId = world.state.station.id;
+  world.state.docking.portId = world.state.station.ports[0].id;
+  return world;
+}
+
 describe('authoritative hangar economy', () => {
   it('owns two meaningfully distinct vehicles and switches the active ship', () => {
-    const world = new World(),
+    const world = dockedWorld(),
       [kestrel, raptor] = world.state.hangar.ships;
     expect(kestrel.definitionId).toBe('KESTREL_LOGISTICS');
     expect(raptor.definitionId).toBe('RAPTOR_COMBAT');
@@ -19,7 +27,7 @@ describe('authoritative hangar economy', () => {
   });
 
   it('buys fuel once, rejects overfill and prevents negative balance', () => {
-    const world = new World();
+    const world = dockedWorld();
     world.selectShip('raptor-01', 'switch-fuel');
     const beforeCredits = world.state.profile.credits,
       beforeFuel = world.state.ship.mass.propellantKg,
@@ -38,7 +46,7 @@ describe('authoritative hangar economy', () => {
   });
 
   it('repairs and replenishes the combat-oriented ammunition reserve', () => {
-    const world = new World();
+    const world = dockedWorld();
     world.selectShip('raptor-01', 'switch-service');
     const before = world.state.profile.credits;
     expect(world.repairShip('repair-1')).toEqual({ ok: true, cost: 160 });
@@ -55,7 +63,7 @@ describe('authoritative hangar economy', () => {
 
   it('installs exactly four fixed upgrades with real stat effects and rejects exploits', () => {
     expect(UPGRADE_DEFINITIONS).toHaveLength(4);
-    const tank = new World();
+    const tank = dockedWorld();
     tank.state.profile.credits = 20_000;
     const tankBefore = tank.state.ship.performance.propellantCapacityKg;
     expect(tank.installUpgrade('extended-propellant-cell', 'upgrade-tank').ok).toBe(true);
@@ -67,12 +75,12 @@ describe('authoritative hangar economy', () => {
     expect(tank.installUpgrade('high-flow-injector', 'upgrade-thrust').ok).toBe(true);
     expect(tank.state.ship.performance.mainThrustN).toBeCloseTo(27_600);
 
-    const cargo = new World();
+    const cargo = dockedWorld();
     cargo.state.profile.credits = 10_000;
     expect(cargo.installUpgrade('modular-cargo-rack', 'upgrade-cargo').ok).toBe(true);
     expect(cargo.state.ship.performance.cargoCapacityKg).toBe(1700);
 
-    const sensor = new World();
+    const sensor = dockedWorld();
     sensor.state.profile.credits = 10_000;
     expect(sensor.installUpgrade('survey-sensor-array', 'upgrade-sensor').ok).toBe(true);
     expect(sensor.state.ship.performance.sensorScanTimeMultiplier).toBe(0.65);
@@ -81,7 +89,7 @@ describe('authoritative hangar economy', () => {
       code: 'DUPLICATE_TRANSACTION',
     });
 
-    const incompatible = new World();
+    const incompatible = dockedWorld();
     incompatible.state.profile.credits = 10_000;
     incompatible.selectShip('raptor-01', 'switch-upgrade');
     expect(incompatible.installUpgrade('modular-cargo-rack', 'upgrade-invalid')).toMatchObject({

@@ -28,4 +28,12 @@ Her aday iki impuls varsayımında bırakılmaz: kalkış yönlendirmesi, mevcut
 
 O2 yürütmede sunucu, worker sonucunu bağlantıya ait plan kimliğiyle saklar; istemci yalnızca bu kimlik ve aday tipini geri gönderir. Plan bir kez tüketilir ve ikinci yürütme `DUPLICATE_EXECUTION` olarak reddedilir. Yanmalarda otopilot gövde `−Z` eksenini planın prograde/retrograde/hedef-hız yönüne çevirir ve normal `step` yolunu kullanır. Coast başlangıç ECI state/kütlesi, mutlak sunucu zaman damgası ve sonraki olay zamanıyla ankrajlanır; snapshot anı `propagateKepler(anchor, elapsed)` ile doğrudan yeniden kurulur. Böylece uzun coast 60 Hz'de tek tek simüle edilmez. İptal, coast'u iptal zamanına kadar örnekler; tamamlanmış yakıt tüketimini geri almaz ve sonraki yanmayı başlatmaz.
 
+## İstasyon rendezvous ve docking sözleşmesi
+
+AEGIS tek nötr servis istasyonudur; 450 km dairesel ekvator yörüngesinde gemiyle aynı iki-cisim integratörü/Kepler propagator sözleşmesini kullanır. İstasyon, yönelim ve Alpha portunun yerel capture noktası/eksenleri otoriter world state içindedir. İstemci yalnız istasyon kimliğini seçer. Sunucu portu o anki ECI konumuna çözer ve mevcut yakın-rendezvous planlayıcısına hedef state verir. Uzun coast atlamasında istasyon da aynı mutlak zamana propagate edilir; tamamlanan çözümün bağıl 200 m yaklaşma ofseti güncel port state'ine yeniden uygulanır.
+
+Son yaklaşma normal fixed-step itki ve quaternion yön kontrolünü kullanır. Ölçümler çift hassasiyetli ECI farkından üretilir: port menzili, istasyon bağıl hızı, kapanma hızı, port eksenindeki mesafe, yanal/dikey hata, gövde `−Z` ileri hizası ve roll. Capture isteği ancak doğru yaklaşma yarı uzayında, 3,5 m capture yarıçapında, en fazla 1 m/s bağıl ve 0,8 m/s kapanma hızında, 2,5 m yanal hata, 12° ileri eksen ve 15° roll sınırlarında kabul edilir. 5 m/s ve üstü capture alanı teması mevcut hasar sözleşmesine otoriter darbe olarak bağlanır.
+
+`DOCKED` durumunda gemi yeniden yaratılmaz; her step'te port transformuna bağlanır, hızı istasyon hızı olur, açısal hız ve kontrol komutları sıfırlanır. Sunucu uçuş ve silah komutlarını reddeder. Yakıt/tamir/mühimmat/hangar/yükseltme işlemleri hem doğru istasyon kimliğini hem sunulan servisi hem `DOCKED` durumunu doğrular ve mevcut idempotent ekonomi işlemini kullanır. Undock gemiyi port ekseninde 14 m uzağa, 0,5 m/s güvenli ayrılma hızıyla bırakır ve doğrudan uçuşu geri açar.
+
 O4 füze/çarpışma ve modül hasarı; O5 otoriter lag işleme. İstemci hiçbir aşamada konum, hız, hasar veya yakıt sonucunun otoritesi olmaz.

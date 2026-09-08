@@ -1,25 +1,27 @@
 import { createServer } from 'node:http';
 import { CONFIG } from '@orbital/shared';
-import { World } from './world';
 import { attachGateway } from './net/gateway';
 import { testEndpoint } from './debug/test-endpoints';
+import { resolve } from 'node:path';
+import { FileIdentityRepository } from './identity/file-identity-repository';
+import { SharedSandbox } from './shared-sandbox';
 const host = process.env.HOST ?? '127.0.0.1';
-if (host !== '127.0.0.1' && host !== 'localhost')
-  throw new Error('Local development server is loopback only.');
 const testToken = process.env.TEST_MODE === '1' ? process.env.TEST_TOKEN : undefined;
 if (process.env.TEST_MODE === '1' && !testToken) throw new Error('Test server requires TEST_TOKEN');
-const world = new World();
+const identityPath = resolve(process.env.IDENTITY_STORE_PATH ?? '.data/identities.json');
+const sandbox = new SharedSandbox(new FileIdentityRepository(identityPath));
+const world = sandbox.legacyWorld;
 const server = createServer(async (req, res) => {
   if (await testEndpoint(req, res, world, testToken)) return;
   if (req.url === '/health') {
     res.setHeader('Content-Type', 'application/json');
-    res.end(JSON.stringify({ status: 'ok', session: 4, persistence: 'memory', testMode: !!testToken }));
+    res.end(JSON.stringify({ status: 'ok', phase: 'shared-sandbox-0', persistence: 'file-identity', testMode: !!testToken }));
     return;
   }
   res.writeHead(404);
   res.end();
 });
-const gateway = attachGateway(server, world, !!testToken);
+const gateway = attachGateway(server, sandbox, !!testToken);
 let prev = performance.now(),
   acc = 0,
   lastBroadcast = 0;
@@ -29,7 +31,7 @@ const timer = setInterval(() => {
   prev = now;
   let steps = 0;
   while (acc >= CONFIG.fixedDt && steps < 30) {
-    world.tick(now);
+    sandbox.tick(now);
     acc -= CONFIG.fixedDt;
     steps++;
   }
@@ -40,12 +42,20 @@ const timer = setInterval(() => {
 }, 4);
 const port = Number(process.env.PORT ?? CONFIG.port);
 server.listen(port, host, () =>
-  console.log(`ORBITAL authority http://${host}:${port} (memory; test=${!!testToken})`),
+  console.log(`ORBITAL authority http://${host}:${port} (durable identity: ${identityPath}; test=${!!testToken})`),
 );
-function close() {
+let closing = false;
+async function close() {
+  if (closing) return;
+  closing = true;
   clearInterval(timer);
   gateway.close();
-  server.close(() => process.exit(0));
+  const forceExit = setTimeout(() => process.exit(0), 2_000);
+  await sandbox.flush();
+  server.close(() => { clearTimeout(forceExit); process.exit(0); });
+  server.closeAllConnections();
 }
-process.on('SIGINT', close);
-process.on('SIGTERM', close);
+if (!testToken) {
+  process.on('SIGINT', () => void close());
+  process.on('SIGTERM', () => void close());
+}

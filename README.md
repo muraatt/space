@@ -1,6 +1,6 @@
 # ORBITAL · Earth Operations
 
-Tarayıcıda çalışan, bilimsel temelli bir yörünge oyunu. **Mevcut kapsam Oturum 4 hasar/kayıp/kurtarma:** Dünya yörüngesinde yerel otoriter sunucu, görev/ekonomi/hangar döngüsü, bölge kuralları, hedefleme, lazer, güdümlü füze, karşı tedbir, dört alt sistemli hasar, savaş botu, imha, enkaz/kayıp ve temel sigorta dönüşü bulunur. Kalıcı hesap ve çok oyunculu oyun henüz yoktur.
+Tarayıcıda çalışan, bilimsel temelli bir yörünge oyunu. **Mevcut kapsam paylaşılan orbital sandbox Phase 0:** Dünya yörüngesinde otoriter sunucu, kilitli çağrı adıyla hafif kimlik, kimlik başına tek kalıcı başlangıç gemisi, iki oyuncunun aynı sunucuda birbirini görüp hareketini izlemesi; ayrıca AEGIS, bounty, manevra, savaş, kenetlenme ve servis döngüsü bulunur. Parolalı hesap, ortak görev/squad ve tam ilerleme kalıcılığı henüz yoktur.
 
 ## Yerel çalıştırma
 
@@ -16,9 +16,13 @@ Tarayıcı: **http://127.0.0.1:5173**. Sunucu sağlık kontrolü: http://127.0.0
 
 WebGPU tercih edilir. Kullanılamıyorsa Three.js WebGL2'ye geçer; alt sağ köşe gerçek backend'i gösterir. WebGL2'yi açıkça denemek için http://127.0.0.1:5173/?backend=webgl2 kullan. Yüksek performanslı GPU istenir; işletim sistemi son seçimi yapar.
 
-**Kumandayı devral** düğmesine bas. W/S ileri/geri, A/D yanal, R/F dikey itki; oklar yön, Q/E yatış. Fareyi sürükle ve tekerlekle yaklaş/uzaklaş. C kamerayı toparlar, F3 ayrıntıları açar. Space girdileri bırakır; fiziksel hızı sıfırlamaz. Arayüze odaklanınca itki kesilir. Başka bir yerel sekme açılırsa tek geliştirme pilotu yeni sekmeye geçer. Yenileme ve gündüz/gece geçişi uçuşu sıfırlar; bu bir kayıt veya yeniden bağlanma sistemi değildir.
+İlk girişte bir çağrı adı seç; sunucu bunu kararlı kimliğine ve tek başlangıç gemine kilitler. Aynı tarayıcı daha sonra güvenli rastgele credential ile aynı gemiye döner. **Kumandayı devral** düğmesine bas. W/S ileri/geri, A/D yanal, R/F dikey itki; oklar yön, Q/E yatış. Fareyi sürükle ve tekerlekle yaklaş/uzaklaş. C kamerayı toparlar, F3 ayrıntıları açar. Space girdileri bırakır; fiziksel hızı sıfırlamaz. Arayüze odaklanınca itki kesilir.
 
 **Manevra bilgisayarı** hedef yörüngeyi seçer, sunucudan ekonomik/dengeli/hızlı seçenekleri ister ve seçilen planı otoriter sunucuda yürütür. Yanma veya coast sırasında panelden iptal edilebilir. `?scene=orbit_maneuver` oynanabilir plan akışını, `?scene=low_fuel` gerçek Δv/yakıt reddini açar.
+
+**AEGIS servis istasyonu** 450 km dairesel ECI yörüngesinde hareket eder. İstasyona hedef kilidi koy, manevra bilgisayarından AEGIS'i seçip rendezvous planını tamamla, ardından W/S, A/D, R/F ve yön tuşlarıyla Alpha portuna manuel yaklaş. Sağ telemetri ve merkez kılavuz menzil, bağıl hız, kapanma, yanal/dikey hata ve yönelim hatalarını gösterir. Capture yalnız doğru tarafta, 3,5 m içinde, en fazla 1 m/s bağıl hız ve belirtilen hizalama sınırlarında kabul edilir. Dock sonrası yakıt, tamir, mühimmat ve gemi seçimi açılır; OPS içindeki **UNDOCK** güvenli ayrılmayı başlatır. `?scene=station_rendezvous` planlama girişini, `?scene=station_docking` kısa manuel yaklaşmayı açar.
+
+**Bounty sandbox** için `?scene=bounty_sandbox` açılır. AEGIS'e docked başlar; Görev Kontrolü'ndeki SCOUT/FIGHTER/HEAVY sözleşmelerinden birini kabul et, OPS'ten ayrıl, hedefi manevra bilgisayarına aktar ve 10/15/20 dakikalık yakın-rendezvous adaylarından birini seç. Hedef yalnız doğru sözleşme ve acquisition sonrasında ateş yetkisi alır. İmha ödülü tek kez işler; sonuç kartı yakıt, mühimmat, hasar, operasyon maliyeti ve net krediyi gösterir. `AEGIS'İ HEDEFLE` yalnız hedef seçer: dönüş transferi, manuel capture ve servis oyuncuda kalır. Dock olduktan sonra ikinci bounty aynı dünya içinde kabul edilebilir.
 
 **Görev kontrolü** iki başlangıç fraksiyonundan birini seçtirir; kargo, keşif ve silahsız önleme işlerini mevcut manevra bilgisayarına bağlar. `?scene=cargo_mission` hızlı ekonomi testi için teslim halkasında başlar. İki başlangıç kargo işinden sonra **Hangar ve servis** panelinden Raptor'a geçilebilir, yakıt/tamir/mühimmat tamamlanabilir ve ilk yükseltme kurulabilir. Bu geliştirme evreni bellek tabanlıdır; sunucu yeniden başlatılınca profil sıfırlanır.
 
@@ -61,7 +65,7 @@ Varsayılan her koşu: Chrome, 1920×1080, DPR 1, 60 saniye ısınma + 300 saniy
 | `packages/client`     | React DOM arayüzü, bağımsız Three.js renderer, girdi toplama     |
 | `packages/test-tools` | Senaryolar, gerçek kumanda yolculukları, görsel/perf kanıtı      |
 
-Önce [AGENTS](AGENTS.md), [yol haritası](docs/roadmap.md), [vertical slice](docs/vertical_slice.md) ve [son oturum raporu](docs/sessions/04-damage-loss-report.md) okunur. Sayısal çalışma değerlerinin tek kaynağı [config](packages/shared/src/config.ts); belgelerdeki gelecek kuralları uygulanmış özellik sayılmaz.
+Önce [AGENTS](AGENTS.md), [yol haritası](docs/roadmap.md), [vertical slice](docs/vertical_slice.md) ve [son uygulama raporu](docs/sessions/04-bounty-loop-report.md) okunur. Sayısal çalışma değerlerinin tek kaynağı [config](packages/shared/src/config.ts); belgelerdeki gelecek kuralları uygulanmış özellik sayılmaz.
 
 [Vizyon](docs/vision.md) · [oyun tasarımı](docs/game_design.md) · [fizik sözleşmesi](docs/physics_contract.md) · [multiplayer](docs/multiplayer_architecture.md) · [ekonomi](docs/economy.md) · [art bible](docs/art_bible.md) · [arayüz](docs/user_interface.md) · [test](docs/testing.md) · [riskler](docs/risk_register.md) · [ADR](docs/decisions/0001-stack-and-boundaries.md).
 

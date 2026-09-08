@@ -1,0 +1,15 @@
+{
+  "browser": "Chrome / Playwright",
+  "viewport": "1440x900",
+  "backend": "WebGL2",
+  "drawCalls": 15,
+  "triangles": 54454,
+  "frameMs": 31.510833333333327,
+  "rttMs": 7.5,
+  "players": 2,
+  "distinctShips": true,
+  "movementObservedBothDirections": true,
+  "ownershipRejection": "NOT_OWNER",
+  "reconnectRestoredShip": true,
+  "duplicateShipCountAfterReconnect": 0
+}

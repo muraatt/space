@@ -10,6 +10,8 @@ import {
   type MissionInstance,
   type WorldState,
   type ServerMetrics,
+  type PublicPlayerIdentity,
+  STATION_PORT_ID,
 } from '@orbital/shared';
 import { length } from '@orbital/simulation';
 import { Connection } from './net/connection';
@@ -24,6 +26,7 @@ import { CombatPanel } from './ui/combat-panel';
 import { OrbitalMap } from './ui/orbital-map';
 import { TelemetryStrip } from './ui/telemetry-strip';
 import { OpsPanel } from './ui/ops-panel';
+import { DockingGuidance } from './ui/docking-guidance';
 import './styles.css';
 type View = {
   state?: WorldState;
@@ -37,7 +40,24 @@ type View = {
   planPending: boolean;
   missionPending: boolean;
   flightAllowed: boolean;
+  identityRequired: boolean;
+  registrationPending: boolean;
+  identity?: PublicPlayerIdentity;
 };
+function IdentityGate({ pending, error, onSubmit }: { pending: boolean; error: string; onSubmit: (username: string) => void }) {
+  const [username, setUsername] = useState('');
+  return <div className="identity-gate" data-testid="identity-gate">
+    <form onSubmit={(event) => { event.preventDefault(); onSubmit(username); }}>
+      <OrbitMark />
+      <small>ORBITAL NETWORK / FIRST ENTRY</small>
+      <h1>Pilot kimliğini oluştur</h1>
+      <p>Bu çağrı adı gemine kalıcı olarak bağlanır.</p>
+      <label>CALLSIGN<input data-testid="callsign-input" autoFocus autoComplete="off" maxLength={20} value={username} onChange={(event) => setUsername(event.target.value)} placeholder="MURAT" /></label>
+      {error && <output data-testid="identity-error">{error}</output>}
+      <button data-testid="register-identity" disabled={pending || username.trim().length < 3}>{pending ? 'BAĞLANIYOR…' : 'ENTER ORBITAL NETWORK'}</button>
+    </form>
+  </div>;
+}
 function OrbitMark() {
   return (
     <svg viewBox="0 0 40 40" aria-hidden="true">
@@ -61,6 +81,8 @@ export default function App() {
     planPending: false,
     missionPending: false,
     flightAllowed: false,
+    identityRequired: false,
+    registrationPending: false,
   });
   const [ready, setReady] = useState(false),
     [active, setActive] = useState(false),
@@ -133,6 +155,9 @@ export default function App() {
               planPending: connection.planPending,
               missionPending: connection.missionPending,
               flightAllowed: connection.flightInputAllowed(),
+              identityRequired: connection.identityRequired,
+              registrationPending: connection.registrationPending,
+              identity: connection.identity,
             });
         }, 250);
         let shown = false;
@@ -232,6 +257,7 @@ export default function App() {
         return;
       }
       if (view.state?.combat.playerDestroyed) { openCombat(); return; }
+      if (view.state?.docking.phase === 'DOCKED') { setOpsOpen(true); return; }
       if (!engine.current.connection.flightInputAllowed()) { openPlanner(); return; }
       setPlannerOpen(false);
       setMissionOpen(false);
@@ -247,7 +273,28 @@ export default function App() {
   };
   const state = view.state,
     activeDefinition = state ? shipDefinition(state.ship.definitionId) : undefined,
-    target = ORBIT_TARGETS.find((option) => option.id === targetId) ?? ORBIT_TARGETS[0],
+    activeMission = state?.missions.find((mission) => mission.id === state.profile.activeMissionId),
+    activeBountyTarget = state?.combat.contacts.find((contact) => contact.id === activeMission?.bounty?.targetId),
+    stationTarget = state ? {
+      id: state.station.id,
+      name: state.station.name,
+      altitudeKm: state.station.orbitAltitudeM / 1000,
+      phaseAheadRad: 0,
+      relation: 'canlı istasyon durumu · gerçek rendezvous hedefi',
+      entityId: state.station.id,
+      entityKind: 'STATION' as const,
+    } : undefined,
+    bountyTarget = activeBountyTarget ? {
+      id: activeBountyTarget.id,
+      name: `${activeBountyTarget.label} / ${activeBountyTarget.bountyClass}`,
+      altitudeKm: (activeBountyTarget.orbitAltitudeM ?? 0) / 1000,
+      phaseAheadRad: 0,
+      relation: 'canlı kaçak hedef · otoriter orbital intercept',
+      entityId: activeBountyTarget.id,
+      entityKind: 'BOUNTY' as const,
+    } : undefined,
+    maneuverTargets = [...ORBIT_TARGETS, ...(stationTarget ? [stationTarget] : []), ...(bountyTarget ? [bountyTarget] : [])],
+    target = maneuverTargets.find((option) => option.id === targetId) ?? ORBIT_TARGETS[0],
     selectedCandidate =
       state?.maneuver?.candidate ??
       view.plan?.candidates.find((candidate) => candidate.type === selectedType);
@@ -266,11 +313,15 @@ export default function App() {
   };
   const requestPlan = () => {
     setSelectedType(undefined);
-    engine.current?.connection.requestPlan({
-      kind: 'CIRCULAR_ORBIT',
-      radiusM: CONFIG.earthRadius + target.altitudeKm * 1000,
-      phaseAheadRad: target.phaseAheadRad,
-    });
+    engine.current?.connection.requestPlan(target.entityKind === 'STATION' && target.entityId
+      ? { kind: 'STATION_RENDEZVOUS', stationId: target.entityId }
+      : target.entityKind === 'BOUNTY' && target.entityId
+        ? { kind: 'ORBITAL_ENTITY_INTERCEPT', entityId: target.entityId }
+      : {
+          kind: 'CIRCULAR_ORBIT',
+          radiusM: CONFIG.earthRadius + target.altitudeKm * 1000,
+          phaseAheadRad: target.phaseAheadRad,
+        });
   };
   const chooseTarget = (id: string) => {
     setTargetId(id);
@@ -322,22 +373,40 @@ export default function App() {
       engine.current?.controls.activate();
     });
   };
+  const selectStation = () => {
+    if (!state) return;
+    setTargetId(state.station.id);
+    setSelectedType(undefined);
+    if (engine.current) engine.current.connection.plan = undefined;
+    engine.current?.connection.selectStation(state.station.id);
+  };
+  const requestDock = () => state && engine.current?.connection.requestDock(state.station.id, STATION_PORT_ID);
+  const undock = () => state && engine.current?.connection.undock(state.station.id);
   const connected = view.status === 'Bağlı',
     destroyed = !!state?.combat.playerDestroyed,
+    docked = state?.docking.phase === 'DOCKED',
     flying = active && connected && view.flightAllowed && !help && !credits,
     controlLabel = !connected ? 'BAĞLANTI YOK' : destroyed ? 'GEMİ İMHA EDİLDİ'
-      : !view.flightAllowed ? 'MANEVRA KUMANDASI' : flying ? 'KUMANDA ETKİN' : 'UÇUŞA ODAKLAN',
+      : docked ? 'İSTASYONA KENETLİ' : !view.flightAllowed ? 'MANEVRA KUMANDASI' : flying ? 'KUMANDA ETKİN' : 'UÇUŞA ODAKLAN',
     controlHint = !connected ? 'Kumandayı devral ile yeniden bağlan'
       : destroyed ? 'Kurtarmayı aç ve yedek araç talep et'
+      : docked ? 'OPS panelinden servisleri aç veya güvenli ayrıl'
       : !view.flightAllowed ? 'Doğrudan uçuş için manevrayı iptal et'
       : flying ? 'WASD · R/F · Oklar · Q/E' : 'Uzay görünümüne tıkla veya kumandayı devral',
-    activeMission = state?.missions.find((mission) => mission.id === state.profile.activeMissionId),
     selectedContact = state?.combat.contacts.find((contact) => contact.id === state.combat.selectedTargetId),
-    mapTargetRadius = selectedContact ? length(selectedContact.position)
+    stationSelected = !!state && state.docking.selectedStationId === state.station.id,
+    mapTargetRadius = activeBountyTarget ? length(activeBountyTarget.position)
+      : stationSelected ? length(state!.station.position)
+      : selectedContact ? length(selectedContact.position)
       : activeMission ? CONFIG.earthRadius + activeMission.destination.altitudeKm * 1000
       : view.plan ? CONFIG.earthRadius + target.altitudeKm * 1000 : undefined,
     anySystemOpen = plannerOpen || missionOpen || hangarOpen || combatOpen;
   const navigateMission = (mission: MissionInstance) => {
+    if (mission.bounty) {
+      chooseTarget(mission.bounty.targetId);
+      openPlanner();
+      return;
+    }
     const matching = ORBIT_TARGETS.find((option) => option.altitudeKm === mission.destination.altitudeKm);
     if (matching) chooseTarget(matching.id);
     openPlanner();
@@ -346,6 +415,7 @@ export default function App() {
     <main className="app-shell">
       <canvas ref={canvasRef} className="flight-canvas" aria-label="Uçuş görünümü" tabIndex={0} />
       <div className="screen-vignette" />
+      {view.identityRequired && <IdentityGate pending={view.registrationPending} error={view.error} onSubmit={(username) => engine.current?.connection.register(username)} />}
       <header className="topbar">
         <div className="brand">
           <OrbitMark />
@@ -363,14 +433,14 @@ export default function App() {
         <div className="connection">
           <i className={view.status === 'Bağlı' ? 'live' : ''} />
           <div>
-            {view.status}
-            <small>YEREL EVREN · {view.rtt.toFixed(0)} ms</small>
+            {view.identity?.callsign ? `${view.identity.callsign} · ${view.status}` : view.status}
+            <small>PAYLAŞILAN EVREN · {view.rtt.toFixed(0)} ms</small>
           </div>
           <span className="version">01.0</span>
         </div>
       </header>
       {!anySystemOpen && <div className="hud-left">
-        <OrbitalMap state={state} targetRadiusM={mapTargetRadius} targetPosition={selectedContact?.position} candidate={selectedCandidate} />
+        <OrbitalMap state={state} targetRadiusM={mapTargetRadius} targetPosition={activeBountyTarget?.position ?? (stationSelected ? state?.station.position : selectedContact?.position)} targetVelocity={activeBountyTarget?.velocity ?? selectedContact?.velocity} candidate={selectedCandidate} />
         <section className="vehicle-card">
           <div><small>ACTIVE VEHICLE / {activeDefinition?.callsign ?? '—'}</small><h2>{activeDefinition?.name ?? 'Bağlanıyor'}</h2></div>
           <span>{state ? `${state.ship.massKg.toFixed(0)} kg` : '—'} · {state?.combat.region ?? '—'}</span>
@@ -384,6 +454,7 @@ export default function App() {
         <button className="mission-toggle" disabled={!ready} onClick={openMissions}>GÖREV KONTROLÜ</button>
         <button className="mission-toggle" disabled={!ready} onClick={openHangar}>HANGAR VE SERVİS</button>
         <button className="combat-toggle" disabled={!ready} onClick={openCombat}>ATEŞ KONTROLÜ</button>
+        <button className="station-toggle" disabled={!ready} onClick={selectStation}>{stationSelected ? 'İSTASYON HEDEFTE' : 'İSTASYONU HEDEFLE'}</button>
         <span className="scene-control"><button aria-pressed={scene === 'orbit_day'} onClick={() => goScene(false)}>☀ Gündüz</button><button aria-pressed={scene === 'orbit_night'} onClick={() => goScene(true)}>◐ Gece</button></span>
       </nav>}
       <ManeuverPanel
@@ -400,6 +471,7 @@ export default function App() {
         onSelect={setSelectedType}
         onExecute={executePlan}
         onCancel={cancelPlan}
+        targets={maneuverTargets}
       />
       <MissionPanel
         open={missionOpen}
@@ -419,6 +491,10 @@ export default function App() {
           engine.current?.connection.identifyTarget(mission.id, mission.destination.id)
         }
         onAbandon={(missionId) => engine.current?.connection.abandonMission(missionId)}
+        onSelectStation={() => {
+          selectStation();
+          closeSystems();
+        }}
       />
       <HangarPanel
         open={hangarOpen}
@@ -484,7 +560,8 @@ export default function App() {
         <span />
       </div>
       {!anySystemOpen && <TelemetryStrip state={state} clock={clock} onCamera={resetCamera} onDebug={() => setDebug(v => !v)} />}
-      {!anySystemOpen && <OpsPanel state={state} expanded={opsOpen} onToggle={() => setOpsOpen(v => !v)} onMissions={openMissions} onPlanner={openPlanner} onCombat={openCombat} />}
+      {!anySystemOpen && <DockingGuidance state={state} />}
+      {!anySystemOpen && <OpsPanel state={state} expanded={opsOpen} onToggle={() => setOpsOpen(v => !v)} onMissions={openMissions} onPlanner={openPlanner} onCombat={openCombat} onSelectStation={selectStation} onDock={requestDock} onUndock={undock} onServices={openHangar} />}
       {debug && <DebugHud metrics={view.metrics} state={state} server={view.server} />}
       {!anySystemOpen && <footer className="flight-strip">
         <div className="strip-status">

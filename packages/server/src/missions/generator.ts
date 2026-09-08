@@ -5,6 +5,7 @@ import {
   type ManeuverPlanResult,
   type ManeuverTarget,
   type MissionInstance,
+  type CombatTargetState,
 } from '@orbital/shared';
 
 export const MISSION_TARGETS = {
@@ -144,4 +145,53 @@ export function generateMissionPool(
       },
     });
   return missions;
+}
+
+export function generateBountyPool(
+  factionId: FactionId,
+  targets: CombatTargetState[],
+  plans: ReadonlyMap<string, ManeuverPlanResult>,
+): MissionInstance[] {
+  return targets.flatMap((target) => {
+    if (!target.bountyClass || !target.threat || target.destroyed) return [];
+    const plan = plans.get(target.id),
+      candidate = plan?.candidates.reduce((best, item) =>
+        !best || item.estimatedDeltaVMps < best.estimatedDeltaVMps ? item : best, undefined as typeof plan.candidates[number] | undefined);
+    if (!candidate) return [];
+    const values = target.bountyClass === 'SCOUT'
+      ? [CONFIG.bountyScoutRewardCredits, CONFIG.bountyScoutReputation]
+      : target.bountyClass === 'FIGHTER'
+        ? [CONFIG.bountyFighterRewardCredits, CONFIG.bountyFighterReputation]
+        : [CONFIG.bountyHeavyRewardCredits, CONFIG.bountyHeavyReputation];
+    return [{
+      id: `bounty-${target.id}`,
+      type: 'BOUNTY',
+      title: `${target.label} yakalama emri`,
+      briefing: `${target.bountyClass} sınıfı kaçak teması bul, doğrula ve etkisiz hale getir.`,
+      factionId,
+      status: 'AVAILABLE',
+      destination: {
+        id: target.id,
+        name: `${target.label} · ${Math.round((target.orbitAltitudeM ?? 0) / 1000)} km`,
+        altitudeKm: Math.round((target.orbitAltitudeM ?? 0) / 1000),
+        toleranceM: CONFIG.bountyAcquireRangeM,
+        target: { kind: 'NEAR_RENDEZVOUS_STATE', state: { position: [...target.position], velocity: [...target.velocity] } },
+      },
+      reward: { credits: values[0], reputation: values[1] },
+      estimatedEtaSeconds: candidate.etaSeconds,
+      difficulty: target.threat === 'LOW' ? 'BAŞLANGIÇ' : 'STANDART',
+      reachable: true,
+      bounty: {
+        targetId: target.id,
+        targetLabel: target.label,
+        targetClass: target.bountyClass,
+        threat: target.threat,
+        acquired: false,
+        neutralized: false,
+        rewardIssued: false,
+        estimatedDeltaVMps: candidate.estimatedDeltaVMps,
+        estimatedPropellantKg: candidate.estimatedPropellantKg,
+      },
+    } satisfies MissionInstance];
+  });
 }

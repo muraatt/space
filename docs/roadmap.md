@@ -36,6 +36,14 @@ Kabul: botla savaş, hasar al, gemiyi kaybet, kargo/modül kaybını gör ve tem
 
 Risk: haksız görünür isabet, okunmaz efekt, ücretsiz araçtan para üretimi. Tamamlanma: bot savaşı→imha→sigorta gerçek akışı ve açık bölge kuralları; polis/diplomasi ve gerçek oyuncu multiplayer'ı eklenmez.
 
+### O4 sonrası orbital sandbox bütünleme
+
+AEGIS istasyon/docking temeli ve bounty loop, ana altı oturum sırasını değiştirmeyen O4 sonrası bütünleme geçişleridir. Güncel yerel sandbox üç canlı hedef sınıfını otoriter ECI propagation, yakın-rendezvous planner, mevcut savaş, tek ödül, fiziksel istasyon dönüşü, manuel docking ve mevcut servislerle bağlar. Kanıt ve sınırlar [bounty loop raporunda](sessions/04-bounty-loop-report.md) tutulur. Bu bütünleme O5 hesap, PostgreSQL, squad veya multiplayer kapsamını erkene çekmez.
+
+### Paylaşılan sandbox Phase 0
+
+O5'in tamamını açmadan önce yapılan dar Phase 0 geçişi; kilitli çağrı adı, opak oyuncu kimliği, kimlik başına tek başlangıç gemisi, dayanıklı asgari kimlik kaydı ve iki gerçek istemcinin aynı otoriter sunucuda karşılıklı görünürlüğünü sağlar. Vercel yalnız statik istemciyi taşır; sürekli dünya döngüsü tek uzun ömürlü Node authority üzerinde kalır. Parola, PostgreSQL, squad, ortak görev ve ölçek çalışması O5'te kalır. Kanıt [Phase 0 raporunda](sessions/05-shared-phase-00-report.md) tutulur.
+
 ## Oturum 5 — Multiplayer ve kalıcı evren
 
 Giriş: O4 otoriter savaş/kayıp. Sıra: hesap/protokol ownership → 8–16 oyuncu sunucusu → PostgreSQL/migration/transaction → dört kişilik squad/ortak görev → çıkış/combat tag/kopma/geri dönüş → restart restore → iki gerçek tarayıcı + yapay istemci → düşük maliyetli staging reçetesi.

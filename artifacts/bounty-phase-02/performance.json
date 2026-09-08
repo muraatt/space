@@ -1,0 +1,19 @@
+{
+  "backend": "WebGL2",
+  "viewport": "1920x1080",
+  "durationSeconds": 3,
+  "frames": 82,
+  "averageFrameMs": 37.94268292682926,
+  "p95FrameMs": 55.20000000000073,
+  "drawCalls": 27,
+  "triangles": 56018,
+  "rttMs": 6.799999952316284,
+  "server": {
+    "tickMs": 4.5253000000011525,
+    "tickP95Ms": 2.6748999999999796,
+    "tickP99Ms": 5.989099999998871,
+    "backlogMs": 12.919966666666689,
+    "rejectedCommands": 0
+  },
+  "bountyContacts": 3
+}

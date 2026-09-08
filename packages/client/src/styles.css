@@ -43,6 +43,23 @@ a {
   position: relative;
   overflow: hidden;
 }
+
+.identity-gate { position: fixed; inset: 0; z-index: 120; display: grid; place-items: center; background: radial-gradient(circle at 50% 30%, rgba(17,52,70,.88), rgba(2,8,13,.97) 58%); backdrop-filter: blur(9px); }
+.identity-gate form { width: min(430px, calc(100vw - 36px)); padding: 32px; border: 1px solid rgba(117,219,245,.38); background: rgba(4,15,22,.94); box-shadow: 0 24px 90px #000b, inset 0 1px rgba(255,255,255,.06); color: #d8f4fb; }
+.identity-gate svg { width: 46px; stroke: #78dff3; fill: none; margin-bottom: 18px; }
+.identity-gate .mark-dot { fill: #fff; }
+.identity-gate small { display:block; color:#71cfe4; letter-spacing:.16em; }
+.identity-gate h1 { margin: 9px 0 4px; font: 500 25px/1.2 system-ui; }
+.identity-gate p { color:#92aab3; margin: 0 0 26px; }
+.identity-gate label { display:grid; gap:8px; color:#79cfe2; font-size:11px; letter-spacing:.14em; }
+.identity-gate input { padding:15px 14px; border:1px solid #34677a; background:#06131b; color:#eefcff; font:600 18px/1 monospace; text-transform:uppercase; outline:none; }
+.identity-gate input:focus { border-color:#79dff4; box-shadow:0 0 0 2px #51bfd22d; }
+.identity-gate output { display:block; margin-top:10px; color:#ff897c; font:12px monospace; }
+.identity-gate button { width:100%; margin-top:18px; padding:14px; border:1px solid #69d8ef; background:#123f4c; color:#effcff; font-weight:700; letter-spacing:.08em; cursor:pointer; }
+.identity-gate button:disabled { opacity:.45; cursor:default; }
+.map-remote-player { fill:#83e8f5; stroke:#83e8f5; filter:url(#map-glow); }
+.map-remote-player circle { fill:#071a22; stroke-width:1.5; }
+.map-remote-player text { font:7px monospace; stroke:none; fill:#c8f8ff; letter-spacing:.05em; }
 .flight-canvas {
   position: absolute;
   width: 100%;
@@ -1926,6 +1943,7 @@ dd {
 .telemetry-value em { margin-left: 3px; color: #7e96a2; font: 7px Consolas; font-style: normal; }
 .telemetry-strip .telemetry-context { background: #c9955910; margin: 0 -8px; padding: 9px 8px; border-left: 1px solid #d7a462; }
 .telemetry-strip .telemetry-context.combat { border-left-color: #e66e5b; }
+.telemetry-strip .telemetry-context.docking { border-left-color: #67d5d8; background: #4dbfc510; }
 .telemetry-strip footer { display: flex; justify-content: space-between; padding-top: 10px; }
 .telemetry-strip footer button { color: #8fa8b5; font: 8px Consolas; }
 
@@ -1953,6 +1971,39 @@ dd {
 .ops-content dl { margin-top: 7px; gap: 4px; font-size: 8px; }
 .ops-content nav { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; height: auto; margin-top: 13px; }
 .ops-content nav button { padding: 8px 3px; border: 1px solid #7896a540; font: 7px Consolas; color: #a9bec7; }
+.ops-station-actions { display: flex; gap: 4px; margin-top: 8px; }
+.ops-station-actions button { flex: 1; padding: 7px 5px; border: 1px solid #6eb7bc66; color: #bde7e5; font: 7px Consolas; letter-spacing: .7px; }
+
+.map-station-orbit { fill: none; stroke: #6bd5d8; stroke-width: .8; stroke-dasharray: 2 4; opacity: .55; }
+.map-station-marker { fill: #08151e; stroke: #6bd5d8; stroke-width: 1; opacity: .85; }
+.map-station-marker.selected { fill: #e0b16f; stroke: #fff0ce; filter: url(#map-glow); opacity: 1; }
+
+.docking-guidance {
+  position: absolute;
+  z-index: 8;
+  left: 50%;
+  bottom: 83px;
+  transform: translateX(-50%);
+  min-width: 300px;
+  padding: 8px 18px;
+  text-align: center;
+  background: #06121bc7;
+  border-top: 1px solid #65c9ce88;
+  color: #bfe4e4;
+  pointer-events: none;
+}
+.docking-guidance small { display: block; color: #718f9c; font: 7px Consolas; letter-spacing: 1.2px; }
+.docking-guidance strong { display: block; margin-top: 3px; color: #78e0df; font: 12px Consolas; letter-spacing: 1.1px; }
+.docking-guidance > span { display: block; margin-top: 3px; color: #a8bbc2; font: 8px Consolas; }
+.docking-guidance b { display: block; margin-top: 4px; color: #ed806b; font: 8px Consolas; }
+.docking-guidance.warning { border-color: #e66e5b; }
+.docking-guidance.warning strong { color: #f08a72; }
+.docking-guidance.docked strong { color: #dcb173; }
+.dock-axis { position: absolute; left: 50%; top: -31px; width: 88px; height: 30px; transform: translateX(-50%); }
+.dock-axis span { position: absolute; inset: 7px 34px; border: 1px solid #79d8d5; border-radius: 50%; }
+.dock-axis i { position: absolute; top: 14px; width: 30px; border-top: 1px solid #79d8d5; }
+.dock-axis i:first-child { left: 0; }
+.dock-axis i:last-child { right: 0; }
 
 .scene-caption { top: 142px; left: 50%; transform: translateX(-50%); text-align: center; }
 .scene-caption h2 { font-size: 19px; margin: 7px 0 2px; }
@@ -2030,6 +2081,10 @@ dd {
 .mission-card { margin: 0; min-height: 315px; display: flex; flex-direction: column; }
 .mission-card p { font-size: 10px; line-height: 1.45; min-height: 44px; }
 .mission-card .mission-accept { margin-top: auto; }
+.mission-card[data-testid="mission-bounty"] { border-color: rgba(221,162,99,.52); background: linear-gradient(135deg,rgba(42,27,20,.72),rgba(9,24,34,.94)); }
+.bounty-result { display: grid; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(216,166,105,.35); }
+.bounty-result b { color: #e5b572; }
+.bounty-result button { justify-self: start; }
 .hangar-panel .hangar-fleet { grid-template-columns: 1fr 1fr; }
 .hangar-panel .service-grid { grid-template-columns: repeat(3, 1fr); }
 .hangar-panel .upgrade-grid { grid-template-columns: repeat(4, 1fr); }

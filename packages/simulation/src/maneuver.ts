@@ -204,6 +204,114 @@ function targetAt(target: ResolvedTarget, seconds: number): OrbitalState {
   return propagateKepler(target.initialState, seconds);
 }
 
+function solveLinear3(matrix: number[][], rhs: Vec3): Vec3 | undefined {
+  const rows = matrix.map((row, index) => [...row, rhs[index]]);
+  for (let column = 0; column < 3; column++) {
+    let pivot = column;
+    for (let row = column + 1; row < 3; row++)
+      if (Math.abs(rows[row][column]) > Math.abs(rows[pivot][column])) pivot = row;
+    if (Math.abs(rows[pivot][column]) < 1e-9) return undefined;
+    [rows[column], rows[pivot]] = [rows[pivot], rows[column]];
+    const divisor = rows[column][column];
+    for (let item = column; item < 4; item++) rows[column][item] /= divisor;
+    for (let row = 0; row < 3; row++) {
+      if (row === column) continue;
+      const factor = rows[row][column];
+      for (let item = column; item < 4; item++) rows[row][item] -= factor * rows[column][item];
+    }
+  }
+  return [rows[0][3], rows[1][3], rows[2][3]];
+}
+
+/** Finite-burn shooting solution for nearby objects that share an orbital plane. */
+function runLocalRendezvous(ship: ShipState, target: ResolvedTarget, coastSeconds: number): RawCandidate {
+  const initial: OrbitalState = { position: ship.position, velocity: ship.velocity },
+    expectedAtBurn = targetAt(target, coastSeconds),
+    nominalArrival = propagateKepler(initial, coastSeconds);
+  let departureVector = scale(sub(expectedAtBurn.position, nominalArrival.position), 1 / coastSeconds);
+  const fly = (vector: Vec3) => {
+    const arrivalState = propagateKepler(
+      { position: initial.position, velocity: add(initial.velocity, vector) },
+      coastSeconds,
+    );
+    return { arrivalState };
+  };
+  for (let iteration = 0; iteration < 8; iteration++) {
+    const base = fly(departureVector), error = sub(expectedAtBurn.position, base.arrivalState.position);
+    if (length(error) < 2) break;
+    const epsilon = 0.05,
+      columns = ([0, 1, 2] as const).map((axis) => {
+        const perturbed = [...departureVector] as Vec3;
+        perturbed[axis] += epsilon;
+        return scale(sub(fly(perturbed).arrivalState.position, base.arrivalState.position), 1 / epsilon);
+      }),
+      correction = solveLinear3(
+        [
+          [columns[0][0], columns[1][0], columns[2][0]],
+          [columns[0][1], columns[1][1], columns[2][1]],
+          [columns[0][2], columns[1][2], columns[2][2]],
+        ],
+        error,
+      );
+    if (!correction || !correction.every(Number.isFinite)) throw new PlannerFailure('NO_FEASIBLE_TRANSFER');
+    const capped = length(correction) > 150 ? scale(correction, 150 / length(correction)) : correction;
+    departureVector = add(departureVector, capped);
+  }
+  const flown = fly(departureVector),
+    departureDirection = length(departureVector) > 1e-9
+      ? normalize(departureVector)
+      : tangential(initial.position, target.normal, target.direction),
+    departure = simulateFiniteBurn(
+      initial,
+      ship.mass,
+      length(departureVector),
+      () => departureDirection,
+      ship.performance,
+    ),
+    arrivalVector = sub(expectedAtBurn.velocity, flown.arrivalState.velocity),
+    arrivalDeltaV = length(arrivalVector),
+    arrival = simulateFiniteBurn(
+      flown.arrivalState,
+      departure.mass,
+      arrivalDeltaV,
+      (state) => sub(expectedAtBurn.velocity, state.velocity),
+      ship.performance,
+    ),
+    etaSeconds = coastSeconds + arrival.durationSeconds,
+    expectedTarget = targetAt(target, etaSeconds),
+    positionErrorM = length(sub(flown.arrivalState.position, expectedAtBurn.position)),
+    radiusErrorM = Math.abs(length(flown.arrivalState.position) - length(expectedAtBurn.position)),
+    velocityErrorMps = length(sub(add(flown.arrivalState.velocity, arrivalVector), expectedAtBurn.velocity));
+  if (positionErrorM > POSITION_TOLERANCE_M || radiusErrorM > RADIUS_TOLERANCE_M || velocityErrorMps > VELOCITY_TOLERANCE_MPS)
+    throw new PlannerFailure('ARRIVAL_TOLERANCE_NOT_MET');
+  return {
+    estimatedDeltaVMps: length(departureVector) + arrivalDeltaV,
+    estimatedPropellantKg: ship.mass.propellantKg - arrival.mass.propellantKg,
+    waitSeconds: 0,
+    transferDurationSeconds: etaSeconds,
+    etaSeconds,
+    burns: [
+      {
+        offsetSeconds: 0,
+        durationSeconds: departure.durationSeconds,
+        deltaVMps: length(departureVector),
+        steering: 'INERTIAL_VECTOR',
+        direction: departureDirection,
+      },
+      {
+        offsetSeconds: coastSeconds,
+        durationSeconds: arrival.durationSeconds,
+        deltaVMps: arrivalDeltaV,
+        steering: 'MATCH_TARGET_VELOCITY',
+      },
+    ],
+    expectedFinalState: expectedTarget,
+    expectedFinalMass: arrival.mass,
+    expectedReserveDeltaVMps: availableDeltaV(arrival.mass, ship.performance.specificImpulseSeconds),
+    verification: { positionErrorM, radiusErrorM, velocityErrorMps },
+  };
+}
+
 function waitForPhase(
   phaseAhead: number,
   n1: number,
@@ -452,7 +560,16 @@ export function generateManeuverPlan(ship: ShipState, requestedTarget: ManeuverT
   const radius = length(ship.position),
     raw: RawCandidate[] = [],
     reasons: ManeuverRejectionReason[] = [];
-  if (Math.abs(target.radiusM - radius) <= 1_000) {
+  const directRangeM = length(sub(target.initialState.position, ship.position));
+  if (requestedTarget.kind === 'NEAR_RENDEZVOUS_STATE' && directRangeM <= 100_000) {
+    for (const seconds of [1_200, 900, 600]) {
+      try {
+        raw.push(runLocalRendezvous(ship, target, seconds));
+      } catch (error) {
+        reasons.push(error instanceof PlannerFailure ? error.reason : 'NO_FEASIBLE_TRANSFER');
+      }
+    }
+  } else if (Math.abs(target.radiusM - radius) <= 1_000) {
     for (const revolutions of [1, 2, 3, 4, 5]) {
       try {
         raw.push(runPhasingTransfer(ship, target, revolutions));
@@ -462,9 +579,17 @@ export function generateManeuverPlan(ship: ShipState, requestedTarget: ManeuverT
     }
   } else {
     const transferAxis = (radius + target.radiusM) / 2,
-      circularSpeed = Math.sqrt(CONFIG.earthMu / radius),
       transferSpeed = Math.sqrt(CONFIG.earthMu * (2 / radius - 1 / transferAxis)),
-      minimumDepartureDeltaV = Math.abs(transferSpeed - circularSpeed);
+      currentProgradeSpeed = dot(ship.velocity, tangential(ship.position, target.normal, target.direction)),
+      // A manual undock leaves a small, real velocity offset from the local
+      // circular orbit. Base the departure burn on that authoritative velocity
+      // instead of silently assuming the ship is already circularized.
+      minimumDepartureDeltaV = Math.max(
+        0.01,
+        target.radiusM > radius
+          ? transferSpeed - currentProgradeSpeed
+          : currentProgradeSpeed - transferSpeed,
+      );
     for (const factor of [1, 1.15, 1.35, 1.6, 1.9]) {
       try {
         raw.push(runRadialTransfer(ship, target, minimumDepartureDeltaV * factor));

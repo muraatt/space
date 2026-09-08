@@ -56,28 +56,35 @@ export function dispatch(world: WorldState, data: unknown, ownedShipId: string) 
   if (c.type === 'fire_missile') return { ok: true as const, missileRequest: { commandId: c.commandId } };
   if (c.type === 'activate_countermeasure')
     return { ok: true as const, countermeasureRequest: { commandId: c.commandId } };
+  if (c.type === 'select_station')
+    return { ok: true as const, stationSelectionRequest: { stationId: c.stationId, commandId: c.commandId } };
+  if (c.type === 'request_dock')
+    return { ok: true as const, dockingRequest: { stationId: c.stationId, portId: c.portId, commandId: c.commandId } };
+  if (c.type === 'undock')
+    return { ok: true as const, undockRequest: { stationId: c.stationId, commandId: c.commandId } };
   if (c.type === 'select_ship')
     return {
       ok: true as const,
-      shipSelectionRequest: { targetShipId: c.targetShipId, transactionId: c.transactionId },
+      shipSelectionRequest: { targetShipId: c.targetShipId, stationId: c.stationId, transactionId: c.transactionId },
     };
   if (c.type === 'buy_fuel')
     return {
       ok: true as const,
-      fuelRequest: { amountKg: c.amountKg, transactionId: c.transactionId },
+      fuelRequest: { amountKg: c.amountKg, stationId: c.stationId, transactionId: c.transactionId },
     };
   if (c.type === 'repair_ship')
-    return { ok: true as const, repairRequest: { transactionId: c.transactionId } };
+    return { ok: true as const, repairRequest: { stationId: c.stationId, transactionId: c.transactionId } };
   if (c.type === 'buy_ammunition')
     return {
       ok: true as const,
-      ammunitionRequest: { amountKg: c.amountKg, transactionId: c.transactionId },
+      ammunitionRequest: { amountKg: c.amountKg, stationId: c.stationId, transactionId: c.transactionId },
     };
   if (c.type === 'install_upgrade')
     return {
       ok: true as const,
-      upgradeRequest: { upgradeId: c.upgradeId, transactionId: c.transactionId },
+      upgradeRequest: { upgradeId: c.upgradeId, stationId: c.stationId, transactionId: c.transactionId },
     };
+  if (world.docking.phase === 'DOCKED') return { ok: false as const, code: 'DOCKED' };
   if (
     world.maneuver &&
     ['PLANNED', 'EXECUTING_BURN', 'COASTING', 'ARRIVAL_BURN'].includes(world.maneuver.status)

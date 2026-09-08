@@ -10,9 +10,12 @@ import {
   type SceneId,
   type Vec3,
   type CombatState,
+  STATION_ID,
+  STATION_PORT_ID,
+  type StationState,
 } from '@orbital/shared';
 import { integrate } from './integrate';
-import { length, multiplyQuat, normalizedQuat, rotate } from './coordinates';
+import { add, length, multiplyQuat, normalizedQuat, rotate, scale } from './coordinates';
 import { propulsionStep } from './propulsion';
 import { totalMassKg } from './mass';
 export function initialWorld(scene: SceneId = 'orbit_day', seed = 4401): WorldState {
@@ -47,9 +50,53 @@ export function initialWorld(scene: SceneId = 'orbit_day', seed = 4401): WorldSt
       installedUpgradeIds: [],
     };
   };
-  const kestrel = makeShip('KESTREL_LOGISTICS', CONFIG.shipId),
+  const stationRadius = CONFIG.earthRadius + CONFIG.stationAltitudeM,
+    stationPhase = scene === 'station_rendezvous' || scene === 'station_docking' || scene === 'bounty_sandbox'
+      ? 0 : CONFIG.stationInitialPhaseRad,
+    stationSpeed = Math.sqrt(CONFIG.earthMu / stationRadius),
+    station: StationState = {
+      id: STATION_ID,
+      name: 'AEGIS SERVİS İSTASYONU',
+      position: [stationRadius * Math.cos(stationPhase), 0, -stationRadius * Math.sin(stationPhase)],
+      velocity: [-stationSpeed * Math.sin(stationPhase), 0, -stationSpeed * Math.cos(stationPhase)],
+      orientation: [0, 0, 0, 1],
+      angularVelocity: [0, 0, 0],
+      bodyRadiusM: CONFIG.stationBodyRadiusM,
+      orbitAltitudeM: CONFIG.stationAltitudeM,
+      services: ['FUEL', 'REPAIR', 'AMMUNITION', 'HANGAR', 'CONTRACTS'],
+      ports: [{
+        id: STATION_PORT_ID,
+        name: 'ALPHA SERVİS PORTU',
+        capturePointLocal: [0, 0, CONFIG.stationPortCapturePointM],
+        approachAxisLocal: [0, 0, 1],
+        upAxisLocal: [0, 1, 0],
+        captureRadiusM: CONFIG.stationCaptureRadiusM,
+        maxRelativeSpeedMps: CONFIG.stationMaxDockingRelativeSpeedMps,
+        maxClosingSpeedMps: CONFIG.stationMaxDockingClosingSpeedMps,
+        maxLateralErrorM: CONFIG.stationMaxDockingLateralErrorM,
+        maxAlignmentErrorDeg: CONFIG.stationMaxDockingAlignmentErrorDeg,
+        maxRollErrorDeg: CONFIG.stationMaxDockingRollErrorDeg,
+      }],
+    },
+    kestrel = makeShip('KESTREL_LOGISTICS', CONFIG.shipId),
     raptor = makeShip('RAPTOR_COMBAT', 'raptor-01'),
-    activeShip = scene === 'intercept' || scene === 'missile_hit' ? raptor : kestrel,
+    activeShip = scene === 'intercept' || scene === 'missile_hit' || scene === 'bounty_sandbox' ? raptor : kestrel,
+    bountyContacts = ([
+      ['bounty-target-scout-01', 'ROGUE S-09', 'SCOUT', 'LOW', 460_000, 0.003, 65, 9],
+      ['bounty-target-fighter-01', 'ROGUE F-17', 'FIGHTER', 'MEDIUM', 480_000, 0.016, 110, 13],
+      ['bounty-target-heavy-01', 'ROGUE H-31', 'HEAVY', 'HIGH', 520_000, 0.026, 180, 18],
+    ] as const).map(([id, label, bountyClass, threat, altitudeM, phase, health, radiusM]) => {
+      const targetRadius = CONFIG.earthRadius + altitudeM,
+        targetSpeed = Math.sqrt(CONFIG.earthMu / targetRadius),
+        position: Vec3 = [targetRadius * Math.cos(phase), 0, -targetRadius * Math.sin(phase)],
+        targetVelocity: Vec3 = [-targetSpeed * Math.sin(phase), 0, -targetSpeed * Math.cos(phase)];
+      return {
+        id, label, position, velocity: targetVelocity, radiusM, health, maxHealth: health,
+        eligible: false, destroyed: false, occluded: false,
+        rangeM: length(add(position, scale(activeShip.position, -1))),
+        lineOfSight: true, engagementAllowed: false, bountyClass, threat, orbitAltitudeM: altitudeM,
+      };
+    }),
     combat: CombatState = {
       region:
         scene === 'orbit_night' || scene === 'missile_hit'
@@ -73,6 +120,7 @@ export function initialWorld(scene: SceneId = 'orbit_day', seed = 4401): WorldSt
           lineOfSight: true,
           engagementAllowed: scene === 'orbit_night' || scene === 'missile_hit',
         },
+        ...bountyContacts,
       ],
       laserEnergy: 100,
       laserHeat: 0,
@@ -107,6 +155,16 @@ export function initialWorld(scene: SceneId = 'orbit_day', seed = 4401): WorldSt
       },
       wrecks: [],
     };
+  if (scene === 'station_rendezvous' || scene === 'station_docking' || scene === 'bounty_sandbox') {
+    const portZ = CONFIG.stationPortCapturePointM,
+      separation = scene === 'bounty_sandbox' ? 0.5 : scene === 'station_docking' ? 8 : 4_000;
+    for (const ship of [kestrel, raptor]) {
+      ship.position = [station.position[0], station.position[1], station.position[2] + portZ + separation];
+      ship.velocity = [...station.velocity];
+      ship.orientation = [0, 0, 0, 1];
+      ship.angularVelocity = [0, 0, 0];
+    }
+  }
   return {
     universeId: CONFIG.universeId,
     scene,
@@ -116,6 +174,7 @@ export function initialWorld(scene: SceneId = 'orbit_day', seed = 4401): WorldSt
     controls: neutralControls(),
     profile: {
       playerId: 'local-pilot-01',
+      factionId: scene === 'bounty_sandbox' ? 'AURORA' : undefined,
       credits: CONFIG.startingCredits,
       reputation: 0,
       ownedShipIds: [CONFIG.shipId, 'raptor-01'],
@@ -123,16 +182,42 @@ export function initialWorld(scene: SceneId = 'orbit_day', seed = 4401): WorldSt
     },
     missions: [],
     ship: structuredClone(activeShip),
+    remotePlayers: [],
     hangar: { ships: [kestrel, raptor], processedTransactionIds: [] },
     combat,
+    station,
+    docking: {
+      phase: scene === 'bounty_sandbox' ? 'DOCKED' : 'NONE',
+      selectedStationId: scene === 'bounty_sandbox' ? STATION_ID : undefined,
+      portId: scene === 'bounty_sandbox' ? STATION_PORT_ID : undefined,
+      guidance: scene === 'bounty_sandbox' ? 'CAPTURED' : 'SELECT_STATION',
+      processedCommandIds: [],
+      impactCooldownUntilMs: 0,
+      rendezvousComplete: scene === 'station_docking' || scene === 'bounty_sandbox',
+      stationUpdatedAtMs: 0,
+    },
   };
 }
 export function step(world: WorldState): WorldState {
   const dt = CONFIG.fixedDt,
-    ship = world.ship;
+    ship = world.ship,
+    stationMotion = integrate(world.station.position, world.station.velocity, [0, 0, 0], dt),
+    station = { ...world.station, ...stationMotion };
   const authoritativeMassKg = totalMassKg(ship.mass);
   if (!Number.isFinite(ship.massKg) || Math.abs(ship.massKg - authoritativeMassKg) > 1e-9)
     throw new RangeError('Ship total mass is inconsistent with its mass components');
+  if (world.docking.phase === 'DOCKED') {
+    const port = station.ports.find(item => item.id === world.docking.portId) ?? station.ports[0],
+      capture = add(station.position, rotate(port.capturePointLocal, station.orientation)),
+      position = add(capture, scale(rotate(port.approachAxisLocal, station.orientation), 0.5));
+    return {
+      ...world,
+      tick: world.tick + 1,
+      station,
+      controls: neutralControls(),
+      ship: { ...ship, position, velocity: [...station.velocity], orientation: [0, 0, 0, 1], angularVelocity: [0, 0, 0] },
+    };
+  }
   const angularVelocity = ship.angularVelocity.map((v, i) => {
     const target = world.controls.rotation[i] * CONFIG.angularRate,
       limit = CONFIG.angularAcceleration * dt;
@@ -156,6 +241,7 @@ export function step(world: WorldState): WorldState {
   return {
     ...world,
     tick: world.tick + 1,
+    station,
     ship: {
       ...ship,
       ...motion,

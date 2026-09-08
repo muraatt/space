@@ -20,10 +20,12 @@ const errors: Record<string, string> = {
   MISSION_ACTIVE: 'Etkin görev sırasında hangar işlemi yapılamaz.',
   MANEUVER_ACTIVE: 'Etkin manevra sırasında hangar işlemi yapılamaz.',
   SERVICE_UNAVAILABLE: 'Servis için bir yörünge merkezinde bulunmalısın.',
+  SERVICE_REQUIRES_DOCKING: 'Servis için Aegis istasyonuna fiziksel olarak kenetlenmelisin.',
+  SERVICE_NOT_OFFERED: 'Bu istasyon istenen servisi sunmuyor.',
   SHIP_ALREADY_ACTIVE: 'Bu araç zaten aktif.',
 };
 
-function ShipCard({ ship, active, onSelect }: { ship: ShipState; active: boolean; onSelect: () => void }) {
+function ShipCard({ ship, active, blocked, onSelect }: { ship: ShipState; active: boolean; blocked: boolean; onSelect: () => void }) {
   const definition = shipDefinition(ship.definitionId),
     deltaV = availableDeltaV(ship.mass, ship.performance.specificImpulseSeconds);
   return (
@@ -49,7 +51,7 @@ function ShipCard({ ship, active, onSelect }: { ship: ShipState; active: boolean
         <dt>DAYANIKLILIK</dt>
         <dd>{ship.performance.durabilityRating}</dd>
       </dl>
-      <button onClick={onSelect} disabled={active} data-testid={`select-${ship.id}`}>
+      <button onClick={onSelect} disabled={active || blocked} data-testid={`select-${ship.id}`}>
         {active ? 'AKTİF ARAÇ' : 'AKTİF ARACI DEĞİŞTİR'}
       </button>
     </article>
@@ -90,13 +92,14 @@ export function HangarPanel({
     activeManeuver =
       !!state.maneuver &&
       ['PLANNED', 'EXECUTING_BURN', 'COASTING', 'ARRIVAL_BURN'].includes(state.maneuver.status),
-    blocked = activeMission || activeManeuver;
+    docked = state.docking.phase === 'DOCKED' && state.docking.selectedStationId === state.station.id,
+    blocked = activeMission || activeManeuver || !docked;
   return (
     <aside className="hangar-panel" aria-label="Hangar ve servisler">
       <div className="maneuver-heading">
         <div>
           <div className="eyebrow">03 / YÖRÜNGE HANGARI</div>
-          <h2>Araç ve servis</h2>
+          <h2>{docked ? `${state.station.name} servisleri` : 'Araç ve servis'}</h2>
         </div>
         <button onClick={onClose} aria-label="Hangarı kapat">
           [X]
@@ -112,6 +115,7 @@ export function HangarPanel({
             key={owned.id}
             ship={owned}
             active={owned.id === state.profile.activeShipId}
+            blocked={blocked}
             onSelect={() => onSelectShip(owned.id)}
           />
         ))}
@@ -119,7 +123,7 @@ export function HangarPanel({
       <section className="service-grid" aria-label="Servisler">
         <div className="service-heading">
           <span>AKTİF SERVİS · {definition.name}</span>
-          <b>{blocked ? 'İŞLEM KİLİTLİ' : 'YÖRÜNGE MERKEZİ'}</b>
+          <b>{!docked ? 'DOCKING GEREKLİ' : blocked ? 'İŞLEM KİLİTLİ' : 'AEGIS / DOCKED'}</b>
         </div>
         <article data-testid="fuel-service">
           <small>YAKIT</small>
@@ -202,6 +206,7 @@ export function HangarPanel({
         })}
       </section>
       {error && <p className="planner-error">{errors[error] ?? error}</p>}
+      {!docked && <p className="planner-error" data-testid="service-docking-required">SERVİS KİLİTLİ · Aegis Alpha portuna kenetlen.</p>}
       <p className="hangar-limit">
         Onarım gövde ve dört savaş alt sistemini birlikte yeniler. İmha edilen araç önce sigorta
         akışından kurtarılmalıdır.

@@ -32,4 +32,16 @@ O3 görev kontrolü **CONTRACTS/GÖREV KONTROLÜ** tam ekran sisteminde açılı
 
 O3 hangar tam ekran sistem olarak açılır ve diğer ana sistemleri kapatır. İki sahip olunan araç kartı aktif aracı, rolü, kuru kütleyi, ana itkiyi, kullanılabilir Δv'yi, kargo kapasitesini ve genel dayanıklılığı karşılaştırır. Raptor seçimi uçuş görünümündeki ad/çağrı kodu ile gemi siluetini günceller. Servis satırları mevcut/tamamlanmış yakıt, kondisyon ve mühimmatla otoriter fiyatı gösterir. Dört sabit modül kartı fiyat, etki, uyumluluk, slot ve kurulu durumunu taşır; bakiye sunucu onayıyla anında güncellenir. Sistem 1920×1080 içinde kaydırılabilir ve `[X]` her zaman görünürdür.
 
+## AEGIS istasyon ve docking arayüzü
+
+AEGIS haritada kendi otoriter ECI konumu ve osculating yörüngesiyle sürekli görünür. İstasyon seçildiğinde manevra bilgisayarına gerçek `STATION_RENDEZVOUS` hedefi gider; istemci hedef konumu üretmez. Rendezvous tamamlandıktan sonra sağ şeritte DOCKING bölümü menzil, bağıl hız, kapanma, yanal/dikey hata, ileri hizası ve yaw/pitch/roll hatalarını gösterir. Merkezdeki küçük kılavuz yalnız seçili istasyonda görünür ve `RENDEZVOUS REQUIRED`, `FOLLOW APPROACH AXIS`, `REDUCE RELATIVE SPEED`, `ALIGN ATTITUDE`, `CAPTURE READY` veya `CAPTURED` sonucunu otoriter snapshot'tan okur. Dünya görünümündeki port halkaları ve yaklaşma ekseni aynı kamera-bağıl çizim yolunu kullanır.
+
+OPS çekmecesi istasyon seçimi, capture isteği, dock sonrası servis erişimi ve undock için tek kısa işlem alanıdır. `DOCKED` durumunda uçuş girdisi gönderilmez; hangar başlığı AEGIS servis bağlamını ve durum satırı `AEGIS / DOCKED` bilgisini gösterir. İstasyon dışındayken hangar incelenebilir fakat yakıt, tamir, mühimmat, araç değiştirme ve yükseltme işlemleri kapalıdır. Her ret kullanıcıya açık bir neden olarak gösterilir.
+
+## Bounty sandbox arayüzü
+
+AEGIS'e docked iken aynı Görev Kontrolü ekranı üç canlı bounty kartını gösterir. Kartlar hedef adı, SCOUT/FIGHTER/HEAVY sınıfı, LOW/MEDIUM/HIGH tehdit, irtifa, otoriter planner ETA/Δv/yakıt ve sabit ödülü kısa satırlarda verir. Kabul dock durumuna bağlıdır. Uçuş HUD'ındaki OPS etkin hedefi, menzili, sınıfı, tehdidi, ödülü ve acquisition durumunu taşır; harita hedefin gerçek ECI yörüngesini gösterir.
+
+Görev ekranındaki `HEDEFİ MANEVRAYA AKTAR` yalnız stabil entity kimliğini gönderir; sunucu anlık hedef durumunu çözer. Acquisition sonrasında Ateş Kontrolü doğru hedefi ve yetkiyi gösterir. Tamamlanma kartı ödül, tüketilen yakıt/mühimmat, hasar, otoriter servis fiyatlarından operasyon maliyeti ve net sonucu sunar. `AEGIS'İ HEDEFLE` istasyonu seçer; transfer veya docking başlatmaz.
+
 Viewport kabulü: 1920×1080 ve 1280×720; kısa desktop'ta sol aksiyonlar footer'a taşmaz. Mobil oyun desteği bu slice'ın hedefi değildir. O2 manevra süre/yakıt/risk arayüzü; O3 fraksiyon, profil, hangar ve görev akışı; O4 hedef/hasar/kayıp/güvenli bölge bildirimi; O5 squad ve bağlantı durumu; O6 onboarding, ses ve grafik kalite seçenekleri. Onboarding final kabulünde yeni insan oyuncunun rehber almadan döngüyü bitirmesi ölçülür.

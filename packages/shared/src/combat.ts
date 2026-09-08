@@ -1,4 +1,5 @@
 import type { Vec3 } from './units';
+import type { BountyTargetClass, BountyThreat } from './mission';
 
 export type CombatRegion = 'SAFE' | 'NORMAL' | 'CONTESTED';
 export type MissileStatus = 'ACTIVE' | 'HIT' | 'EXPIRED' | 'DECOYED';
@@ -74,6 +75,9 @@ export interface CombatTargetState {
   rangeM: number;
   lineOfSight: boolean;
   engagementAllowed: boolean;
+  bountyClass?: BountyTargetClass;
+  threat?: BountyThreat;
+  orbitAltitudeM?: number;
 }
 
 export interface MissileState {

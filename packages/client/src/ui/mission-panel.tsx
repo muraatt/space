@@ -21,11 +21,15 @@ const errorText: Record<string, string> = {
   SCAN_UNAVAILABLE: 'Tarama yalnızca hedef yörüngede başlatılabilir.',
   IDENTIFY_UNAVAILABLE: 'Tanımlama için hedef yörüngeye ulaş.',
   TARGET_ALREADY_IDENTIFIED: 'Hedef daha önce tanımlandı.',
+  BOUNTY_REQUIRES_DOCKING: 'Bounty yalnız AEGIS istasyonuna dock edilmişken kabul edilir.',
+  BOUNTY_TARGET_UNAVAILABLE: 'Kaçak hedef artık görev için uygun değil.',
 };
 
-function MissionCard({ mission, onAccept }: { mission: MissionInstance; onAccept: () => void }) {
+function MissionCard({ mission, onAccept, docked }: { mission: MissionInstance; onAccept: () => void; docked: boolean }) {
   const typeLabel =
-    mission.type === 'CARGO' ? '▣ KARGO' : mission.type === 'RECONNAISSANCE' ? '⌾ KEŞİF' : '◇ ÖNLEME';
+    mission.type === 'CARGO' ? '▣ KARGO' : mission.type === 'RECONNAISSANCE' ? '⌾ KEŞİF'
+      : mission.type === 'BOUNTY' ? '◆ BOUNTY' : '◇ ÖNLEME';
+  const available = mission.reachable && (mission.type !== 'BOUNTY' || docked);
   return (
     <article className="mission-card" data-testid={`mission-${mission.type.toLowerCase()}`}>
       <div className="mission-card-top">
@@ -39,6 +43,10 @@ function MissionCard({ mission, onAccept }: { mission: MissionInstance; onAccept
         <dd>{mission.destination.name}</dd>
         <dt>TAHMİNİ ETA</dt>
         <dd>{duration(mission.estimatedEtaSeconds)}</dd>
+        {mission.bounty && <>
+          <dt>SINIF / TEHDİT</dt><dd>{mission.bounty.targetClass} / {mission.bounty.threat}</dd>
+          <dt>TAHMİNİ ΔV / YAKIT</dt><dd>{mission.bounty.estimatedDeltaVMps.toFixed(0)} m/s · {mission.bounty.estimatedPropellantKg.toFixed(0)} kg</dd>
+        </>}
         {mission.cargo && (
           <>
             <dt>KARGO KÜTLESİ</dt>
@@ -50,8 +58,10 @@ function MissionCard({ mission, onAccept }: { mission: MissionInstance; onAccept
           {mission.reward.credits.toLocaleString('tr-TR')} kr · +{mission.reward.reputation} itibar
         </dd>
       </dl>
-      <button className="mission-accept" onClick={onAccept} disabled={!mission.reachable}>
-        {mission.reachable ? 'GÖREVİ KABUL ET' : (mission.unavailableReason ?? 'ERİŞİLEMİYOR')}
+      <button className="mission-accept" onClick={onAccept} disabled={!available}>
+        {mission.type === 'BOUNTY' && !docked ? 'AEGIS DOCK GEREKİR'
+          : mission.reachable ? (mission.type === 'BOUNTY' ? 'BOUNTY KABUL ET' : 'GÖREVİ KABUL ET')
+          : (mission.unavailableReason ?? 'ERİŞİLEMİYOR')}
       </button>
     </article>
   );
@@ -85,7 +95,7 @@ function ActiveMission({
             ? '▣ AKTİF KARGO'
             : mission.type === 'RECONNAISSANCE'
               ? '⌾ AKTİF KEŞİF'
-              : '◇ AKTİF ÖNLEME'}
+              : mission.type === 'BOUNTY' ? '◆ AKTİF BOUNTY' : '◇ AKTİF ÖNLEME'}
         </span>
         <b>{mission.status}</b>
       </div>
@@ -129,6 +139,15 @@ function ActiveMission({
           </span>
         </div>
       )}
+      {mission.bounty && (
+        <div className="objective-status" data-testid="bounty-progress">
+          <small>BOUNTY TARGET</small>
+          <strong>{mission.bounty.targetLabel} · {mission.bounty.targetClass}</strong>
+          <span>{mission.bounty.neutralized ? 'NEUTRALIZED'
+            : mission.bounty.acquired ? 'ACQUIRED · FIRE AUTHORIZED'
+            : atDestination ? 'ACQUISITION READY' : 'INTERCEPT REQUIRED'}</span>
+        </div>
+      )}
       {!atDestination && (
         <button className="mission-navigate" onClick={onNavigate}>
           HEDEFİ MANEVRAYA AKTAR
@@ -154,14 +173,14 @@ function ActiveMission({
           {mission.recon?.scanning ? 'TARAMA SÜRÜYOR…' : 'TARAMAYI BAŞLAT'}
         </button>
       )}
-      {mission.type === 'INTERCEPT' && (
+      {(mission.type === 'INTERCEPT' || mission.type === 'BOUNTY') && (
         <button
           className="mission-complete"
           onClick={onIdentify}
-          disabled={!atDestination || mission.intercept?.identified}
+          disabled={!atDestination || mission.intercept?.identified || mission.bounty?.acquired}
           data-testid="identify-target"
         >
-          {mission.intercept?.identified ? 'ATEŞ YETKİSİ VERİLDİ' : 'HEDEFİ TANIMLA'}
+          {mission.intercept?.identified || mission.bounty?.acquired ? 'ATEŞ YETKİSİ VERİLDİ' : 'HEDEFİ TANIMLA'}
         </button>
       )}
       <button className="mission-abandon" onClick={onAbandon}>
@@ -185,6 +204,7 @@ export function MissionPanel({
   onScan,
   onIdentify,
   onAbandon,
+  onSelectStation,
 }: {
   open: boolean;
   state?: WorldState;
@@ -199,6 +219,7 @@ export function MissionPanel({
   onScan: (mission: MissionInstance) => void;
   onIdentify: (mission: MissionInstance) => void;
   onAbandon: (missionId: string) => void;
+  onSelectStation: () => void;
 }) {
   if (!open) return null;
   const profile = state?.profile,
@@ -208,8 +229,9 @@ export function MissionPanel({
     recent = [...(state?.missions ?? [])]
       .reverse()
       .find((mission) => ['COMPLETED', 'FAILED'].includes(mission.status)),
-    atDestination = active
-      ? Math.abs(
+    atDestination = active?.bounty
+      ? (state?.combat.contacts.find((item) => item.id === active.bounty!.targetId)?.rangeM ?? Infinity) <= active.destination.toleranceM
+      : active ? Math.abs(
           length(state!.ship.position) - (CONFIG.earthRadius + active.destination.altitudeKm * 1000),
         ) <= active.destination.toleranceM
       : false;
@@ -275,14 +297,14 @@ export function MissionPanel({
           ) : (
             <section className="mission-offers" aria-label="Görev listesi">
               <div className="offer-heading">
-                <span>NPC GÖREV HAVUZU</span>
+                <span>{state?.docking.phase === 'DOCKED' ? 'AEGIS CONTRACTS / BOUNTY BOARD' : 'NPC GÖREV HAVUZU'}</span>
                 <button onClick={onRefresh} disabled={pending}>
                   {pending ? 'HESAPLANIYOR…' : 'YENİLE'}
                 </button>
               </div>
               {offers.length ? (
                 offers.map((mission) => (
-                  <MissionCard key={mission.id} mission={mission} onAccept={() => onAccept(mission.id)} />
+                  <MissionCard key={mission.id} mission={mission} docked={state?.docking.phase === 'DOCKED'} onAccept={() => onAccept(mission.id)} />
                 ))
               ) : (
                 <p className="empty-offers">
@@ -298,6 +320,11 @@ export function MissionPanel({
                       ? ` · +${recent.reward.credits} kredi · +${recent.reward.reputation} itibar`
                       : ''}
                   </span>
+                  {recent.bounty?.rewardIssued && <div className="bounty-result" data-testid="bounty-result">
+                    <span>YAKIT {recent.bounty.fuelUsedKg?.toFixed(0)} kg · MÜHİMMAT {recent.bounty.ammunitionUsedKg?.toFixed(0)} kg · HASAR %{recent.bounty.damagePercent?.toFixed(0)}</span>
+                    <b>OPERASYON {recent.bounty.operationalCostCredits} kr · NET {recent.bounty.netCredits} kr</b>
+                    <button onClick={onSelectStation}>AEGIS'İ HEDEFLE</button>
+                  </div>}
                 </div>
               )}
             </section>

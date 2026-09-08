@@ -21,7 +21,7 @@ export default defineConfig({
       url: 'http://127.0.0.1:8788/health',
       timeout: 30000,
       reuseExistingServer: false,
-      env: { PORT: '8788', TEST_MODE: '1', TEST_TOKEN: 'orbital-isolated-test-01' },
+      env: { PORT: '8788', TEST_MODE: '1', TEST_TOKEN: 'orbital-isolated-test-01', IDENTITY_STORE_PATH: 'artifacts/shared-phase-00/test-identities.json' },
     },
     {
       command:

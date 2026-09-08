@@ -3,10 +3,12 @@ import {
   type Controls,
   type ManeuverCandidateType,
   type ManeuverPlanResult,
-  type ManeuverTarget,
+  type ManeuverRequestTarget,
   type Snapshot,
   type ServerMessage,
+  type PublicPlayerIdentity,
 } from '@orbital/shared';
+const CREDENTIAL_KEY = 'orbital.identity.credential.v1';
 export class Connection {
   socket?: WebSocket;
   snapshot?: Snapshot;
@@ -24,13 +26,30 @@ export class Connection {
   lastMissionAck = '';
   lastEconomyAck = '';
   lastCombatAck = '';
+  lastDockingAck = '';
+  identityRequired = false;
+  registrationPending = false;
+  identity?: PublicPlayerIdentity;
   missionPending = false;
   maneuverCommandActive = false;
   private requestSequence = 0;
   private pingTimer?: ReturnType<typeof setInterval>;
   private disposed = false;
+  private reconnectTimer?: ReturnType<typeof setTimeout>;
+  private identityMode = true;
+  private registrationCredential = '';
+  private readonly pageHide = () => {
+    this.disposed = true;
+    clearInterval(this.pingTimer);
+    clearTimeout(this.reconnectTimer);
+    this.socket?.close();
+  };
+  constructor() {
+    if (typeof window !== 'undefined') window.addEventListener('pagehide', this.pageHide);
+  }
   connect(scene: string, resume = false) {
     clearInterval(this.pingTimer);
+    clearTimeout(this.reconnectTimer);
     this.socket?.close();
     this.status = 'Bağlanıyor';
     this.lastError = '';
@@ -39,18 +58,50 @@ export class Connection {
     this.maneuverCommandActive = false;
     this.plan = undefined;
     this.snapshot = undefined;
-    const scheme = location.protocol === 'https:' ? 'wss' : 'ws';
-    const ws = new WebSocket(`${scheme}://${location.host}/socket?scene=${encodeURIComponent(scene)}${resume ? '&resume=1' : ''}`);
+    const scheme = location.protocol === 'https:' ? 'wss' : 'ws', page = new URLSearchParams(location.search),
+      locationPort = location.port || new URL(`${location.protocol}//${location.host}`).port;
+    this.identityMode = !(locationPort === '5174' && page.get('shared') !== '1');
+    const endpoint = ((import.meta as ImportMeta & { env?: Record<string, string | undefined> }).env?.VITE_GAME_SERVER_URL)?.replace(/\/$/, '')
+      ?? `${scheme}://${location.host}`;
+    const ws = new WebSocket(`${endpoint}/socket?scene=${encodeURIComponent(scene)}${resume ? '&resume=1' : ''}${this.identityMode ? '' : '&legacy=1'}`);
     this.socket = ws;
     ws.onopen = () => {
       if (this.socket !== ws || this.disposed) return;
-      this.status = 'Bağlı';
-      this.pingTimer = setInterval(() => this.send({ type: 'ping', sentAt: performance.now() }), 1000);
+      this.status = this.identityMode ? 'Kimlik doğrulanıyor' : 'Bağlı';
+      if (!this.identityMode) this.startPing();
     };
     ws.onmessage = (event) => {
       if (this.socket !== ws || this.disposed) return;
       this.bytesIn += event.data.length;
       const data = JSON.parse(event.data) as ServerMessage;
+      if (data.type === 'identity_required') {
+        this.registrationCredential = data.registrationCredential;
+        const credential = this.readCredential();
+        if (credential && data.reason === 'MISSING_CREDENTIAL') {
+          this.send({ type: 'resume_identity', version: 1, credential });
+        } else {
+          if (data.reason === 'INVALID_CREDENTIAL') this.clearCredential();
+          this.identityRequired = true;
+          this.registrationPending = false;
+          this.status = 'Çağrı adı gerekli';
+        }
+      }
+      if (data.type === 'identity_established') {
+        if (data.credential) this.writeCredential(data.credential);
+        this.identity = data.identity;
+        this.identityRequired = false;
+        this.registrationPending = false;
+        this.status = 'Bağlı';
+        this.lastError = '';
+        this.startPing();
+      }
+      if (data.type === 'identity_error') {
+        this.clearCredential();
+        this.identityRequired = true;
+        this.registrationPending = false;
+        this.lastError = data.code;
+        this.status = 'Çağrı adı gerekli';
+      }
       if (data.type === 'snapshot') {
         this.snapshot = data;
         this.receivedAt = performance.now();
@@ -71,6 +122,7 @@ export class Connection {
       }
       if (data.type === 'economy_ack') this.lastEconomyAck = `${data.action}:${data.transactionId}`;
       if (data.type === 'combat_ack') this.lastCombatAck = `${data.action}:${data.commandId}`;
+      if (data.type === 'docking_ack') this.lastDockingAck = `${data.action}:${data.commandId}`;
       if (data.type === 'error') {
         this.lastError = data.code;
         this.planPending = false;
@@ -92,11 +144,37 @@ export class Connection {
       this.planPending = false;
       this.missionPending = false;
       this.maneuverCommandActive = false;
+      if (!this.disposed && this.identityMode && event.code !== 4001)
+        this.reconnectTimer = setTimeout(() => this.connect(scene, true), 1000);
     };
     ws.onerror = () => {
       if (this.socket !== ws) return;
       this.status = 'Sunucuya erişilemiyor';
     };
+  }
+  private startPing() {
+    clearInterval(this.pingTimer);
+    this.pingTimer = setInterval(() => this.send({ type: 'ping', sentAt: performance.now() }), 1000);
+  }
+  private readCredential() {
+    try { return localStorage.getItem(CREDENTIAL_KEY) ?? ''; } catch { return ''; }
+  }
+  private writeCredential(value: string) {
+    try { localStorage.setItem(CREDENTIAL_KEY, value); } catch { /* private storage may be unavailable */ }
+  }
+  private clearCredential() {
+    try { localStorage.removeItem(CREDENTIAL_KEY); } catch { /* private storage may be unavailable */ }
+  }
+  register(username: string) {
+    this.lastError = '';
+    this.registrationPending = true;
+    if (!this.registrationCredential) { this.lastError = 'REGISTRATION_NOT_READY'; this.registrationPending = false; return false; }
+    this.writeCredential(this.registrationCredential);
+    return this.send({
+      type: 'register_identity', version: 1,
+      requestId: `register-${Date.now().toString(36)}-${++this.requestSequence}`, username,
+      credential: this.registrationCredential,
+    });
   }
   send(value: unknown) {
     if (this.socket?.readyState === WebSocket.OPEN) {
@@ -121,7 +199,7 @@ export class Connection {
   private transactionId(action: string) {
     return `${action}-${Date.now().toString(36)}-${++this.requestSequence}`;
   }
-  requestPlan(target: ManeuverTarget) {
+  requestPlan(target: ManeuverRequestTarget) {
     this.planId = `plan-${Date.now().toString(36)}-${++this.requestSequence}`;
     this.plan = undefined;
     this.planPending = true;
@@ -247,6 +325,27 @@ export class Connection {
       transactionId: this.transactionId('recovery'),
     });
   }
+  selectStation(stationId: string) {
+    this.lastError = '';
+    this.send({
+      type: 'select_station', version: 1, shipId: this.activeShipId(), stationId,
+      commandId: this.transactionId('station-target'),
+    });
+  }
+  requestDock(stationId: string, portId: string) {
+    this.lastError = '';
+    this.send({
+      type: 'request_dock', version: 1, shipId: this.activeShipId(), stationId, portId,
+      commandId: this.transactionId('dock'),
+    });
+  }
+  undock(stationId: string) {
+    this.lastError = '';
+    this.send({
+      type: 'undock', version: 1, shipId: this.activeShipId(), stationId,
+      commandId: this.transactionId('undock'),
+    });
+  }
   abandonMission(missionId: string) {
     this.lastError = '';
     this.send({ type: 'abandon_mission', version: 1, shipId: this.activeShipId(), missionId });
@@ -258,6 +357,7 @@ export class Connection {
       version: 1,
       shipId: this.activeShipId(),
       targetShipId,
+      stationId: this.snapshot?.state.docking.selectedStationId ?? CONFIG.universeId,
       transactionId: this.transactionId('ship'),
     });
   }
@@ -268,6 +368,7 @@ export class Connection {
       version: 1,
       shipId: this.activeShipId(),
       amountKg,
+      stationId: this.snapshot?.state.docking.selectedStationId ?? CONFIG.universeId,
       transactionId: this.transactionId('fuel'),
     });
   }
@@ -277,6 +378,7 @@ export class Connection {
       type: 'repair_ship',
       version: 1,
       shipId: this.activeShipId(),
+      stationId: this.snapshot?.state.docking.selectedStationId ?? CONFIG.universeId,
       transactionId: this.transactionId('repair'),
     });
   }
@@ -287,6 +389,7 @@ export class Connection {
       version: 1,
       shipId: this.activeShipId(),
       amountKg,
+      stationId: this.snapshot?.state.docking.selectedStationId ?? CONFIG.universeId,
       transactionId: this.transactionId('ammo'),
     });
   }
@@ -297,6 +400,7 @@ export class Connection {
       version: 1,
       shipId: this.activeShipId(),
       upgradeId,
+      stationId: this.snapshot?.state.docking.selectedStationId ?? CONFIG.universeId,
       transactionId: this.transactionId('upgrade'),
     });
   }
@@ -305,6 +409,7 @@ export class Connection {
     return (
       this.status === 'Bağlı' && !!this.snapshot &&
       !this.snapshot?.state.combat.playerDestroyed &&
+      this.snapshot?.state.docking.phase !== 'DOCKED' &&
       !this.maneuverCommandActive &&
       (!status || !['PLANNED', 'EXECUTING_BURN', 'COASTING', 'ARRIVAL_BURN'].includes(status))
     );
@@ -312,6 +417,8 @@ export class Connection {
   dispose() {
     this.disposed = true;
     clearInterval(this.pingTimer);
+    clearTimeout(this.reconnectTimer);
     this.socket?.close();
+    if (typeof window !== 'undefined') window.removeEventListener('pagehide', this.pageHide);
   }
 }

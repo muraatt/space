@@ -45,6 +45,17 @@ export async function testEndpoint(
     }
     return true;
   }
+  if (req.method === 'POST' && req.url === '/__test/advance-maneuver') {
+    const nextEventAtMs = world.state.maneuver?.nextEventAtMs;
+    if (!nextEventAtMs || world.state.maneuver?.status !== 'COASTING') {
+      res.writeHead(409);
+      res.end(JSON.stringify({ error: 'NO_COAST_EVENT' }));
+      return true;
+    }
+    world.tick(performance.now(), nextEventAtMs + 1);
+    res.end(JSON.stringify({ ok: true, advancedToMs: nextEventAtMs + 1 }));
+    return true;
+  }
   res.writeHead(404);
   res.end();
   return true;

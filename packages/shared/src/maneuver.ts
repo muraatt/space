@@ -19,11 +19,17 @@ export type ManeuverTarget =
   | { kind: 'CIRCULAR_ORBIT'; radiusM: number; phaseAheadRad: number }
   | { kind: 'NEAR_RENDEZVOUS_STATE'; state: ManeuverOrbitalState };
 
+/** Wire-level reference resolved by the authoritative server before reaching the planner. */
+export type ManeuverRequestTarget = ManeuverTarget
+  | { kind: 'STATION_RENDEZVOUS'; stationId: string }
+  | { kind: 'ORBITAL_ENTITY_INTERCEPT'; entityId: string };
+
 export interface PlannedBurn {
   offsetSeconds: number;
   durationSeconds: number;
   deltaVMps: number;
-  steering: 'PROGRADE' | 'RETROGRADE' | 'MATCH_TARGET_VELOCITY';
+  steering: 'PROGRADE' | 'RETROGRADE' | 'MATCH_TARGET_VELOCITY' | 'INERTIAL_VECTOR';
+  direction?: Vec3;
 }
 
 export interface ManeuverCandidate {
@@ -70,4 +76,5 @@ export interface ManeuverExecutionState {
   };
   completedAtMs?: number;
   failureReason?: string;
+  targetEntityId?: string;
 }

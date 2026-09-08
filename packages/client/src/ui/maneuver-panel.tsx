@@ -12,6 +12,8 @@ export interface OrbitTargetOption {
   altitudeKm: number;
   phaseAheadRad: number;
   relation: string;
+  entityId?: string;
+  entityKind?: 'STATION' | 'BOUNTY';
 }
 
 export const ORBIT_TARGETS: OrbitTargetOption[] = [
@@ -147,6 +149,7 @@ export function ManeuverPanel({
   onSelect,
   onExecute,
   onCancel,
+  targets = ORBIT_TARGETS,
 }: {
   open: boolean;
   target: OrbitTargetOption;
@@ -161,6 +164,7 @@ export function ManeuverPanel({
   onSelect: (type: ManeuverCandidateType) => void;
   onExecute: () => void;
   onCancel: () => void;
+  targets?: OrbitTargetOption[];
 }) {
   if (!open) return null;
   const selected = plan?.candidates.find((candidate) => candidate.type === selectedType),
@@ -180,7 +184,7 @@ export function ManeuverPanel({
       <label className="target-select">
         <span>HEDEF YÖRÜNGE</span>
         <select value={target.id} onChange={(event) => onTarget(event.target.value)} disabled={!!active}>
-          {ORBIT_TARGETS.map((option) => (
+          {targets.map((option) => (
             <option key={option.id} value={option.id}>
               {option.name}
             </option>

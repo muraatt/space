@@ -9,3 +9,4 @@ export * from './orbit';
 export * from './propulsion';
 export * from './maneuver';
 export * from './combat';
+export * from './docking';

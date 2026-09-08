@@ -16,6 +16,10 @@ Tek geliştirme gemisi, merkezî yerçekimi ve sabit kütleli itki. SI/ECI ortak
 
 Ay yüzeyi/kolonileri, Mars/dış gezegenler, solucan delikleri, evrenler arası geçiş, yüzlerce oyuncu, tam araç mühendisliği editörü, oyuncu devletleri, tam oyuncu üretimli ekonomi, madencilik/fabrika/karmaşık tedarik zincirleri, devasa içerik ve monetizasyon. Bu alanlar adına erken servis veya placeholder oyun akışı yapılmaz.
 
+## Kabul edilmiş orbital sandbox uzantısı
+
+Oturum 4 sonrasında tek AEGIS servis istasyonu ve üç kontrollü bounty hedefi eklendi. Uzantı yeni bir ana oturum değildir: mevcut O2 planner/yakıt, O3 servis/hangar ve O4 savaş/hasar sözleşmelerini canlı ECI hedefi → yakın yörünge intercept → acquisition/savaş → tek ödül → fiziksel AEGIS dönüşü → manuel capture → servis → ikinci sözleşme döngüsünde birleştirir. Ek istasyonlar, loot/salvage, yeni ekonomi, kalıcılık ve multiplayer bu geçişin dışındadır. Ayrıntı ve kanıt [bounty döngüsü raporundadır](sessions/04-bounty-loop-report.md); istasyon temeli [önceki raporda](sessions/04-station-docking-report.md) kayıtlıdır.
+
 ## Ortak kabul
 
 Gereken komutlar gerçekten geçer; atlananlar ayrı raporlanır. Baseline güncelleme önce görsel inceleme gerektirir. İtki/yön/fare kontrolleri doğrudan test edilir; sadece ekran görüntüsü yeterli değildir. Grafik ölçümü GPU/backend/tarayıcı/viewport/süre içerir. Yazılım render'ı referans GPU sayılmaz. İnsan tarafından oyun hissi/görsel beğeni ve mevcut olmayan referans donanım kabulü doğrulanmadan işaretlenmez.

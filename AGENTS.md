@@ -1,10 +1,10 @@
 # ORBITAL / Production rules
 
-Current milestone: Session 4 final playtest and acceptance. Sessions 1–3 and both Session 4 implementation passes are complete.
+Current milestone: shared orbital sandbox Phase 0, minimal identity and two-player shared-world acceptance. Sessions 1–4, AEGIS docking and bounty loop remain accepted prerequisites.
 
 - Read README, docs/roadmap.md, docs/vertical_slice.md and the latest session report before work.
 - State the session scope briefly, then implement, integrate, run tests, inspect screenshots and update documentation in the same session.
-- Session 4 includes region rules, targeting, laser, simulated guided missiles, countermeasures, module damage, deterministic bot combat, destruction, wreck/loss and local insurance recovery. During final acceptance, limit work to combat feel, balance and blocking fixes. Do not add accounts, database integration, remote multiplayer or Session 5 systems.
+- Preserve Sessions 1–4, AEGIS and bounty behavior. Phase 0 adds only a locked callsign, opaque player identity, one authoritative starter ship, durable minimal identity and two-player shared presence. Do not add passwords, email, OAuth, squads, chat, PostgreSQL, shared missions, extra stations, loot or new weapon/economy systems.
 - Use the local Node authoritative command path from the beginning. Never make client transforms authoritative.
 - simulation is pure TypeScript: no Three.js, React, network, database or wall clock imports. Time, commands and randomness are injected. SI units and ECI coordinates are canonical.
 - shared owns runtime schemas, units and versioned configuration. Documents link to definitions instead of duplicating tunable values.
