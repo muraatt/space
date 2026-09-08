@@ -6,7 +6,7 @@ import type { World } from '../world';
 import { dispatch } from '../commands/dispatch';
 import { PlannerService } from '../planner/service';
 import { generateBountyPool, generateMissionPool, MISSION_TARGETS } from '../missions/generator';
-import { IdentityConflict } from '../identity/file-identity-repository';
+import { IdentityConflict } from '../identity/identity-repository';
 import type { SharedPilotRuntime } from '../shared-sandbox';
 import { SharedSandbox } from '../shared-sandbox';
 export function attachGateway(server: Server, sandbox: SharedSandbox, testMode: boolean) {

@@ -1,7 +1,7 @@
 import { neutralControls, type PublicPlayerIdentity, type RemotePlayerState } from '@orbital/shared';
 import { add } from '@orbital/simulation';
 import { World } from './world';
-import { FileIdentityRepository, type IdentityRecord } from './identity/file-identity-repository';
+import type { IdentityRecord, IdentityRepository } from './identity/identity-repository';
 
 export interface SharedPilotRuntime { record: IdentityRecord; world: World; presence: RemotePlayerState['presence']; connections: number }
 
@@ -10,7 +10,7 @@ export class SharedSandbox {
   private pilots = new Map<string, SharedPilotRuntime>();
   private lastPersistAt = 0;
   private persistPending = false;
-  constructor(readonly identities: FileIdentityRepository) {}
+  constructor(readonly identities: IdentityRepository) {}
 
   private createWorld(record: IdentityRecord) {
     const world = new World();
@@ -83,7 +83,7 @@ export class SharedSandbox {
       .filter((remote) => remote !== local)
       .map((remote) => ({
         ...this.identity(remote.record), presence: remote.presence,
-        ship: structuredClone(remote.world.state.ship),
+          ship: structuredClone(remote.world.state.ship),
       }));
   }
   async flush() {

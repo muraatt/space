@@ -14,6 +14,7 @@
     "test:unit": "node node_modules/vitest/vitest.mjs run",
     "test:integration": "node node_modules/vitest/vitest.mjs run packages/server",
     "test:e2e": "node node_modules/@playwright/test/cli.js test",
+    "test:production": "node scripts/production-acceptance.mjs",
     "test:visual": "node node_modules/@playwright/test/cli.js test orbit.visual",
     "test:load": "node scripts/not-yet.mjs load 5",
     "build": "node scripts/build.mjs",

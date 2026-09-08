@@ -8,6 +8,10 @@
   "dependencies": {
     "@orbital/shared": "workspace:*",
     "@orbital/simulation": "workspace:*",
+    "pg": "^8.23.0",
     "ws": "^8.18.3"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.23.1"
   }
 }

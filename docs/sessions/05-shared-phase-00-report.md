@@ -8,7 +8,7 @@ This pass adds the smallest identity and two-pilot shared-world foundation. Pass
 
 `SharedSandbox` owns all connected pilot runtimes under one server clock. Each socket is authenticated to one opaque `playerId`; gameplay commands continue through the existing runtime schema and dispatch ownership check against that identity's assigned ship. Every pilot snapshot includes the other authoritative player ships and presence. A client cannot select its player ID or callsign during gameplay.
 
-`FileIdentityRepository` serializes username reservation and atomic JSON replacement. Callsigns are trimmed, 3–20 characters, restricted to ASCII letters, numbers, space, underscore and hyphen, and unique after lower-case normalization. The locked callsign maps to a UUID player ID. A 256-bit browser credential is represented on disk only by its SHA-256 verifier.
+The identity repository boundary has a file adapter for local/test use and a minimal PostgreSQL adapter selected by `DATABASE_URL` in production. PostgreSQL registration takes an advisory transaction lock, retries the same callsign and verifier idempotently, and relies on unique constraints for normalized callsign, credential verifier, player ID and ship ID. Callsigns remain trimmed, 3–20 characters, restricted to ASCII letters, numbers, space, underscore and hyphen, and unique after lower-case normalization. The locked callsign maps to a UUID player ID. A 256-bit browser credential is represented in storage only by its SHA-256 verifier.
 
 Registration creates exactly one existing Raptor starter configuration with a stable generated ship ID. Deterministic eight-slot rings around AEGIS prevent coincident free-flight spawns. The server issues the 256-bit credential before registration; a replay carrying the same callsign and credential resolves to the same record and ship. Refresh and reconnect restore the credential, player ID and ship. The backend snapshots ships every five seconds and flushes them at clean shutdown.
 
@@ -18,7 +18,7 @@ First entry presents one callsign field. Normal UI exposes the callsign as locke
 
 ## Deployment boundary
 
-Vercel hosts the static client. A long-lived container hosts the continuous authoritative loop and WebSocket gateway; a mounted disk backs the prototype identity file. See [deployment instructions](../deployment_shared_sandbox.md). A public URL still requires the user's Vercel/backend accounts and final origins.
+Vercel hosts the static client. A Render Free Web Service hosts the continuous authoritative loop and WebSocket gateway; a minimal Render Free Postgres database backs Phase 0 identity and ship restoration. See [deployment instructions](../deployment_shared_sandbox.md). Free Postgres expires after 30 days and has no backups; this is accepted only for the closed-alpha prototype.
 
 ## Verification
 
