@@ -99,7 +99,7 @@ export function HangarPanel({
           <h2>Araç ve servis</h2>
         </div>
         <button onClick={onClose} aria-label="Hangarı kapat">
-          ×
+          [X]
         </button>
       </div>
       <section className="hangar-balance">
@@ -203,8 +203,8 @@ export function HangarPanel({
       </section>
       {error && <p className="planner-error">{errors[error] ?? error}</p>}
       <p className="hangar-limit">
-        Onarım bu geçişte tek bir genel servis yüzdesidir. Silah, hasar ve mühimmat tüketimi Session 4
-        kapsamındadır.
+        Onarım gövde ve dört savaş alt sistemini birlikte yeniler. İmha edilen araç önce sigorta
+        akışından kurtarılmalıdır.
       </p>
     </aside>
   );

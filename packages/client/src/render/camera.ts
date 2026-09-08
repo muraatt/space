@@ -1,6 +1,6 @@
 import { PerspectiveCamera, Vector3 } from 'three/webgpu';
 export class FlightCamera {
-  camera = new PerspectiveCamera(45, 1, 0.1, 1000);
+  camera = new PerspectiveCamera(45, 1, 0.1, 5000);
   yaw = 0.64;
   pitch = 0.28;
   distance = 31;
@@ -18,6 +18,12 @@ export class FlightCamera {
   reset = () => {
     this.yaw = 0.64;
     this.pitch = 0.28;
+    this.distance = 31;
+    this.update();
+  };
+  combatView = () => {
+    this.yaw = 0.18;
+    this.pitch = 0.12;
     this.distance = 31;
     this.update();
   };

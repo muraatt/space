@@ -27,7 +27,7 @@ test('orbit_maneuver: request, compare, select, execute, reject duplicate and ca
     button.click();
   });
   await expect(panel).toContainText('KALKIŞ YANMASI', { timeout: 5000 });
-  await expect(panel).toContainText('Bu plan zaten yürütüldü');
+  await expect(panel).toContainText(/Bu plan zaten yürütüldü|Etkin manevra tamamlanmadan yeni komut verilemez/);
   await expect
     .poll(() => page.evaluate(() => window.__ORBITAL__!.getState()!.maneuver?.status))
     .toBe('EXECUTING_BURN');
@@ -39,6 +39,13 @@ test('orbit_maneuver: request, compare, select, execute, reject duplicate and ca
   await expect
     .poll(() => page.evaluate(() => window.__ORBITAL__!.getState()!.maneuver?.status))
     .toBe('CANCELLED');
+  // The consumed plan remains visible; an attempted reuse must not freeze manual flight.
+  await page.getByTestId('execute-maneuver').click();
+  await expect(panel).toContainText('Bu plan zaten yürütüldü');
+  await page.getByRole('button', { name: 'Manevra panelini kapat' }).click();
+  await page.keyboard.down('w');
+  await expect.poll(() => page.evaluate(() => window.__ORBITAL__!.getState()!.controls.translation[2])).toBe(-1);
+  await page.keyboard.up('w');
   expect(errors).toEqual([]);
 });
 
@@ -51,7 +58,11 @@ test('low_fuel: capability rejection and actual reserve HUD', async ({ page, req
   const panel = page.getByLabel('Manevra bilgisayarı');
   await panel.getByRole('button', { name: 'MANEVRA SEÇENEKLERİNİ HESAPLA' }).click();
   await expect(panel.getByText('Yakıt bu rota için yetersiz').first()).toBeVisible({ timeout: 5000 });
-  await expect(page.locator('.flight-strip')).toContainText('80 kg · 4%');
   await expect(page.getByTestId('execute-maneuver')).toHaveCount(0);
+  expect(await page.evaluate(() => window.__ORBITAL__!.getState()!.ship.mass.propellantKg)).toBe(80);
+  await page.getByRole('button', { name: 'Manevra panelini kapat' }).click();
+  const telemetry = page.getByLabel('Sayısal uçuş telemetrisi');
+  await expect(telemetry.getByText('FUEL', { exact: true }).locator('..')).toContainText('80kg');
+  await expect(telemetry.getByText('FUEL%', { exact: true }).locator('..')).toContainText('4%');
   expect(errors).toEqual([]);
 });

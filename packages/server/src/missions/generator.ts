@@ -1,5 +1,6 @@
 import {
   CONFIG,
+  COMBAT_TARGET_ID,
   type FactionId,
   type ManeuverPlanResult,
   type ManeuverTarget,
@@ -115,7 +116,7 @@ export function generateMissionPool(
       id: `intercept-${factionId.toLowerCase()}-relay-01`,
       type: 'INTERCEPT',
       title: 'Kimliksiz röle teması',
-      briefing: '400 km halkasındaki kimliksiz röleyle buluş ve transponder imzasını doğrula.',
+      briefing: '400 km halkasındaki kimliksiz röleyi tanımla ve ateş kontrolüyle etkisiz hale getir.',
       factionId,
       status: 'AVAILABLE',
       destination: {
@@ -132,7 +133,15 @@ export function generateMissionPool(
       estimatedEtaSeconds: interceptEta,
       difficulty: 'STANDART',
       reachable: true,
-      intercept: { targetId: 'relay-r17', targetLabel: 'Kimliksiz Röle R-17', identified: false },
+      intercept: {
+        targetId: COMBAT_TARGET_ID,
+        targetLabel: 'Kimliksiz Röle R-17',
+        identified: false,
+        combatAuthorized: false,
+        damageRequired: CONFIG.interceptDamageRequired,
+        damageDealt: 0,
+        neutralized: false,
+      },
     });
   return missions;
 }

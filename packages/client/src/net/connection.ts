@@ -23,22 +23,32 @@ export class Connection {
   lastManeuverAck = '';
   lastMissionAck = '';
   lastEconomyAck = '';
+  lastCombatAck = '';
   missionPending = false;
   maneuverCommandActive = false;
   private requestSequence = 0;
   private pingTimer?: ReturnType<typeof setInterval>;
   private disposed = false;
-  connect(scene: string) {
+  connect(scene: string, resume = false) {
+    clearInterval(this.pingTimer);
+    this.socket?.close();
     this.status = 'Bağlanıyor';
     this.lastError = '';
+    this.planPending = false;
+    this.missionPending = false;
+    this.maneuverCommandActive = false;
+    this.plan = undefined;
+    this.snapshot = undefined;
     const scheme = location.protocol === 'https:' ? 'wss' : 'ws';
-    const ws = new WebSocket(`${scheme}://${location.host}/socket?scene=${encodeURIComponent(scene)}`);
+    const ws = new WebSocket(`${scheme}://${location.host}/socket?scene=${encodeURIComponent(scene)}${resume ? '&resume=1' : ''}`);
     this.socket = ws;
     ws.onopen = () => {
+      if (this.socket !== ws || this.disposed) return;
       this.status = 'Bağlı';
       this.pingTimer = setInterval(() => this.send({ type: 'ping', sentAt: performance.now() }), 1000);
     };
     ws.onmessage = (event) => {
+      if (this.socket !== ws || this.disposed) return;
       this.bytesIn += event.data.length;
       const data = JSON.parse(event.data) as ServerMessage;
       if (data.type === 'snapshot') {
@@ -60,13 +70,18 @@ export class Connection {
         this.missionPending = false;
       }
       if (data.type === 'economy_ack') this.lastEconomyAck = `${data.action}:${data.transactionId}`;
+      if (data.type === 'combat_ack') this.lastCombatAck = `${data.action}:${data.commandId}`;
       if (data.type === 'error') {
         this.lastError = data.code;
         this.planPending = false;
         this.missionPending = false;
+        // Only the optimistic request lock is released. An accepted maneuver
+        // remains locked by its authoritative snapshot phase below.
+        this.maneuverCommandActive = false;
       }
     };
     ws.onclose = (event) => {
+      if (this.socket !== ws) return;
       this.status = this.disposed
         ? 'Kapalı'
         : event.code === 4001
@@ -74,8 +89,12 @@ export class Connection {
           : 'Bağlantı kesildi';
       this.lastError = this.status;
       clearInterval(this.pingTimer);
+      this.planPending = false;
+      this.missionPending = false;
+      this.maneuverCommandActive = false;
     };
     ws.onerror = () => {
+      if (this.socket !== ws) return;
       this.status = 'Sunucuya erişilemiyor';
     };
   }
@@ -84,9 +103,16 @@ export class Connection {
       const msg = JSON.stringify(value);
       this.bytesOut += msg.length;
       this.socket.send(msg);
+      return true;
     }
+    this.lastError = 'NOT_CONNECTED';
+    this.planPending = false;
+    this.missionPending = false;
+    this.maneuverCommandActive = false;
+    return false;
   }
   input(c: Controls) {
+    if (!this.snapshot) return;
     this.send({ type: 'input', version: 1, shipId: this.activeShipId(), seq: this.seq++, ...c });
   }
   private activeShipId() {
@@ -166,6 +192,61 @@ export class Connection {
       destinationId,
     });
   }
+  selectCombatTarget(targetId: string) {
+    this.lastError = '';
+    this.send({
+      type: 'select_target',
+      version: 1,
+      shipId: this.activeShipId(),
+      targetId,
+      commandId: this.transactionId('target'),
+    });
+  }
+  clearCombatTarget() {
+    this.lastError = '';
+    this.send({
+      type: 'clear_target',
+      version: 1,
+      shipId: this.activeShipId(),
+      commandId: this.transactionId('clear-target'),
+    });
+  }
+  fireLaser() {
+    this.lastError = '';
+    this.send({
+      type: 'fire_laser',
+      version: 1,
+      shipId: this.activeShipId(),
+      commandId: this.transactionId('laser'),
+    });
+  }
+  fireMissile() {
+    this.lastError = '';
+    this.send({
+      type: 'fire_missile',
+      version: 1,
+      shipId: this.activeShipId(),
+      commandId: this.transactionId('missile'),
+    });
+  }
+  activateCountermeasure() {
+    this.lastError = '';
+    this.send({
+      type: 'activate_countermeasure',
+      version: 1,
+      shipId: this.activeShipId(),
+      commandId: this.transactionId('countermeasure'),
+    });
+  }
+  claimReplacement() {
+    this.lastError = '';
+    this.send({
+      type: 'claim_replacement',
+      version: 1,
+      shipId: this.activeShipId(),
+      transactionId: this.transactionId('recovery'),
+    });
+  }
   abandonMission(missionId: string) {
     this.lastError = '';
     this.send({ type: 'abandon_mission', version: 1, shipId: this.activeShipId(), missionId });
@@ -222,6 +303,8 @@ export class Connection {
   flightInputAllowed() {
     const status = this.snapshot?.state.maneuver?.status;
     return (
+      this.status === 'Bağlı' && !!this.snapshot &&
+      !this.snapshot?.state.combat.playerDestroyed &&
       !this.maneuverCommandActive &&
       (!status || !['PLANNED', 'EXECUTING_BURN', 'COASTING', 'ARRIVAL_BURN'].includes(status))
     );

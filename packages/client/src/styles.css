@@ -22,7 +22,7 @@ button {
   cursor: pointer;
 }
 button:disabled {
-  cursor: wait;
+  cursor: not-allowed;
   opacity: 0.45;
 }
 button:focus-visible,
@@ -353,7 +353,8 @@ h1 > span {
 .planner-toggle:hover {
   background: #9bc2d018;
 }
-.mission-toggle {
+.mission-toggle,
+.combat-toggle {
   width: 100%;
   margin-top: 8px;
   padding: 10px 13px;
@@ -365,9 +366,254 @@ h1 > span {
   font: 9px Consolas;
   letter-spacing: 1.1px;
 }
-.mission-toggle:hover {
+.mission-toggle:hover,
+.combat-toggle:hover {
   border-color: #d5a96b99;
   color: #ead8be;
+}
+.combat-toggle {
+  width: 100%;
+  margin-top: 8px;
+  padding: 10px 13px;
+  border: 1px solid #9d6a515d;
+  color: #e0b18f;
+  background: #1b1111c7;
+  display: flex;
+  justify-content: space-between;
+  font: 9px Consolas;
+  letter-spacing: 1.1px;
+}
+.combat-panel {
+  position: absolute;
+  z-index: 5;
+  left: 330px;
+  top: 112px;
+  bottom: 118px;
+  width: 500px;
+  padding: 21px;
+  overflow-y: auto;
+  border: 1px solid #9c735d5e;
+  background: #0a1119f2;
+  box-shadow: 0 24px 80px #000a;
+  backdrop-filter: blur(18px);
+}
+.combat-region {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 5px 12px;
+  margin: 13px 0;
+  padding: 11px;
+  border-left: 3px solid #839ca7;
+  background: #13212a;
+}
+.combat-region small,
+.contact-card small,
+.weapon-grid small,
+.combat-hull small,
+.combat-log > small {
+  color: #849ba6;
+  font: 7px Consolas;
+  letter-spacing: 1.2px;
+}
+.combat-region strong {
+  color: #e5c28d;
+  font: 14px Consolas;
+}
+.combat-region span {
+  grid-column: 1;
+  color: #9aadb5;
+  font-size: 9px;
+}
+.combat-region b {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  color: #d88c70;
+  font: 8px Consolas;
+}
+.region-safe {
+  border-color: #75ad97;
+}
+.region-contested {
+  border-color: #d16e58;
+}
+.contact-card,
+.weapon-grid article,
+.combat-hull,
+.combat-log {
+  padding: 12px;
+  border: 1px solid #768f9b42;
+  background: #0d1a23e8;
+}
+.contact-card > div > * {
+  display: block;
+}
+.contact-card > div strong {
+  margin-top: 4px;
+  color: #e0e7e9;
+  font-size: 15px;
+}
+.contact-card > div span {
+  color: #bf8f6d;
+  font: 8px Consolas;
+}
+.contact-card dl {
+  margin: 10px 0;
+  grid-template-columns: 1fr 1fr;
+  font-size: 8px;
+}
+.contact-card button,
+.weapon-grid button {
+  width: 100%;
+  padding: 9px;
+  border: 1px solid #c080626b;
+  color: #efbb99;
+  font: 8px Consolas;
+}
+.contact-card button:disabled,
+.weapon-grid button:disabled {
+  opacity: 0.35;
+}
+.incoming-warning {
+  margin: 10px 0;
+  padding: 11px;
+  border: 1px solid #ef765e99;
+  background: #5b1f1f66;
+  color: #ffb09d;
+  font: 10px Consolas;
+  letter-spacing: 1.2px;
+  animation: incoming-pulse 0.8s ease-in-out infinite alternate;
+}
+@keyframes incoming-pulse {
+  to {
+    border-color: #ffb28d;
+    background: #742a276f;
+  }
+}
+.weapon-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+.weapon-grid article:last-child {
+  grid-column: 1 / -1;
+}
+.weapon-grid article > * {
+  display: block;
+}
+.weapon-grid strong {
+  margin: 7px 0 4px;
+  color: #dce5e7;
+  font: 13px Consolas;
+}
+.weapon-grid span {
+  min-height: 22px;
+  color: #93a8b1;
+  font: 8px Consolas;
+}
+.weapon-grid button {
+  margin-top: 9px;
+}
+.combat-hull {
+  margin-top: 8px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+}
+.combat-hull strong {
+  color: #dbb27d;
+  font: 14px Consolas;
+}
+.combat-hull div {
+  grid-column: 1 / -1;
+  height: 3px;
+  margin-top: 8px;
+  background: #6e879237;
+}
+.combat-hull div span {
+  display: block;
+  height: 100%;
+  background: #83b99f;
+}
+.combat-log {
+  margin-top: 8px;
+}
+.combat-log p {
+  margin: 7px 0 0;
+  color: #91a6af;
+  font-size: 8px;
+}
+.combat-log b {
+  display: block;
+  color: #d29b76;
+  font: 7px Consolas;
+}
+.module-status {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+  margin-top: 10px;
+}
+.module-status article {
+  display: grid;
+  gap: 4px;
+  padding: 9px;
+  border: 1px solid #718d9c45;
+  background: #0d1c27;
+}
+.module-status small {
+  color: #829aa7;
+  font: 7px Consolas;
+  letter-spacing: 1px;
+}
+.module-status strong {
+  color: #e1b77f;
+  font: 15px Consolas;
+}
+.module-status span {
+  color: #93a9b4;
+  font-size: 8px;
+}
+.recovery-card {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 13px;
+  border: 1px solid #da765c99;
+  background: #2a1113e8;
+}
+.recovery-card small {
+  color: #ef947d;
+  font: 8px Consolas;
+  letter-spacing: 1.3px;
+}
+.recovery-card strong {
+  color: #ffd0bd;
+  font-size: 13px;
+}
+.recovery-card p,
+.recovery-card span {
+  margin: 0;
+  color: #c6a59c;
+  font-size: 9px;
+}
+.recovery-card button {
+  padding: 10px;
+  border: 1px solid #e8a17199;
+  color: #f2bd8f;
+  font: 8px Consolas;
+}
+.recovery-card.claimed {
+  border-color: #78b89a88;
+  background: #10231fe8;
+}
+.combat-reading span {
+  display: block;
+  margin-top: 5px;
+  color: #d28b70;
+  font: 8px Consolas;
 }
 .mission-panel {
   position: absolute;
@@ -1206,6 +1452,7 @@ dd {
 }
 .loading-toast,
 .error-toast {
+  z-index: 10;
   position: absolute;
   top: 105px;
   left: 50%;
@@ -1218,8 +1465,15 @@ dd {
 }
 .error-toast {
   border-color: #c98d60;
+  z-index: 40;
+}
+.error-toast button {
+  margin-left: 12px;
+  color: #e8bd88;
+  text-decoration: underline;
 }
 .modal-backdrop {
+  z-index: 20;
   position: absolute;
   inset: 0;
   background: #020811bd;
@@ -1555,4 +1809,253 @@ dd {
   .strip-status {
     min-width: 174px;
   }
+}
+
+/* Three-layer orbital operations interface. Kept at the end so the accepted
+   system components retain behavior while sharing one presentation shell. */
+.topbar {
+  left: 28px;
+  right: 28px;
+  height: 72px;
+  gap: 42px;
+  z-index: 12;
+}
+.brand { font-size: 17px; letter-spacing: 4px; }
+.brand svg { width: 34px; height: 34px; }
+.topbar nav { gap: 24px; }
+.hud-left {
+  position: absolute;
+  z-index: 7;
+  left: 28px;
+  top: 90px;
+  width: 278px;
+  pointer-events: none;
+}
+.orbital-map {
+  width: 278px;
+  height: 242px;
+  padding: 12px 13px 9px;
+  background: linear-gradient(145deg, #06111bcc, #07131ea8);
+  border: 1px solid #7ea1b345;
+  box-shadow: inset 0 0 40px #102d3e42, 0 12px 45px #0005;
+  clip-path: polygon(0 0, calc(100% - 13px) 0, 100% 13px, 100% 100%, 13px 100%, 0 calc(100% - 13px));
+  font: 9px Consolas, monospace;
+  color: #8ca7b5;
+}
+.orbital-map header,
+.orbital-map footer { display: flex; justify-content: space-between; letter-spacing: 1.4px; }
+.orbital-map header b { color: #dbad78; font-weight: 400; }
+.orbital-map footer { border-top: 1px solid #7895a52e; padding-top: 6px; font-size: 8px; }
+.orbital-map svg { width: 100%; height: 192px; overflow: visible; }
+.orbital-map .map-glow { fill: none; stroke: #6fc5e2; stroke-width: 2; opacity: .2; }
+.orbital-map .map-earth-live { stroke: #8cd1e8; stroke-width: .7; }
+.orbital-map .map-grid { fill: none; stroke: #9dccda; stroke-width: .6; opacity: .26; }
+.map-current-live { fill: none; stroke: #9fd6df; stroke-width: 1.2; opacity: .8; }
+.map-target-live { fill: none; stroke: #d9a567; stroke-width: 1; stroke-dasharray: 4 4; opacity: .8; }
+.map-transfer-live { fill: none; stroke: #f0bd7d; stroke-width: 1.5; stroke-dasharray: 3 2; filter: url(#map-glow); }
+.map-player { fill: #baf6ee; stroke: #baf6ee; stroke-width: .8; filter: url(#map-glow); }
+.map-target-marker { fill: none; stroke: #e7a761; stroke-width: 1; }
+.hud-left .vehicle-card {
+  margin-top: 8px;
+  padding: 9px 12px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid #7695a63d;
+  background: #07131eb8;
+}
+.hud-left .vehicle-card small { display: block; font: 7px Consolas; letter-spacing: 1.2px; color: #829aa8; }
+.hud-left .vehicle-card h2 { margin: 3px 0 0; font: 15px 'Segoe UI'; }
+.hud-left .vehicle-card > span { font: 9px Consolas; color: #d5af81; }
+
+.system-dock {
+  position: absolute;
+  z-index: 8;
+  top: 88px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: auto;
+  height: 34px;
+  display: flex;
+  gap: 2px;
+  padding: 0;
+  background: #07121cc7;
+  border: 1px solid #7897a638;
+  backdrop-filter: blur(10px);
+}
+.system-dock button {
+  height: 32px;
+  margin: 0;
+  padding: 0 14px;
+  width: auto;
+  border-right: 1px solid #7897a62c;
+  color: #9db0ba;
+  background: transparent;
+  font: 8px Consolas;
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+.system-dock button:hover { color: #fff; background: #b9dbe70e; }
+.system-dock .primary-action { color: #182129; background: #d8aa75; }
+.system-dock .scene-control { display: flex; margin: 0; }
+.system-dock .scene-control button { padding: 0 9px; font-size: 8px; }
+.system-dock .scene-control button[aria-pressed='true'] { color: #e7b77f; background: #d9a56a15; }
+
+.telemetry-strip {
+  position: absolute;
+  z-index: 7;
+  right: 24px;
+  top: 90px;
+  bottom: 84px;
+  width: 174px;
+  padding: 12px 12px 10px;
+  overflow-y: auto;
+  background: linear-gradient(90deg, #06111a66, #06111ad4);
+  border-left: 1px solid #7798aa46;
+  border-right: 1px solid #7798aa20;
+  scrollbar-width: thin;
+}
+.telemetry-strip header { display: flex; justify-content: space-between; padding-bottom: 9px; border-bottom: 1px solid #7898aa35; font: 8px Consolas; letter-spacing: 1.2px; color: #8ea5b2; }
+.telemetry-strip header b { color: #d7b486; font-weight: 400; }
+.telemetry-strip section { display: grid; grid-template-columns: 1fr 1fr; gap: 7px 5px; padding: 9px 0; border-bottom: 1px solid #7898aa22; }
+.telemetry-strip h3 { grid-column: 1 / -1; margin: 0 0 2px; color: #6f8b9b; font: 7px Consolas; letter-spacing: 1.5px; }
+.telemetry-value { min-width: 0; }
+.telemetry-value small { display: block; color: #718b99; font: 7px Consolas; letter-spacing: .8px; }
+.telemetry-value strong { color: #d9e5e7; font: 13px Consolas; font-weight: 400; }
+.telemetry-value em { margin-left: 3px; color: #7e96a2; font: 7px Consolas; font-style: normal; }
+.telemetry-strip .telemetry-context { background: #c9955910; margin: 0 -8px; padding: 9px 8px; border-left: 1px solid #d7a462; }
+.telemetry-strip .telemetry-context.combat { border-left-color: #e66e5b; }
+.telemetry-strip footer { display: flex; justify-content: space-between; padding-top: 10px; }
+.telemetry-strip footer button { color: #8fa8b5; font: 8px Consolas; }
+
+.ops-panel {
+  position: absolute;
+  z-index: 9;
+  left: 28px;
+  bottom: 22px;
+  width: 312px;
+  background: #07131ee8;
+  border: 1px solid #7a99aa43;
+  box-shadow: 0 20px 50px #0007;
+}
+.ops-toggle { width: 100%; height: 38px; padding: 0 13px; display: flex; align-items: center; gap: 10px; text-align: left; color: #d4e0e3; font: 9px Consolas; letter-spacing: 1.4px; }
+.ops-toggle span { color: #d6a46c; }
+.ops-toggle b { margin-left: auto; color: #7893a1; font-weight: 400; font-size: 7px; }
+.ops-content { border-top: 1px solid #7695a53d; padding: 12px; max-height: 370px; overflow: auto; }
+.ops-content header { display: flex; justify-content: space-between; color: #819aa8; font: 7px Consolas; letter-spacing: 1px; }
+.ops-content header i { color: #d1ad82; font-style: normal; }
+.ops-content header i.danger { color: #f06f5f; }
+.ops-content section { margin-top: 12px; padding-left: 9px; border-left: 1px solid #638699; }
+.ops-content section small { display: block; color: #77909e; font: 7px Consolas; letter-spacing: 1px; }
+.ops-content section strong { display: block; margin-top: 4px; color: #d9e4e5; font: 12px Consolas; }
+.ops-content section span { display: block; margin-top: 3px; color: #8fa4af; font-size: 9px; }
+.ops-content dl { margin-top: 7px; gap: 4px; font-size: 8px; }
+.ops-content nav { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; height: auto; margin-top: 13px; }
+.ops-content nav button { padding: 8px 3px; border: 1px solid #7896a540; font: 7px Consolas; color: #a9bec7; }
+
+.scene-caption { top: 142px; left: 50%; transform: translateX(-50%); text-align: center; }
+.scene-caption h2 { font-size: 19px; margin: 7px 0 2px; }
+.scene-caption p { display: none; }
+.flight-strip {
+  left: 358px;
+  right: 218px;
+  bottom: 21px;
+  height: 40px;
+  padding: 0 13px;
+  gap: 20px;
+  z-index: 7;
+  border: 1px solid #7896a533;
+  background: #07131ecc;
+}
+.flight-strip .strip-status { min-width: 185px; }
+.flight-strip .controls-inline { margin-left: auto; }
+.flight-strip .render-badge { padding-left: 15px; }
+
+.maneuver-panel,
+.mission-panel,
+.hangar-panel,
+.combat-panel {
+  position: fixed;
+  z-index: 30;
+  inset: 0;
+  width: auto;
+  height: auto;
+  max-width: none;
+  padding: 96px max(5vw, 54px) 45px;
+  overflow: auto;
+  background: radial-gradient(circle at 60% 45%, #102331e8, #040b12f7 70%);
+  border: 0;
+  box-shadow: none;
+  backdrop-filter: blur(18px);
+}
+.maneuver-panel::before,
+.mission-panel::before,
+.hangar-panel::before,
+.combat-panel::before {
+  content: '';
+  position: fixed;
+  inset: 74px 28px 25px;
+  pointer-events: none;
+  border: 1px solid #7293a23d;
+  clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px));
+}
+.maneuver-panel > *, .mission-panel > *, .hangar-panel > *, .combat-panel > * { max-width: 1180px; margin-left: auto; margin-right: auto; }
+.maneuver-heading { position: relative; min-height: 58px; }
+.maneuver-heading > button {
+  position: fixed;
+  z-index: 35;
+  top: 92px;
+  right: 52px;
+  width: 42px;
+  height: 42px;
+  border: 1px solid #90aeba69;
+  background: #0b1924;
+  font: 22px Consolas;
+}
+.maneuver-heading > button::after { content: ' CLOSE'; position: absolute; right: 49px; top: 15px; color: #75909d; font: 7px Consolas; letter-spacing: 1px; }
+.maneuver-panel { display: grid; grid-template-columns: minmax(260px, .8fr) minmax(510px, 1.7fr); grid-template-rows: auto auto auto 1fr; column-gap: 42px; align-content: start; }
+.maneuver-panel .maneuver-heading { grid-column: 1 / -1; width: 100%; }
+.maneuver-panel .target-select, .maneuver-panel .plan-action, .maneuver-panel .candidate-list { grid-column: 1; }
+.maneuver-panel .plan-orbit-map { grid-column: 2; grid-row: 2 / span 3; width: 100%; height: 320px; margin-top: 18px; }
+.maneuver-panel .selection-summary, .maneuver-panel .maneuver-status, .maneuver-panel .planner-error { grid-column: 2; }
+.maneuver-panel .candidate-card { min-height: 72px; grid-template-columns: 1fr 1fr 1fr 1fr 1fr; align-items: center; }
+.maneuver-panel .candidate-name { font-size: 12px; }
+.mission-panel .faction-select,
+.mission-panel .profile-strip,
+.mission-panel .mission-offers,
+.mission-panel .active-mission { max-width: 1180px; }
+.mission-panel .mission-offers { display: grid; grid-template-columns: repeat(4, minmax(210px, 1fr)); gap: 9px; }
+.mission-panel .offer-heading, .mission-panel .mission-result, .mission-panel .empty-offers { grid-column: 1 / -1; }
+.mission-card { margin: 0; min-height: 315px; display: flex; flex-direction: column; }
+.mission-card p { font-size: 10px; line-height: 1.45; min-height: 44px; }
+.mission-card .mission-accept { margin-top: auto; }
+.hangar-panel .hangar-fleet { grid-template-columns: 1fr 1fr; }
+.hangar-panel .service-grid { grid-template-columns: repeat(3, 1fr); }
+.hangar-panel .upgrade-grid { grid-template-columns: repeat(4, 1fr); }
+.combat-panel .combat-region,
+.combat-panel .contact-card,
+.combat-panel .weapon-grid,
+.combat-panel .combat-hull,
+.combat-panel .module-status,
+.combat-panel .combat-log,
+.combat-panel .recovery-card { max-width: 1180px; }
+.combat-panel .weapon-grid { grid-template-columns: repeat(3, 1fr); }
+.combat-panel .module-status { grid-template-columns: repeat(4, 1fr); }
+
+@media (max-width: 1380px) {
+  .telemetry-strip { width: 158px; right: 14px; }
+  .hud-left { left: 18px; transform: scale(.9); transform-origin: top left; }
+  .system-dock button { padding: 0 9px; font-size: 7px; }
+  .flight-strip { right: 184px; }
+  .mission-panel .mission-offers { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-height: 820px) {
+  .orbital-map { height: 210px; }
+  .orbital-map svg { height: 160px; }
+  .hud-left .vehicle-card { display: none; }
+  .telemetry-strip { top: 79px; bottom: 72px; }
+  .telemetry-strip section { padding: 6px 0; gap: 4px; }
+  .maneuver-panel, .mission-panel, .hangar-panel, .combat-panel { padding-top: 82px; }
+  .maneuver-heading > button { top: 80px; }
 }

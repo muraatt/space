@@ -6,6 +6,9 @@ export function dispatch(world: WorldState, data: unknown, ownedShipId: string) 
   if (c.type === 'ping') return { ok: true as const, pong: c.sentAt };
   if (c.shipId !== ownedShipId || c.shipId !== world.ship.id)
     return { ok: false as const, code: 'NOT_OWNER' };
+  if (c.type === 'claim_replacement')
+    return { ok: true as const, recoveryRequest: { transactionId: c.transactionId } };
+  if (world.combat.playerDestroyed) return { ok: false as const, code: 'SHIP_DESTROYED' };
   if (c.type === 'plan_maneuver')
     return {
       ok: true as const,
@@ -46,6 +49,13 @@ export function dispatch(world: WorldState, data: unknown, ownedShipId: string) 
       ok: true as const,
       identifyRequest: { missionId: c.missionId, destinationId: c.destinationId },
     };
+  if (c.type === 'select_target')
+    return { ok: true as const, targetSelectionRequest: { targetId: c.targetId, commandId: c.commandId } };
+  if (c.type === 'clear_target') return { ok: true as const, targetClearRequest: { commandId: c.commandId } };
+  if (c.type === 'fire_laser') return { ok: true as const, laserRequest: { commandId: c.commandId } };
+  if (c.type === 'fire_missile') return { ok: true as const, missileRequest: { commandId: c.commandId } };
+  if (c.type === 'activate_countermeasure')
+    return { ok: true as const, countermeasureRequest: { commandId: c.commandId } };
   if (c.type === 'select_ship')
     return {
       ok: true as const,

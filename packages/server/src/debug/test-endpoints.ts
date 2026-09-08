@@ -1,5 +1,5 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import { scenarioResetSchema } from '@orbital/shared';
+import { CONFIG, scenarioResetSchema } from '@orbital/shared';
 import type { World } from '../world';
 export async function testEndpoint(
   req: IncomingMessage,
@@ -31,6 +31,13 @@ export async function testEndpoint(
     try {
       const data = scenarioResetSchema.parse(JSON.parse(body));
       world.reset(data.scene, data.paused, data.seed);
+      // Isolated starting fixture for the existing reconnaissance objective;
+      // acceptance, scanning and rewards still use the normal command path.
+      if (data.startOrbitAltitudeKm) {
+        const radius = CONFIG.earthRadius + data.startOrbitAltitudeKm * 1000;
+        world.state.ship.position = [radius, 0, 0];
+        world.state.ship.velocity = [0, 0, -Math.sqrt(CONFIG.earthMu / radius)];
+      }
       res.end(JSON.stringify({ ok: true }));
     } catch {
       res.writeHead(400);

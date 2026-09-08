@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
-import { ready, reset } from '../src/runner';
+import { CONFIG } from '@orbital/shared';
+import { ready, reset, TEST_SERVER, TEST_HEADERS } from '../src/runner';
 import { cargoMission } from '../src/scenarios/cargo_mission';
 
 test('cargo_mission: faction, reachable offer, cargo identity, completion and reward', async ({
@@ -53,4 +54,32 @@ test('reconnaissance offer transfers its target into the existing maneuver plann
   await page.getByRole('button', { name: 'HEDEFİ MANEVRAYA AKTAR' }).click();
   await expect(page.getByLabel('Manevra bilgisayarı')).toBeVisible();
   await expect(page.getByLabel('Manevra bilgisayarı').locator('select')).toHaveValue('service-800');
+});
+
+test('reconnaissance at its orbit: accept, scan, authoritative reward and return to manual flight', async ({ page, request }) => {
+  await page.goto('/?backend=webgl2');
+  await ready(page);
+  const response = await request.post(`${TEST_SERVER}/__test/reset`, {
+    headers: TEST_HEADERS,
+    data: { scene: 'orbit_day', paused: false, startOrbitAltitudeKm: 800 },
+  });
+  expect(response.ok()).toBe(true);
+  await expect.poll(() => page.evaluate((radius) => Math.round((Math.hypot(...window.__ORBITAL__!.getState()!.ship.position) - radius) / 1000), CONFIG.earthRadius)).toBe(800);
+  await page.getByRole('button', { name: 'GÖREV KONTROLÜ' }).click();
+  await page.getByTestId('faction-aurora').click();
+  await page.getByRole('button', { name: 'YENİLE', exact: true }).click();
+  const card = page.getByTestId('mission-reconnaissance');
+  await expect(card).toBeVisible();
+  const before = await page.evaluate(() => window.__ORBITAL__!.getState()!.profile.credits);
+  await card.getByRole('button', { name: 'GÖREVİ KABUL ET' }).click();
+  await page.getByTestId('start-scan').click();
+  await expect(page.getByLabel('Görev kontrolü')).toContainText('GÖREV TAMAMLANDI', { timeout: 10000 });
+  const state = await page.evaluate(() => window.__ORBITAL__!.getState()!);
+  const mission = state.missions.find(item => item.type === 'RECONNAISSANCE')!;
+  expect(mission.status).toBe('COMPLETED');
+  expect(state.profile.credits).toBe(before + mission.reward.credits);
+  await page.getByRole('button', { name: 'Görev panelini kapat' }).click();
+  await page.keyboard.down('w');
+  await expect.poll(() => page.evaluate(() => window.__ORBITAL__!.getState()!.controls.translation[2])).toBe(-1);
+  await page.keyboard.up('w');
 });

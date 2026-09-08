@@ -1,5 +1,6 @@
 import {
   CONFIG,
+  COMBAT_TARGET_ID,
   neutralControls,
   shipDefinition,
   shipPerformance,
@@ -8,6 +9,7 @@ import {
   type WorldState,
   type SceneId,
   type Vec3,
+  type CombatState,
 } from '@orbital/shared';
 import { integrate } from './integrate';
 import { length, multiplyQuat, normalizedQuat, rotate } from './coordinates';
@@ -46,7 +48,65 @@ export function initialWorld(scene: SceneId = 'orbit_day', seed = 4401): WorldSt
     };
   };
   const kestrel = makeShip('KESTREL_LOGISTICS', CONFIG.shipId),
-    raptor = makeShip('RAPTOR_COMBAT', 'raptor-01');
+    raptor = makeShip('RAPTOR_COMBAT', 'raptor-01'),
+    activeShip = scene === 'intercept' || scene === 'missile_hit' ? raptor : kestrel,
+    combat: CombatState = {
+      region:
+        scene === 'orbit_night' || scene === 'missile_hit'
+          ? 'CONTESTED'
+          : scene === 'intercept'
+            ? 'NORMAL'
+            : 'SAFE',
+      contacts: [
+        {
+          id: COMBAT_TARGET_ID,
+          label: 'Kimliksiz Röle R-17',
+          position: [r, 0, scene === 'missile_hit' ? -350 : -1200],
+          velocity: [...velocity],
+          radiusM: 16,
+          health: 100,
+          maxHealth: 100,
+          eligible: scene === 'orbit_night' || scene === 'missile_hit',
+          destroyed: false,
+          occluded: false,
+          rangeM: scene === 'missile_hit' ? 350 : 1200,
+          lineOfSight: true,
+          engagementAllowed: scene === 'orbit_night' || scene === 'missile_hit',
+        },
+      ],
+      laserEnergy: 100,
+      laserHeat: 0,
+      laserCooldownUntilMs: 0,
+      missileCooldownUntilMs: 0,
+      countermeasureCharges: CONFIG.countermeasureCharges,
+      countermeasureCooldownUntilMs: 0,
+      playerHull: 100,
+      playerMaxHull: 100,
+      combatTagUntilMs: 0,
+      serverNowMs: CONFIG.epochMs,
+      missiles: [],
+      events: [],
+      processedCommandIds: [],
+      processedDamageIds: [],
+      sequence: 0,
+      scriptedIncomingLaunched: false,
+      playerDestroyed: false,
+      modules: {
+        ENGINE: { id: 'ENGINE', condition: 100, consequence: 'İtki nominal' },
+        FUEL: { id: 'FUEL', condition: 100, consequence: 'Yakıt sistemi nominal' },
+        POWER: { id: 'POWER', condition: 100, consequence: 'Enerji dolumu nominal' },
+        WEAPON: { id: 'WEAPON', condition: 100, consequence: 'Silahlar nominal' },
+      },
+      bot: {
+        mode: scene === 'missile_hit' ? 'ATTACK' : 'PATROL',
+        laserEnergy: 100,
+        missileAmmunitionKg: CONFIG.botInitialMissileAmmunitionKg,
+        laserCooldownUntilMs: 0,
+        missileCooldownUntilMs: 0,
+        nextDecisionAtMs: CONFIG.epochMs,
+      },
+      wrecks: [],
+    };
   return {
     universeId: CONFIG.universeId,
     scene,
@@ -59,11 +119,12 @@ export function initialWorld(scene: SceneId = 'orbit_day', seed = 4401): WorldSt
       credits: CONFIG.startingCredits,
       reputation: 0,
       ownedShipIds: [CONFIG.shipId, 'raptor-01'],
-      activeShipId: CONFIG.shipId,
+      activeShipId: activeShip.id,
     },
     missions: [],
-    ship: structuredClone(kestrel),
+    ship: structuredClone(activeShip),
     hangar: { ships: [kestrel, raptor], processedTransactionIds: [] },
+    combat,
   };
 }
 export function step(world: WorldState): WorldState {

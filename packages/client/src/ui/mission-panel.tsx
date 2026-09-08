@@ -19,6 +19,8 @@ const errorText: Record<string, string> = {
   WRONG_DESTINATION: 'Bu işlem yanlış hedefte istendi.',
   NOT_AT_DESTINATION: 'Teslimat için hedef yörüngeye ulaş.',
   SCAN_UNAVAILABLE: 'Tarama yalnızca hedef yörüngede başlatılabilir.',
+  IDENTIFY_UNAVAILABLE: 'Tanımlama için hedef yörüngeye ulaş.',
+  TARGET_ALREADY_IDENTIFIED: 'Hedef daha önce tanımlandı.',
 };
 
 function MissionCard({ mission, onAccept }: { mission: MissionInstance; onAccept: () => void }) {
@@ -114,6 +116,19 @@ function ActiveMission({
           </div>
         </div>
       )}
+      {mission.intercept && (
+        <div className="objective-status" data-testid="intercept-progress">
+          <small>ÖNLEME HEDEFİ</small>
+          <strong>{mission.intercept.targetLabel}</strong>
+          <span>
+            {mission.intercept.neutralized
+              ? 'ETKİSİZ'
+              : mission.intercept.identified
+                ? `ATEŞ YETKİSİ · ${mission.intercept.damageDealt}/${mission.intercept.damageRequired} HASAR`
+                : 'KİMLİK DOĞRULAMA BEKLİYOR'}
+          </span>
+        </div>
+      )}
       {!atDestination && (
         <button className="mission-navigate" onClick={onNavigate}>
           HEDEFİ MANEVRAYA AKTAR
@@ -146,7 +161,7 @@ function ActiveMission({
           disabled={!atDestination || mission.intercept?.identified}
           data-testid="identify-target"
         >
-          {mission.intercept?.identified ? 'HEDEF TANIMLANDI' : 'HEDEFİ TANIMLA'}
+          {mission.intercept?.identified ? 'ATEŞ YETKİSİ VERİLDİ' : 'HEDEFİ TANIMLA'}
         </button>
       )}
       <button className="mission-abandon" onClick={onAbandon}>
@@ -206,7 +221,7 @@ export function MissionPanel({
           <h2>Yörünge işleri</h2>
         </div>
         <button onClick={onClose} aria-label="Görev panelini kapat">
-          ×
+          [X]
         </button>
       </div>
       {!faction ? (

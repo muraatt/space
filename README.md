@@ -1,6 +1,6 @@
 # ORBITAL · Earth Operations
 
-Tarayıcıda çalışan, bilimsel temelli bir yörünge oyunu. **Mevcut kapsam Oturum 3 ekonomi/hangar geçişi:** Dünya yörüngesinde yerel otoriter sunucu, yakıtlı doğrudan itki, manevra planlama/yürütme, iki fraksiyon, kargo/keşif/silahsız önleme görevleri, iki araçlı hangar, ikmal hizmetleri ve dört sabit yükseltme bulunur. Savaş, silahlar, gerçek hasar, kalıcı hesap ve çok oyunculu oyun henüz yoktur.
+Tarayıcıda çalışan, bilimsel temelli bir yörünge oyunu. **Mevcut kapsam Oturum 4 hasar/kayıp/kurtarma:** Dünya yörüngesinde yerel otoriter sunucu, görev/ekonomi/hangar döngüsü, bölge kuralları, hedefleme, lazer, güdümlü füze, karşı tedbir, dört alt sistemli hasar, savaş botu, imha, enkaz/kayıp ve temel sigorta dönüşü bulunur. Kalıcı hesap ve çok oyunculu oyun henüz yoktur.
 
 ## Yerel çalıştırma
 
@@ -21,6 +21,10 @@ WebGPU tercih edilir. Kullanılamıyorsa Three.js WebGL2'ye geçer; alt sağ kö
 **Manevra bilgisayarı** hedef yörüngeyi seçer, sunucudan ekonomik/dengeli/hızlı seçenekleri ister ve seçilen planı otoriter sunucuda yürütür. Yanma veya coast sırasında panelden iptal edilebilir. `?scene=orbit_maneuver` oynanabilir plan akışını, `?scene=low_fuel` gerçek Δv/yakıt reddini açar.
 
 **Görev kontrolü** iki başlangıç fraksiyonundan birini seçtirir; kargo, keşif ve silahsız önleme işlerini mevcut manevra bilgisayarına bağlar. `?scene=cargo_mission` hızlı ekonomi testi için teslim halkasında başlar. İki başlangıç kargo işinden sonra **Hangar ve servis** panelinden Raptor'a geçilebilir, yakıt/tamir/mühimmat tamamlanabilir ve ilk yükseltme kurulabilir. Bu geliştirme evreni bellek tabanlıdır; sunucu yeniden başlatılınca profil sıfırlanır.
+
+**Ateş kontrolü** bölge ve görev yetkisini, seçilebilir teması, lazer enerji/ısı durumunu, füze mühimmatını, karşı tedbirleri, gelen tehdidi ve otoriter olay akışını gösterir. `?scene=intercept` Raptor ile kısa silahlı önleme akışını açar: görevi kabul et, hedefi tanımla, gelen füzeye karşı tedbir kullan, hedefi seç ve lazer/füzeyle etkisizleştir. NORMAL bölgede yalnız görev yetkili hedefe; CONTESTED bölgede uygun temaslara ateş edilir; SAFE bölgede silahlar sunucu tarafından reddedilir.
+
+Hasar ENGINE itkisini, FUEL eldeki yakıtı, POWER lazer dolumunu ve enerji tavanını, WEAPON ise silah verimini/çalışabilirliğini düşürür. Sıfır gövde gemiyi tek seferde imha eder; görev başarısız olur, kargo/mühimmat/yükseltmeler enkaz kaydına geçer. Ateş kontrolündeki sigorta düğmesi Raptor için 600 kredi muafiyetle aynı aracı, bakiye yetmezse ücretsiz temel Kestrel'i verir. `?scene=missile_hit` gelen füze, görünür modül hasarı, imha ve kurtarmayı otomatik gösteren kısa test sahnesidir.
 
 ## Doğrulama
 
@@ -57,7 +61,7 @@ Varsayılan her koşu: Chrome, 1920×1080, DPR 1, 60 saniye ısınma + 300 saniy
 | `packages/client`     | React DOM arayüzü, bağımsız Three.js renderer, girdi toplama     |
 | `packages/test-tools` | Senaryolar, gerçek kumanda yolculukları, görsel/perf kanıtı      |
 
-Önce [AGENTS](AGENTS.md), [yol haritası](docs/roadmap.md), [vertical slice](docs/vertical_slice.md) ve [son oturum raporu](docs/sessions/03-economy-hangar-report.md) okunur. Sayısal çalışma değerlerinin tek kaynağı [config](packages/shared/src/config.ts); belgelerdeki gelecek kuralları uygulanmış özellik sayılmaz.
+Önce [AGENTS](AGENTS.md), [yol haritası](docs/roadmap.md), [vertical slice](docs/vertical_slice.md) ve [son oturum raporu](docs/sessions/04-damage-loss-report.md) okunur. Sayısal çalışma değerlerinin tek kaynağı [config](packages/shared/src/config.ts); belgelerdeki gelecek kuralları uygulanmış özellik sayılmaz.
 
 [Vizyon](docs/vision.md) · [oyun tasarımı](docs/game_design.md) · [fizik sözleşmesi](docs/physics_contract.md) · [multiplayer](docs/multiplayer_architecture.md) · [ekonomi](docs/economy.md) · [art bible](docs/art_bible.md) · [arayüz](docs/user_interface.md) · [test](docs/testing.md) · [riskler](docs/risk_register.md) · [ADR](docs/decisions/0001-stack-and-boundaries.md).
 

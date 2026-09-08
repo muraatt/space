@@ -20,19 +20,27 @@ export class FlightControls {
   constructor(
     private canvas: HTMLCanvasElement,
     private resetCamera: () => void,
+    private canActivate: () => boolean = () => true,
+    private onFocusChange: (active: boolean) => void = () => {},
   ) {
     window.addEventListener('keydown', this.down);
     window.addEventListener('keyup', this.up);
     window.addEventListener('blur', this.clear);
     document.addEventListener('visibilitychange', this.visibility);
     canvas.addEventListener('pointerdown', this.focus);
+    canvas.addEventListener('focus', this.activate);
     canvas.addEventListener('blur', this.clear);
   }
   private focus = () => {
+    this.activate();
     this.canvas.focus({ preventScroll: true });
   };
+  activate = () => {
+    this.enabled = this.canActivate();
+    this.onFocusChange(this.enabled);
+  };
   private down = (e: KeyboardEvent) => {
-    if (!this.enabled || document.activeElement !== this.canvas) return;
+    if (!this.enabled || !this.canActivate() || document.activeElement !== this.canvas) return;
     if (e.code === 'KeyC') {
       e.preventDefault();
       this.resetCamera();
@@ -41,7 +49,7 @@ export class FlightControls {
     if (keys.has(e.code)) {
       e.preventDefault();
       if (e.code === 'Space') this.pressed.clear();
-      else this.pressed.add(e.code);
+      else if (!e.repeat) this.pressed.add(e.code);
     }
   };
   private up = (e: KeyboardEvent) => {
@@ -49,12 +57,13 @@ export class FlightControls {
   };
   clear = () => {
     this.pressed.clear();
+    this.onFocusChange(false);
   };
   private visibility = () => {
     if (document.hidden) this.clear();
   };
   read(): Controls {
-    if (!this.enabled || document.hidden || document.activeElement !== this.canvas) return neutralControls();
+    if (!this.enabled || !this.canActivate() || document.hidden || document.activeElement !== this.canvas) return neutralControls();
     const a = (positive: string, negative: string) =>
       Number(this.pressed.has(positive)) - Number(this.pressed.has(negative));
     return {
@@ -68,6 +77,7 @@ export class FlightControls {
     window.removeEventListener('blur', this.clear);
     document.removeEventListener('visibilitychange', this.visibility);
     this.canvas.removeEventListener('pointerdown', this.focus);
+    this.canvas.removeEventListener('focus', this.activate);
     this.canvas.removeEventListener('blur', this.clear);
   }
 }

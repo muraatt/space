@@ -33,7 +33,8 @@ export function attachGateway(server: Server, world: World, testMode: boolean) {
       world.state.controls = neutralControls();
       owner = ws;
       const scene = url.searchParams.get('scene');
-      if (!world.paused && SCENES.includes(scene as SceneId)) world.reset(scene as SceneId);
+      if (url.searchParams.get('resume') !== '1' && !world.paused && SCENES.includes(scene as SceneId))
+        world.reset(scene as SceneId);
       wss.emit('connection', ws);
     });
   });
@@ -67,6 +68,7 @@ export function attachGateway(server: Server, world: World, testMode: boolean) {
         if ('pong' in result && result.pong !== undefined) send(ws, { type: 'pong', sentAt: result.pong });
         else if ('planRequest' in result && result.planRequest !== undefined) {
           const plan = await planner.plan(world.state.ship, result.planRequest.target);
+          if (owner !== ws) return;
           plans.set(result.planRequest.requestId, plan);
           send(ws, {
             type: 'maneuver_plan',
@@ -114,6 +116,7 @@ export function attachGateway(server: Server, world: World, testMode: boolean) {
             planner.plan(world.state.ship, MISSION_TARGETS.reconnaissance),
             planner.plan(world.state.ship, MISSION_TARGETS.interception),
           ]);
+          if (owner !== ws) return;
           const refreshed = world.setMissionOffers(
             generateMissionPool(
               factionId,
@@ -174,6 +177,55 @@ export function attachGateway(server: Server, world: World, testMode: boolean) {
               type: 'mission_ack',
               action: 'IDENTIFY',
               missionId: result.identifyRequest.missionId,
+            });
+        } else if ('targetSelectionRequest' in result && result.targetSelectionRequest !== undefined) {
+          const selected = world.selectCombatTarget(
+            result.targetSelectionRequest.targetId,
+            result.targetSelectionRequest.commandId,
+            Date.now(),
+          );
+          if (!selected.ok) send(ws, { type: 'error', code: selected.code });
+          else
+            send(ws, {
+              type: 'combat_ack',
+              action: 'TARGET',
+              commandId: result.targetSelectionRequest.commandId,
+            });
+        } else if ('targetClearRequest' in result && result.targetClearRequest !== undefined) {
+          const cleared = world.clearCombatTarget(result.targetClearRequest.commandId, Date.now());
+          if (!cleared.ok) send(ws, { type: 'error', code: cleared.code });
+          else
+            send(ws, {
+              type: 'combat_ack',
+              action: 'CLEAR_TARGET',
+              commandId: result.targetClearRequest.commandId,
+            });
+        } else if ('laserRequest' in result && result.laserRequest !== undefined) {
+          const fired = world.fireLaser(result.laserRequest.commandId, Date.now());
+          if (!fired.ok) send(ws, { type: 'error', code: fired.code });
+          else send(ws, { type: 'combat_ack', action: 'LASER', commandId: result.laserRequest.commandId });
+        } else if ('missileRequest' in result && result.missileRequest !== undefined) {
+          const fired = world.fireMissile(result.missileRequest.commandId, Date.now());
+          if (!fired.ok) send(ws, { type: 'error', code: fired.code });
+          else
+            send(ws, { type: 'combat_ack', action: 'MISSILE', commandId: result.missileRequest.commandId });
+        } else if ('countermeasureRequest' in result && result.countermeasureRequest !== undefined) {
+          const activated = world.activateCountermeasure(result.countermeasureRequest.commandId, Date.now());
+          if (!activated.ok) send(ws, { type: 'error', code: activated.code });
+          else
+            send(ws, {
+              type: 'combat_ack',
+              action: 'COUNTERMEASURE',
+              commandId: result.countermeasureRequest.commandId,
+            });
+        } else if ('recoveryRequest' in result && result.recoveryRequest !== undefined) {
+          const claimed = world.claimReplacement(result.recoveryRequest.transactionId, Date.now());
+          if (!claimed.ok) send(ws, { type: 'error', code: claimed.code });
+          else
+            send(ws, {
+              type: 'combat_ack',
+              action: 'RECOVERY',
+              commandId: result.recoveryRequest.transactionId,
             });
         } else if ('shipSelectionRequest' in result && result.shipSelectionRequest !== undefined) {
           const selected = world.selectShip(

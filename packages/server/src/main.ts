@@ -13,7 +13,7 @@ const server = createServer(async (req, res) => {
   if (await testEndpoint(req, res, world, testToken)) return;
   if (req.url === '/health') {
     res.setHeader('Content-Type', 'application/json');
-    res.end(JSON.stringify({ status: 'ok', session: 3, persistence: 'memory', testMode: !!testToken }));
+    res.end(JSON.stringify({ status: 'ok', session: 4, persistence: 'memory', testMode: !!testToken }));
     return;
   }
   res.writeHead(404);

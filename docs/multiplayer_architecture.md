@@ -1,5 +1,11 @@
 # Multiplayer ve kalıcılık mimarisi
 
+## Savaş güven sınırı
+
+İstemci yalnız hedef seç/bırak, lazer ateşle, füze fırlat ve karşı tedbir kullan niyeti gönderir. Komutlarda benzersiz kimlik bulunur; istemci hit, hasar, fiyat veya sonuç gönderemez. Sunucu bölge/görev yetkisini, hedefi, menzil/görüş/atış yayını, kaynakları ve cooldown'u doğrular; hasarı ve görev ilerlemesini tekil hasar kimlikleriyle uygular. Snapshot temas, füze, kaynak, gövde, combat tag ve olay akışının otoriter kopyasını taşır.
+
+İmha, enkaz içeriği, görev sonucu ve sigorta hesabı da aynı sınırın içindedir. Recovery komutu yalnız transaction id taşır; fiyat, replacement türü ve içerik alanları strict şema tarafından reddedilir. Sunucu claim'i tekilleştirir, kayıp aracı sahiplikten çıkarır ve yeni aktif gemi kimliğini atomik snapshot ile yayınlar.
+
 ## O1 — uygulanan temel
 
 Girdi → [strict runtime şema](../packages/shared/src/protocol.ts) → [ownership/sequence doğrulaması](../packages/server/src/commands/dispatch.ts) → saf simulation → sunucu snapshot → renderer/DOM. Client yalnızca eksen niyetleri ve ping gönderir. Konum, hız, para veya hasar alanı kabul edilmez. Mesaj boyutu, komut sıklığı ve yavaş istemci backlog'u sınırlıdır. JSON hatası süreç düşürmez. Güncel sayılar shared/config'tedir.

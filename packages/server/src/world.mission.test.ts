@@ -106,9 +106,10 @@ describe('authoritative mission loop', () => {
     expect(world.acceptMission(mission.id, 1002)).toMatchObject({ ok: false, code: 'INVALID_MISSION_STATE' });
   });
 
-  it('completes non-combat interception once after authoritative identification', () => {
+  it('arms combat interception on identification and rewards authoritative damage once', () => {
     const world = new World(),
       initialCredits = world.state.profile.credits;
+    world.setCombatRegion('NORMAL');
     world.chooseFaction('AURORA');
     world.setMissionOffers(offers(world));
     const mission = world.state.missions.find((item) => item.type === 'INTERCEPT')!;
@@ -126,11 +127,18 @@ describe('authoritative mission loop', () => {
     });
     expect(world.identifyTarget(mission.id, mission.destination.id, 2002).ok).toBe(true);
     expect(mission.intercept?.identified).toBe(true);
-    expect(world.state.profile.credits).toBe(initialCredits + mission.reward.credits);
+    expect(mission.intercept?.combatAuthorized).toBe(true);
+    expect(world.state.profile.credits).toBe(initialCredits);
     expect(world.identifyTarget(mission.id, mission.destination.id, 2003)).toMatchObject({
       ok: false,
-      code: 'INVALID_MISSION_STATE',
+      code: 'TARGET_ALREADY_IDENTIFIED',
     });
+    expect(world.selectCombatTarget(mission.intercept!.targetId, 'mission-target', 2100).ok).toBe(true);
+    world.state.combat.contacts[0].health = 48;
+    for (let index = 0; index < 4; index++)
+      expect(world.fireLaser(`mission-shot-${index}`, 2500 + index * 500).ok).toBe(true);
+    expect(mission.status).toBe('COMPLETED');
+    expect(mission.intercept?.neutralized).toBe(true);
     expect(world.state.profile.credits).toBe(initialCredits + mission.reward.credits);
   });
 });

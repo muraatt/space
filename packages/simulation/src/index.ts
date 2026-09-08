@@ -8,3 +8,4 @@ export * from './mass';
 export * from './orbit';
 export * from './propulsion';
 export * from './maneuver';
+export * from './combat';

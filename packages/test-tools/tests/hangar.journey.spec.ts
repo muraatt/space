@@ -26,6 +26,7 @@ test('earn, service the second vehicle, install upgrade and return to intercepti
   await completeCargo(page);
   await expect(page.getByTestId('profile-credits')).toHaveText('5.300');
 
+  await page.getByRole('button', { name: 'Görev panelini kapat' }).click();
   await page.getByRole('button', { name: 'HANGAR VE SERVİS' }).click();
   const hangar = page.getByLabel('Hangar ve servisler');
   await expect(hangar).toBeVisible();
@@ -33,7 +34,7 @@ test('earn, service the second vehicle, install upgrade and return to intercepti
   await expect(hangar.getByLabel('Sahip olunan araçlar')).toContainText('Raptor');
   await page.getByTestId('select-raptor-01').click();
   await expect(page.getByTestId('ship-raptor-01')).toContainText('AKTİF ARAÇ');
-  await expect(page.locator('.vehicle-card h2')).toHaveText('Raptor');
+  expect(await page.evaluate(() => window.__ORBITAL__!.getState()!.ship.definitionId)).toBe('RAPTOR_COMBAT');
 
   await page.getByTestId('fuel-service').getByRole('button', { name: 'YAKITI TAMAMLA' }).click();
   await expect(page.getByTestId('fuel-service')).toContainText('1600 / 1600 kg');
@@ -51,11 +52,16 @@ test('earn, service the second vehicle, install upgrade and return to intercepti
     await page.evaluate(() => window.__ORBITAL__!.getState()!.ship.performance.sensorScanTimeMultiplier),
   ).toBe(0.65);
 
+  await page.getByRole('button', { name: 'Hangarı kapat' }).click();
   await page.getByRole('button', { name: 'GÖREV KONTROLÜ' }).click();
   const intercept = page.getByTestId('mission-intercept');
   await expect(intercept).toBeVisible();
   await intercept.getByRole('button', { name: 'GÖREVİ KABUL ET' }).click();
   await page.getByRole('button', { name: 'HEDEFİ MANEVRAYA AKTAR' }).click();
   await expect(page.getByLabel('Manevra bilgisayarı').locator('select')).toHaveValue('phase-target');
+  await page.getByRole('button', { name: 'Manevra panelini kapat' }).click();
+  await page.keyboard.down('w');
+  await expect.poll(() => page.evaluate(() => window.__ORBITAL__!.getState()!.controls.translation[2])).toBe(-1);
+  await page.keyboard.up('w');
   expect(errors).toEqual([]);
 });

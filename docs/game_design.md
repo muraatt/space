@@ -1,5 +1,11 @@
 # Oyun kuralları
 
+## Uygulanan savaş temeli
+
+Oturum 4 ilk geçişinde SAFE bölgeler ateşi reddeder, NORMAL bölgeler yalnız etkin önleme görevinin tanımlanmış hedefine izin verir, CONTESTED bölgeler uygun temaslara serbest ateş sağlar. Sunucu hedef uygunluğu, görüş hattı, menzil, atış yayı, cooldown, lazer enerjisi/ısısı ve mühimmatı doğrular. Lazer anlık otoriter isabet; füze ise sınırlı ivme, ömür ve swept collision kullanan sunucu varlığıdır. Karşı tedbir yalnız menzildeki en yakın aktif gelen füzeyi saptırır ve yük/cooldown tüketir. Sayısal değerlerin kaynağı `packages/shared/src/config.ts` dosyasıdır.
+
+Önleme görevi hedef tanımlanınca NORMAL bölge ateş yetkisi verir. Görev, hedef gövdesi sıfıra ulaşıp sunucu tekil imha olayını ürettiğinde bir kez tamamlanır. ENGINE, FUEL, POWER ve WEAPON hasarı sırasıyla itkiyi, eldeki yakıtı, lazer enerji dolumunu/tavanını ve silah verimini değiştirir. Oyuncu imhası etkin görevi başarısız yapar; yük ve sigortasız yükseltmeler enkaza yazılır. Raptor 600 kredi muafiyetle yenilenir; bakiye yetmezse oynanabilir temel Kestrel ücretsiz sağlanır.
+
 Bu belge kullanıcının nihai tasarım kararlarını tutar. **Oturum 1'de yalnızca sabit kütleli geminin doğrudan itki/yön kontrolü uygulanmıştır.** Aşağıdaki diğer sistemler kendi oturumlarında uygulanacak sözleşmelerdir.
 
 ## Uçuş — O1/O2

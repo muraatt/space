@@ -4,7 +4,7 @@
       "C:\\Users\\Murat\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\node\\bin\\node.exe",
       "C:\\Users\\Murat\\Desktop\\Oyun\\node_modules\\@playwright\\test\\cli.js",
       "test",
-      "packages/test-tools/tests/hangar.visual.spec.ts"
+      "packages/test-tools/tests/intercept.visual.spec.ts"
     ],
     "configFile": "C:\\Users\\Murat\\Desktop\\Oyun\\playwright.config.ts",
     "rootDir": "C:/Users/Murat/Desktop/Oyun/packages/test-tools/tests",
@@ -66,13 +66,13 @@
   },
   "suites": [
     {
-      "title": "hangar.visual.spec.ts",
-      "file": "hangar.visual.spec.ts",
+      "title": "intercept.visual.spec.ts",
+      "file": "intercept.visual.spec.ts",
       "column": 0,
       "line": 0,
       "specs": [
         {
-          "title": "Session 3 hangar, serviced Raptor and interception evidence",
+          "title": "Session 4 targeting, incoming threat and intercept combat evidence",
           "ok": true,
           "tags": [],
           "tests": [
@@ -87,12 +87,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 13350,
+                  "duration": 10846,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-09-07T10:57:10.203Z",
+                  "startTime": "2026-09-07T14:41:05.726Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -100,8 +100,8 @@
               "status": "expected"
             }
           ],
-          "id": "66149b87f643fade1374-45f5d9a0b28a287687af",
-          "file": "hangar.visual.spec.ts",
+          "id": "6eb796d4e06726394306-79a579590627bdd8b206",
+          "file": "intercept.visual.spec.ts",
           "line": 5,
           "column": 1
         }
@@ -110,8 +110,8 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-09-07T10:57:07.669Z",
-    "duration": 41975.316,
+    "startTime": "2026-09-07T14:41:03.758Z",
+    "duration": 44381.373999999996,
     "expected": 1,
     "skipped": 0,
     "unexpected": 0,

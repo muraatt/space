@@ -1,8 +1,24 @@
 # Arayüz sözleşmesi
 
+## Üç katmanlı uçuş arayüzü
+
+Normal oyunun birincil yüzeyi Three.js uzay görünümüdür. Kalıcı uçuş HUD'ı sol üstte canlı 3B ECI yörünge haritasını, sağda dar sayısal telemetri şeridini, merkezde mevcut dünya/hedef işaretlerini ve altta yalnız kumanda durumunu taşır. Sol alttaki OPS çekmecesi varsayılan olarak kapalıdır; etkin sözleşme, hedef, navigasyon ve hızlı sistem erişimini kısa operasyon değerleriyle açar.
+
+Yörünge haritası ikinci bir simülasyon çalıştırmaz. Mevcut yörüngeyi sunucu snapshot'ındaki ECI konum/hızdan osculating yol olarak çıkarır; oyuncu işareti aynı authoritative konumla hareket eder. Görev, seçili temas veya manevra planı varsa hedef yörüngesi/işareti ve planlanan transfer yolu eklenir.
+
+Sağ şeridin sabit bölümleri FLIGHT, ORBIT, SHIP ve ATTITUDE'dur. ALT/VEL/RAD/ACC; APO/PER/INC/PERIOD; MASS/FUEL/ΔV/THR ve quaternion'dan türetilen PITCH/YAW/ROLL gösterilir. Seçili hedefte RANGE/REL-V/CLOSE/LOCK, etkin manevrada STATE/NEXT/BURN, savaş bağlamında LASER/HEAT/MISS/CM eklenir. Uydurulmuş değer kullanılmaz; türevler mevcut SI/ECI snapshot'ından hesaplanır.
+
+Manevra, görev/sözleşme, hangar/servis ve ateş kontrolü tek bir tam ekran sistem kalıbı kullanır. Aynı anda biri açıktır; sağ üstteki görünür `[X]` veya Escape normal uçuş HUD'ına döner. Sistem kapanınca canvas odağı ve klavye kumandası hemen geri verilir.
+
+## Ateş kontrolü
+
+Tam ekran **ATEŞ KONTROLÜ** sistemi bölge kuralını ve combat tag durumunu, taktik teması, menzil/görüş/izin bilgisini, lazer enerji-ısı-cooldown değerlerini, füze stoğunu ve aktif füze sayısını, karşı tedbir yüklerini ve araç gövdesini gösterir. Gelen füze ayrı yüksek görünürlüklü uyarıdır. Hedef seçilmeden silah düğmeleri etkinleşmez; sunucu retleri makine kodundan Türkçe geri bildirime çevrilir. Son otoriter olaylar panel akışında listelenir. Sistem kapandığında seçili hedefin temel değerleri sağ telemetri şeridinde kalır.
+
+ENGINE, FUEL, POWER ve WEAPON kondisyon kartları sonucu kısa metinle açıklar. İmha halinde silah/kontrol kilitlenir ve aynı panel kargo, mühimmat, yükseltme kaybı ile muafiyeti gösterir. **SİGORTA / YEDEK ARAÇ TALEP ET** sunucu sonucunu bekler; teslimden sonra **HANGARA DÖN** normal oynanabilir hangarı açar.
+
 React DOM erişilebilir etkileşimleri ve seyrek telemetri güncellemelerini yönetir; Three.js bağımsız requestAnimationFrame döngüsünü ve canvas'ı yönetir. Her render karesinde React state yazılmaz. Sunucudan gelen otoriter state metriklerin kaynağıdır.
 
-O1 düzeni: üstte kimlik ve bağlantı, solda araç/yörünge ve sahne seçimi, ortada geniş uçuş görüşü, sağda radyal hız/kamera/debug, altta itki/açısal hız/fizik adımı ve grafik yolu. Dünya açısal boyutu görünür; UI gemi kontrolünü kapatmaz. Türkçe metinler Segoe UI, sayılar Consolas ile yerel fontlardan gelir.
+O1'in kalıcı büyük sol rayı bu mimari geçişte kaldırıldı. Üstte kimlik/bağlantı ve kompakt sistem erişimi; sol üstte yörünge, sağda telemetri ve sol altta OPS bulunur. Dünya ve uzay görüşü ekranın baskın yüzeyidir. Türkçe metinler Segoe UI, sayılar Consolas ile yerel fontlardan gelir.
 
 Başlangıçta gözlem modu, görünür **Kumandayı devral** düğmesi vardır. Canvas odaklı gerçek klavye girişi çalışır. Arayüz butonuna odak değişimi, pencere blur ve görünmez sekme girdiyi bırakır. W/S, A/D, R/F; oklar, Q/E; Space; fare sürükleme/tekerlek; C ve F3 için oyun içi rehber vardır. Escape modalı kapatır. Klavye focus çerçevesi ve düğme isimleri görünür/erişilebilirdir.
 
@@ -12,8 +28,8 @@ O2 manevra paneli üç sınırlı hedef sunar ve yalnızca sunucudan gelen adayl
 
 Plan paneli açıkken Three.js far pass mevcut yörüngeyi mavi-gri, hedef yörüngeyi kehribar, seçili transferi açık kehribar çizgiyle gösterir; iki nokta ilk yanma ve varışı işaretler. Geometri React render döngüsünde üretilmez ve ECI noktaları her frame kamera-bağıl kilometre koordinatlarına çevrilir.
 
-O3 görev kontrolü mevcut sol aksiyondan açılır. Profil fraksiyonu ad, sembol ve hizmet merkezi etiketiyle; kredi ve itibar otoriter snapshot değerleriyle gösterilir. Görev kartı tip, hedef, planner kaynaklı ETA, kütle ve kabul anında sabitlenen ödülü taşır. Etkin kart kargoyu, hedef menzilini veya tarama ilerlemesini gösterir ve hedefi mevcut manevra bilgisayarına aktarır. Teslim, tarama ve terk etme düğmeleri yalnızca istek yollarıdır; sonuç snapshot'tan okunur.
+O3 görev kontrolü **CONTRACTS/GÖREV KONTROLÜ** tam ekran sisteminde açılır. Profil fraksiyonu ad, sembol ve hizmet merkezi etiketiyle; kredi ve itibar otoriter snapshot değerleriyle gösterilir. Görev kartı tip, hedef, planner kaynaklı ETA, kütle ve kabul anında sabitlenen ödülü taşır. Etkin görev sistem kapatılınca OPS'te kısa özet olur. Teslim, tarama ve terk etme düğmeleri yalnızca istek yollarıdır; sonuç snapshot'tan okunur.
 
-O3 hangar paneli aynı sol aksiyon alanından açılır ve görev paneliyle birbirini kapatır. İki sahip olunan araç kartı aktif aracı, rolü, kuru kütleyi, ana itkiyi, kullanılabilir Δv'yi, kargo kapasitesini ve genel dayanıklılığı karşılaştırır. Raptor seçimi uçuş görünümündeki ad/çağrı kodu ile gemi siluetini günceller. Servis satırları mevcut/tamamlanmış yakıt, kondisyon ve mühimmatla otoriter fiyatı gösterir. Dört sabit modül kartı fiyat, etki, uyumluluk, slot ve kurulu durumunu taşır; bakiye sunucu onayıyla anında güncellenir. Panel 1920×1080 içinde kaydırılabilir; sol eylem rayı alt HUD sınırında kaydırılır.
+O3 hangar tam ekran sistem olarak açılır ve diğer ana sistemleri kapatır. İki sahip olunan araç kartı aktif aracı, rolü, kuru kütleyi, ana itkiyi, kullanılabilir Δv'yi, kargo kapasitesini ve genel dayanıklılığı karşılaştırır. Raptor seçimi uçuş görünümündeki ad/çağrı kodu ile gemi siluetini günceller. Servis satırları mevcut/tamamlanmış yakıt, kondisyon ve mühimmatla otoriter fiyatı gösterir. Dört sabit modül kartı fiyat, etki, uyumluluk, slot ve kurulu durumunu taşır; bakiye sunucu onayıyla anında güncellenir. Sistem 1920×1080 içinde kaydırılabilir ve `[X]` her zaman görünürdür.
 
 Viewport kabulü: 1920×1080 ve 1280×720; kısa desktop'ta sol aksiyonlar footer'a taşmaz. Mobil oyun desteği bu slice'ın hedefi değildir. O2 manevra süre/yakıt/risk arayüzü; O3 fraksiyon, profil, hangar ve görev akışı; O4 hedef/hasar/kayıp/güvenli bölge bildirimi; O5 squad ve bağlantı durumu; O6 onboarding, ses ve grafik kalite seçenekleri. Onboarding final kabulünde yeni insan oyuncunun rehber almadan döngüyü bitirmesi ölçülür.

@@ -11,7 +11,7 @@ import {
   type WorldState,
   type ServerMetrics,
 } from '@orbital/shared';
-import { availableDeltaV, dot, length, normalize } from '@orbital/simulation';
+import { length } from '@orbital/simulation';
 import { Connection } from './net/connection';
 import { FlightControls } from './input/flight-controls';
 import { GameRenderer } from './render/renderer';
@@ -20,6 +20,10 @@ import { DebugHud } from './ui/debug-hud';
 import { ManeuverPanel, ORBIT_TARGETS } from './ui/maneuver-panel';
 import { MissionPanel } from './ui/mission-panel';
 import { HangarPanel } from './ui/hangar-panel';
+import { CombatPanel } from './ui/combat-panel';
+import { OrbitalMap } from './ui/orbital-map';
+import { TelemetryStrip } from './ui/telemetry-strip';
+import { OpsPanel } from './ui/ops-panel';
 import './styles.css';
 type View = {
   state?: WorldState;
@@ -32,6 +36,7 @@ type View = {
   planId: string;
   planPending: boolean;
   missionPending: boolean;
+  flightAllowed: boolean;
 };
 function OrbitMark() {
   return (
@@ -39,29 +44,6 @@ function OrbitMark() {
       <circle cx="20" cy="20" r="11" />
       <ellipse cx="20" cy="20" rx="21" ry="6" transform="rotate(-38 20 20)" />
       <circle cx="30" cy="12" r="2" className="mark-dot" />
-    </svg>
-  );
-}
-function OrbitDiagram({ altitudeKm }: { altitudeKm: number }) {
-  return (
-    <svg className="orbit-diagram" viewBox="0 0 230 125" aria-label="Yörünge şeması, ölçekli değildir">
-      <defs>
-        <radialGradient id="orb">
-          <stop stopColor="#354c5d" />
-          <stop offset="1" stopColor="#142733" />
-        </radialGradient>
-      </defs>
-      <ellipse cx="115" cy="65" rx="99" ry="35" transform="rotate(-20 115 65)" />
-      <circle cx="115" cy="65" r="29" fill="url(#orb)" />
-      <path d="M91 60Q115 71 138 54M106 39Q98 68 119 91" className="globe-line" />
-      <circle cx="196" cy="29" r="4" className="ship-dot" />
-      <path d="M196 29L219 10" />
-      <text x="7" y="121">
-        ECI / DÜNYA
-      </text>
-      <text x="150" y="121">
-        {altitudeKm.toFixed(0)} km
-      </text>
     </svg>
   );
 }
@@ -78,6 +60,7 @@ export default function App() {
     planId: '',
     planPending: false,
     missionPending: false,
+    flightAllowed: false,
   });
   const [ready, setReady] = useState(false),
     [active, setActive] = useState(false),
@@ -87,8 +70,12 @@ export default function App() {
     [plannerOpen, setPlannerOpen] = useState(false),
     [missionOpen, setMissionOpen] = useState(false),
     [hangarOpen, setHangarOpen] = useState(false),
+    [combatOpen, setCombatOpen] = useState(false),
+    [opsOpen, setOpsOpen] = useState(false),
     [targetId, setTargetId] = useState('service-800'),
     [selectedType, setSelectedType] = useState<ManeuverCandidateType>();
+  const modalOpen = useRef(false), focusAfterConnect = useRef(false);
+  modalOpen.current = help || credits;
   const params = new URLSearchParams(location.search),
     requestedScene = params.get('scene'),
     scene: SceneId = SCENES.includes(requestedScene as SceneId) ? (requestedScene as SceneId) : 'orbit_day';
@@ -116,11 +103,16 @@ export default function App() {
         if (!alive) return;
         renderer = new GameRenderer(canvas, forceWebGL || !adapter);
         await renderer.init();
+        if (scene === 'intercept' || scene === 'missile_hit') renderer.camera.combatView();
         if (!alive) {
           renderer.dispose();
           return;
         }
-        controls = new FlightControls(canvas, renderer.camera.reset);
+        controls = new FlightControls(
+          canvas, renderer.camera.reset,
+          () => connection.flightInputAllowed() && !modalOpen.current,
+          (focused) => { if (alive) setActive(focused); },
+        );
         engine.current = { renderer, controls, connection };
         connection.connect(scene);
         disposeBridge = installTestBridge(renderer, connection);
@@ -140,6 +132,7 @@ export default function App() {
               planId: connection.planId,
               planPending: connection.planPending,
               missionPending: connection.missionPending,
+              flightAllowed: connection.flightInputAllowed(),
             });
         }, 250);
         let shown = false;
@@ -174,20 +167,58 @@ export default function App() {
   }, [scene, forceWebGL]);
   useEffect(() => {
     if (scene === 'orbit_maneuver' || scene === 'low_fuel') setPlannerOpen(true);
-    if (scene === 'cargo_mission') setMissionOpen(true);
+    if (scene === 'cargo_mission' || scene === 'intercept') setMissionOpen(true);
+    if (scene === 'missile_hit') setCombatOpen(true);
   }, [scene]);
   useEffect(() => {
     if (!selectedType && view.plan?.candidates[0]) setSelectedType(view.plan.candidates[0].type);
   }, [selectedType, view.plan]);
   useEffect(() => {
+    if (view.state?.combat.playerDestroyed) {
+      engine.current?.controls.clear();
+      setPlannerOpen(false);
+      setMissionOpen(false);
+      setHangarOpen(false);
+      setCombatOpen(true);
+    }
+  }, [view.state?.combat.playerDestroyed]);
+  useEffect(() => {
+    if (view.status === 'Bağlı' && view.state && focusAfterConnect.current) {
+      focusAfterConnect.current = false;
+      canvasRef.current?.focus();
+      engine.current?.controls.activate();
+    }
+  }, [view.status, view.state]);
+  useEffect(() => {
+    if (help || credits) {
+      engine.current?.controls.clear();
+      document.querySelector<HTMLButtonElement>('.modal-close')?.focus();
+    } else if (document.activeElement === canvasRef.current) {
+      engine.current?.controls.activate();
+    }
+  }, [help, credits]);
+  useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.code === 'F3') {
+      if (modalOpen.current && e.code === 'Tab') {
+        const focusable = Array.from(document.querySelectorAll<HTMLElement>('.modal button, .modal a[href]'));
+        const index = focusable.indexOf(document.activeElement as HTMLElement);
+        if (focusable.length) {
+          e.preventDefault();
+          focusable[(index + (e.shiftKey ? -1 : 1) + focusable.length) % focusable.length].focus();
+        }
+      }
+      if (e.code === 'F3' && !e.repeat) {
         e.preventDefault();
         setDebug((v) => !v);
       }
       if (e.code === 'Escape') {
         setHelp(false);
         setCredits(false);
+        setPlannerOpen(false);
+        setMissionOpen(false);
+        setHangarOpen(false);
+        setCombatOpen(false);
+        canvasRef.current?.focus();
       }
     };
     window.addEventListener('keydown', handler);
@@ -195,10 +226,18 @@ export default function App() {
   }, []);
   const takeControl = () => {
     if (engine.current) {
-      if (engine.current.connection.status === 'Kumanda başka sekmede')
-        engine.current.connection.connect(scene);
-      engine.current.controls.enabled = true;
-      setActive(true);
+      if (engine.current.connection.status !== 'Bağlı') {
+        focusAfterConnect.current = true;
+        engine.current.connection.connect(scene, true);
+        return;
+      }
+      if (view.state?.combat.playerDestroyed) { openCombat(); return; }
+      if (!engine.current.connection.flightInputAllowed()) { openPlanner(); return; }
+      setPlannerOpen(false);
+      setMissionOpen(false);
+      setHangarOpen(false);
+      setCombatOpen(false);
+      engine.current.controls.activate();
       canvasRef.current?.focus();
     }
   };
@@ -208,17 +247,10 @@ export default function App() {
   };
   const state = view.state,
     activeDefinition = state ? shipDefinition(state.ship.definitionId) : undefined,
-    alt = state ? (length(state.ship.position) - CONFIG.earthRadius) / 1000 : 400,
-    speed = state ? length(state.ship.velocity) / 1000 : 0,
-    radial = state ? dot(state.ship.velocity, normalize(state.ship.position)) : 0,
-    propellant = state?.ship.mass.propellantKg ?? CONFIG.initialPropellantKg,
-    propellantPercent = state ? (propellant / state.ship.performance.propellantCapacityKg) * 100 : 0,
-    shipDeltaV = state ? availableDeltaV(state.ship.mass, state.ship.performance.specificImpulseSeconds) : 0,
     target = ORBIT_TARGETS.find((option) => option.id === targetId) ?? ORBIT_TARGETS[0],
     selectedCandidate =
       state?.maneuver?.candidate ??
-      view.plan?.candidates.find((candidate) => candidate.type === selectedType),
-    maneuverStatus = state?.maneuver?.status ?? 'IDLE';
+      view.plan?.candidates.find((candidate) => candidate.type === selectedType);
   useEffect(() => {
     engine.current?.renderer.setManeuverVisual(
       plannerOpen ? CONFIG.earthRadius + target.altitudeKm * 1000 : undefined,
@@ -253,20 +285,58 @@ export default function App() {
     if (executionId) engine.current?.connection.cancel(executionId);
   };
   const openPlanner = () => {
+    engine.current?.controls.clear();
     setMissionOpen(false);
     setHangarOpen(false);
+    setCombatOpen(false);
     setPlannerOpen(true);
   };
   const openMissions = () => {
+    engine.current?.controls.clear();
     setPlannerOpen(false);
     setHangarOpen(false);
+    setCombatOpen(false);
     setMissionOpen(true);
   };
   const openHangar = () => {
+    engine.current?.controls.clear();
     setPlannerOpen(false);
     setMissionOpen(false);
+    setCombatOpen(false);
     setHangarOpen(true);
   };
+  const openCombat = () => {
+    engine.current?.controls.clear();
+    setPlannerOpen(false);
+    setMissionOpen(false);
+    setHangarOpen(false);
+    setCombatOpen(true);
+  };
+  const closeSystems = () => {
+    setPlannerOpen(false);
+    setMissionOpen(false);
+    setHangarOpen(false);
+    setCombatOpen(false);
+    requestAnimationFrame(() => {
+      canvasRef.current?.focus();
+      engine.current?.controls.activate();
+    });
+  };
+  const connected = view.status === 'Bağlı',
+    destroyed = !!state?.combat.playerDestroyed,
+    flying = active && connected && view.flightAllowed && !help && !credits,
+    controlLabel = !connected ? 'BAĞLANTI YOK' : destroyed ? 'GEMİ İMHA EDİLDİ'
+      : !view.flightAllowed ? 'MANEVRA KUMANDASI' : flying ? 'KUMANDA ETKİN' : 'UÇUŞA ODAKLAN',
+    controlHint = !connected ? 'Kumandayı devral ile yeniden bağlan'
+      : destroyed ? 'Kurtarmayı aç ve yedek araç talep et'
+      : !view.flightAllowed ? 'Doğrudan uçuş için manevrayı iptal et'
+      : flying ? 'WASD · R/F · Oklar · Q/E' : 'Uzay görünümüne tıkla veya kumandayı devral',
+    activeMission = state?.missions.find((mission) => mission.id === state.profile.activeMissionId),
+    selectedContact = state?.combat.contacts.find((contact) => contact.id === state.combat.selectedTargetId),
+    mapTargetRadius = selectedContact ? length(selectedContact.position)
+      : activeMission ? CONFIG.earthRadius + activeMission.destination.altitudeKm * 1000
+      : view.plan ? CONFIG.earthRadius + target.altitudeKm * 1000 : undefined,
+    anySystemOpen = plannerOpen || missionOpen || hangarOpen || combatOpen;
   const navigateMission = (mission: MissionInstance) => {
     const matching = ORBIT_TARGETS.find((option) => option.altitudeKm === mission.destination.altitudeKm);
     if (matching) chooseTarget(matching.id);
@@ -299,79 +369,23 @@ export default function App() {
           <span className="version">01.0</span>
         </div>
       </header>
-      <aside className="left-rail">
-        <div className="eyebrow">
-          <span className="amber-dot" /> SERBEST UÇUŞ / 01
-        </div>
-        <h1>
-          Dünya
-          <br />
-          yörüngesi<span>.</span>
-        </h1>
-        <p className="intro">
-          Bir sonraki ufuk,
-          <br />
-          ilk manevrayla başlar.
-        </p>
+      {!anySystemOpen && <div className="hud-left">
+        <OrbitalMap state={state} targetRadiusM={mapTargetRadius} targetPosition={selectedContact?.position} candidate={selectedCandidate} />
         <section className="vehicle-card">
-          <div className="section-label">
-            AKTİF ARAÇ <span>{activeDefinition?.callsign ?? '—'}</span>
-          </div>
-          <h2>{activeDefinition?.name ?? 'Bağlanıyor'}</h2>
-          <p>{activeDefinition?.role === 'COMBAT' ? 'Yörünge devriye aracı' : 'Yörünge servis aracı'}</p>
-          <div className="vehicle-meta">
-            <span>12 m GÖVDE</span>
-            <span>{state ? `${state.ship.massKg.toFixed(0)} kg` : 'KÜTLE'}</span>
-          </div>
-          <OrbitDiagram altitudeKm={alt} />
-          <div className="orbit-numbers">
-            <div>
-              <small>İRTİFA</small>
-              <strong>
-                {alt.toFixed(1)}
-                <em> km</em>
-              </strong>
-            </div>
-            <div>
-              <small>YÖRÜNGE HIZI</small>
-              <strong>
-                {speed.toFixed(3)}
-                <em> km/s</em>
-              </strong>
-            </div>
-          </div>
+          <div><small>ACTIVE VEHICLE / {activeDefinition?.callsign ?? '—'}</small><h2>{activeDefinition?.name ?? 'Bağlanıyor'}</h2></div>
+          <span>{state ? `${state.ship.massKg.toFixed(0)} kg` : '—'} · {state?.combat.region ?? '—'}</span>
         </section>
-        <section className="scene-control">
-          <div className="section-label">GÖRÜŞ KOŞULU</div>
-          <div className="segmented">
-            <button aria-pressed={scene === 'orbit_day'} onClick={() => goScene(false)}>
-              ☀ Gündüz
-            </button>
-            <button aria-pressed={scene === 'orbit_night'} onClick={() => goScene(true)}>
-              ◐ Gece
-            </button>
-          </div>
-          <p className="fine">Test sahnesi değişince uçuş sıfırlanır.</p>
-        </section>
-        <button className="primary-action" disabled={!ready} onClick={takeControl}>
-          {active ? 'UÇUŞA ODAKLAN' : 'KUMANDAYI DEVRAL'}
-          <span>↗</span>
+      </div>}
+      {!anySystemOpen && <nav className="system-dock" aria-label="Sistem erişimi">
+        <button className="primary-action" disabled={!ready || view.status === 'Bağlanıyor'} onClick={takeControl}>
+          {!connected ? 'KUMANDAYI DEVRAL' : destroyed ? 'KURTARMAYI AÇ' : !view.flightAllowed ? 'MANEVRAYI YÖNET' : flying ? 'UÇUŞA ODAKLAN' : 'KUMANDAYI DEVRAL'}
         </button>
-        <button className="planner-toggle" disabled={!ready} onClick={openPlanner}>
-          MANEVRA BİLGİSAYARI <span>⌁</span>
-        </button>
-        <button className="mission-toggle" disabled={!ready} onClick={openMissions}>
-          GÖREV KONTROLÜ <span>▣</span>
-        </button>
-        <button className="mission-toggle" disabled={!ready} onClick={openHangar}>
-          HANGAR VE SERVİS <span>◇</span>
-        </button>
-        <p className="scope-note">
-          OTURUM 3 · Görev operasyonları
-          <br />
-          İlerleme bu oturumda kalıcı değildir.
-        </p>
-      </aside>
+        <button className="planner-toggle" disabled={!ready} onClick={openPlanner}>MANEVRA BİLGİSAYARI</button>
+        <button className="mission-toggle" disabled={!ready} onClick={openMissions}>GÖREV KONTROLÜ</button>
+        <button className="mission-toggle" disabled={!ready} onClick={openHangar}>HANGAR VE SERVİS</button>
+        <button className="combat-toggle" disabled={!ready} onClick={openCombat}>ATEŞ KONTROLÜ</button>
+        <span className="scene-control"><button aria-pressed={scene === 'orbit_day'} onClick={() => goScene(false)}>☀ Gündüz</button><button aria-pressed={scene === 'orbit_night'} onClick={() => goScene(true)}>◐ Gece</button></span>
+      </nav>}
       <ManeuverPanel
         open={plannerOpen}
         target={target}
@@ -380,7 +394,7 @@ export default function App() {
         selectedType={selectedType}
         execution={state?.maneuver}
         error={view.error}
-        onClose={() => setPlannerOpen(false)}
+        onClose={closeSystems}
         onTarget={chooseTarget}
         onPlan={requestPlan}
         onSelect={setSelectedType}
@@ -392,7 +406,7 @@ export default function App() {
         state={state}
         pending={view.missionPending}
         error={view.error}
-        onClose={() => setMissionOpen(false)}
+        onClose={closeSystems}
         onFaction={(faction: FactionId) => engine.current?.connection.chooseFaction(faction)}
         onRefresh={() => engine.current?.connection.requestMissions()}
         onAccept={(missionId) => engine.current?.connection.acceptMission(missionId)}
@@ -410,109 +424,75 @@ export default function App() {
         open={hangarOpen}
         state={state}
         error={view.error}
-        onClose={() => setHangarOpen(false)}
+        onClose={closeSystems}
         onSelectShip={(shipId) => engine.current?.connection.selectShip(shipId)}
         onFuel={(amountKg) => engine.current?.connection.buyFuel(amountKg)}
         onRepair={() => engine.current?.connection.repairShip()}
         onAmmunition={(amountKg) => engine.current?.connection.buyAmmunition(amountKg)}
         onUpgrade={(upgradeId) => engine.current?.connection.installUpgrade(upgradeId)}
       />
-      <section className="scene-caption">
+      <CombatPanel
+        open={combatOpen}
+        state={state}
+        error={view.error}
+        onClose={closeSystems}
+        onSelect={(id) => engine.current?.connection.selectCombatTarget(id)}
+        onClear={() => engine.current?.connection.clearCombatTarget()}
+        onLaser={() => engine.current?.connection.fireLaser()}
+        onMissile={() => engine.current?.connection.fireMissile()}
+        onCountermeasure={() => engine.current?.connection.activateCountermeasure()}
+        onRecover={() => engine.current?.connection.claimReplacement()}
+        onReturnHangar={() => {
+          setCombatOpen(false);
+          setHangarOpen(true);
+        }}
+      />
+      {!anySystemOpen && <section className="scene-caption">
         <span className="eyebrow">
           {scene === 'orbit_night'
             ? 'DÜNYA GÖLGESİ'
             : scene === 'cargo_mission'
               ? 'DENETİM HALKASI'
-              : 'ALÇAK DÜNYA YÖRÜNGESİ'}
+              : scene === 'intercept' || scene === 'missile_hit'
+                ? scene === 'missile_hit'
+                  ? 'ÇEKİŞMELİ BÖLGE · DARBE TESTİ'
+                  : 'NORMAL BÖLGE · GÖREV TEMASI'
+                : 'ALÇAK DÜNYA YÖRÜNGESİ'}
         </span>
         <h2>
           {scene === 'orbit_night'
             ? 'Gece vardiyası'
             : scene === 'cargo_mission'
               ? 'Denetim halkası varışı'
-              : 'Sessizliğin üzerinde'}
+              : scene === 'intercept' || scene === 'missile_hit'
+                ? scene === 'missile_hit' ? 'Füze darbe testi' : 'R-17 önleme hattı'
+                : 'Sessizliğin üzerinde'}
         </h2>
         <p>
           {scene === 'orbit_night'
             ? 'Güneş hattının ötesinde. Seyir ışıkları etkin.'
             : scene === 'cargo_mission'
               ? '450 kilometrede. Görev kontrolü teslimat için bağlantıda.'
-              : '400 kilometre yukarıda. Her hareketin bir karşılığı var.'}
+              : scene === 'intercept' || scene === 'missile_hit'
+                ? scene === 'missile_hit' ? 'Gelen darbeyi ve alt sistem kaybını gözle.' : 'Hedefi tanımla; ateş yetkisi sunucudan gelir.'
+                : '400 kilometre yukarıda. Her hareketin bir karşılığı var.'}
         </p>
-      </section>
+      </section>}
       <div className="center-reticle" aria-hidden="true">
         <span />
         <i />
         <span />
       </div>
-      <aside className="right-telemetry">
-        <div className="vertical-label">YÖRÜNGE TELEMETRİSİ</div>
-        <div className="telemetry-reading">
-          <small>RADYAL HIZ</small>
-          <strong>
-            {radial.toFixed(1)}
-            <em>m/s</em>
-          </strong>
-          <div className="scale-lines" />
-        </div>
-        <div className="telemetry-reading maneuver-reading">
-          <small>MANEVRA DURUMU</small>
-          <strong>{maneuverStatus.replaceAll('_', ' ')}</strong>
-        </div>
-        <div className="telemetry-reading">
-          <small>GEÇEN SÜRE</small>
-          <strong className="clock" data-testid="clock">
-            {clock}
-          </strong>
-        </div>
-        <button className="camera-button" onClick={resetCamera}>
-          ⌖ Kamerayı toparla <kbd>C</kbd>
-        </button>
-        <button className="debug-toggle" onClick={() => setDebug((v) => !v)} aria-expanded={debug}>
-          Telemetri ayrıntıları <kbd>F3</kbd>
-        </button>
-      </aside>
+      {!anySystemOpen && <TelemetryStrip state={state} clock={clock} onCamera={resetCamera} onDebug={() => setDebug(v => !v)} />}
+      {!anySystemOpen && <OpsPanel state={state} expanded={opsOpen} onToggle={() => setOpsOpen(v => !v)} onMissions={openMissions} onPlanner={openPlanner} onCombat={openCombat} />}
       {debug && <DebugHud metrics={view.metrics} state={state} server={view.server} />}
-      <footer className="flight-strip">
+      {!anySystemOpen && <footer className="flight-strip">
         <div className="strip-status">
-          <i className={active ? 'live' : ''} />
+          <i className={flying ? 'live' : ''} />
           <span>
-            {active ? 'KUMANDA ETKİN' : 'GÖZLEM MODU'}
-            <small>{active ? 'Tıklayarak uçuşa odaklan' : 'Kumandayı devralarak başla'}</small>
+            {controlLabel}
+            <small>{controlHint}</small>
           </span>
-        </div>
-        <div className="strip-stat">
-          <small>ANA İTKİ</small>
-          <strong>
-            {Math.round(Math.max(0, -(state?.controls.translation[2] ?? 0)) * 100)}
-            <em> %</em>
-          </strong>
-          <div className="thrust-track">
-            <span style={{ width: `${Math.max(0, -(state?.controls.translation[2] ?? 0)) * 100}%` }} />
-          </div>
-        </div>
-        <div className="strip-stat">
-          <small>YAKIT</small>
-          <strong>
-            {propellant.toFixed(0)}
-            <em> kg · {propellantPercent.toFixed(0)}%</em>
-          </strong>
-        </div>
-        <div className="strip-stat">
-          <small>KULLANILABİLİR Δv</small>
-          <strong>
-            {shipDeltaV.toFixed(0)}
-            <em> m/s</em>
-          </strong>
-        </div>
-        <div className="strip-stat selected-plan-stat">
-          <small>SEÇİLİ PLAN / REZERV</small>
-          <strong>
-            {selectedCandidate ? selectedCandidate.estimatedPropellantKg.toFixed(0) : '—'}
-            <em>
-              {selectedCandidate ? ` kg / ${selectedCandidate.expectedReserveDeltaVMps.toFixed(0)} m/s` : ''}
-            </em>
-          </strong>
         </div>
         <div className="controls-inline">
           <span>
@@ -531,17 +511,23 @@ export default function App() {
           {view.metrics?.backend ?? 'BAŞLATILIYOR'}
           <small>OTORİTER SUNUCU</small>
         </div>
-      </footer>
+      </footer>}
       {!ready && (
         <div className="loading-toast" role="status">
           {view.error ? `Başlatılamadı: ${view.error}` : 'Yörünge bağlantısı kuruluyor…'}
+        </div>
+      )}
+      {destroyed && connected && (
+        <div className="error-toast" role="alert">
+          Gemi imha edildi. Uçuş ve silah kontrolleri kapalı.
+          <button onClick={openCombat}>KURTARMAYI AÇ</button>
         </div>
       )}
       {ready && view.status !== 'Bağlı' && (
         <div className="error-toast" role="alert">
           {view.status === 'Kumanda başka sekmede'
             ? 'Kumanda başka sekmede. Bu sekmede uçmak için Kumandayı devral düğmesine bas.'
-            : `${view.status}. Yerel sunucuyu kontrol edip sayfayı yenile.`}
+            : `${view.status}. Kumandayı devral düğmesiyle yeniden bağlan.`}
         </div>
       )}
       {help && (
@@ -560,7 +546,8 @@ export default function App() {
             </div>
             <h2>Hareketi hisset.</h2>
             <p>
-              Önce kumandayı devral, ardından uzay görünümüne tıkla. İtki kesilince gemi hareketini korur.
+              Uzay görünümüne tıkla veya kumandayı devral. İtki kesilince gemi hareketini korur.
+              Panelde işlem yaptıktan sonra uçuşa dönmek için tekrar uzaya tıkla. Escape panelleri kapatır.
             </p>
             <dl className="help-keys">
               <dt>W / S</dt>
@@ -581,8 +568,8 @@ export default function App() {
               <dd>Kamerayı toparla / debug telemetri</dd>
             </dl>
             <p className="fine">
-              Oturum 3: yakıt, manevra bilgisayarı ve yerel NPC görevleri etkindir. Silah sistemi henüz
-              yoktur.
+              Lazer, füze ve karşı tedbir Ateş kontrolü panelindedir. Etkin manevrada doğrudan itki
+              kilitlidir; önce manevrayı iptal et. İmha sonrası Kurtarmayı aç üzerinden yedek araç talep et.
             </p>
           </section>
         </div>

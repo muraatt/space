@@ -1,10 +1,10 @@
 # ORBITAL / Production rules
 
-Current milestone: Session 3, economy/hangar completion and final acceptance. Sessions 1 and 2 were accepted by the user.
+Current milestone: Session 4 final playtest and acceptance. Sessions 1–3 and both Session 4 implementation passes are complete.
 
 - Read README, docs/roadmap.md, docs/vertical_slice.md and the latest session report before work.
 - State the session scope briefly, then implement, integrate, run tests, inspect screenshots and update documentation in the same session.
-- Session 3 now includes two factions, a local authoritative profile, cargo/reconnaissance/non-combat interception, a two-ship hangar, fuel/repair/ammunition services and four fixed upgrades. Do not add weapons, combat damage, insurance, accounts, database integration or Session 4 systems during final acceptance.
+- Session 4 includes region rules, targeting, laser, simulated guided missiles, countermeasures, module damage, deterministic bot combat, destruction, wreck/loss and local insurance recovery. During final acceptance, limit work to combat feel, balance and blocking fixes. Do not add accounts, database integration, remote multiplayer or Session 5 systems.
 - Use the local Node authoritative command path from the beginning. Never make client transforms authoritative.
 - simulation is pure TypeScript: no Three.js, React, network, database or wall clock imports. Time, commands and randomness are injected. SI units and ECI coordinates are canonical.
 - shared owns runtime schemas, units and versioned configuration. Documents link to definitions instead of duplicating tunable values.

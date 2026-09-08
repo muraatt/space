@@ -3,6 +3,7 @@ import type { SceneId } from './config';
 import type { ManeuverExecutionState, ManeuverPlanResult } from './maneuver';
 import type { LocalPlayerProfile, MissionAction, MissionInstance } from './mission';
 import type { ShipDefinitionId, ShipPerformance } from './hangar';
+import type { CombatAction, CombatState } from './combat';
 export interface Controls {
   translation: Vec3;
   rotation: Vec3;
@@ -44,6 +45,7 @@ export interface WorldState {
     ships: ShipState[];
     processedTransactionIds: string[];
   };
+  combat: CombatState;
 }
 export interface ServerMetrics {
   tickMs: number;
@@ -73,4 +75,5 @@ export type ServerMessage =
       transactionId: string;
       credits: number;
     }
+  | { type: 'combat_ack'; action: CombatAction; commandId: string }
   | { type: 'pong'; sentAt: number };

@@ -105,4 +105,24 @@ describe('untrusted wire commands', () => {
       }).success,
     ).toBe(false);
   });
+  it('accepts combat intent without accepting forged hit or damage results', () => {
+    const laser = {
+      type: 'fire_laser',
+      version: 1,
+      shipId: 'kestrel-01',
+      commandId: 'laser-1',
+    };
+    expect(clientMessageSchema.safeParse(laser).success).toBe(true);
+    expect(clientMessageSchema.safeParse({ ...laser, hit: true }).success).toBe(false);
+    expect(clientMessageSchema.safeParse({ ...laser, damage: 9999 }).success).toBe(false);
+    expect(
+      clientMessageSchema.safeParse({
+        type: 'missile_hit',
+        version: 1,
+        shipId: 'kestrel-01',
+        targetId: 'relay-contact-r17',
+        damage: 9999,
+      }).success,
+    ).toBe(false);
+  });
 });

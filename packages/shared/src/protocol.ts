@@ -89,6 +89,43 @@ export const clientMessageSchema = z.discriminatedUnion('type', [
     destinationId: z.string().min(1).max(96),
   }),
   z.strictObject({
+    type: z.literal('select_target'),
+    version: z.literal(1),
+    shipId: z.string().max(64),
+    targetId: z.string().min(1).max(96),
+    commandId: z.string().min(1).max(96),
+  }),
+  z.strictObject({
+    type: z.literal('clear_target'),
+    version: z.literal(1),
+    shipId: z.string().max(64),
+    commandId: z.string().min(1).max(96),
+  }),
+  z.strictObject({
+    type: z.literal('fire_laser'),
+    version: z.literal(1),
+    shipId: z.string().max(64),
+    commandId: z.string().min(1).max(96),
+  }),
+  z.strictObject({
+    type: z.literal('fire_missile'),
+    version: z.literal(1),
+    shipId: z.string().max(64),
+    commandId: z.string().min(1).max(96),
+  }),
+  z.strictObject({
+    type: z.literal('activate_countermeasure'),
+    version: z.literal(1),
+    shipId: z.string().max(64),
+    commandId: z.string().min(1).max(96),
+  }),
+  z.strictObject({
+    type: z.literal('claim_replacement'),
+    version: z.literal(1),
+    shipId: z.string().max(64),
+    transactionId: z.string().min(1).max(96),
+  }),
+  z.strictObject({
     type: z.literal('select_ship'),
     version: z.literal(1),
     shipId: z.string().max(64),
@@ -125,7 +162,16 @@ export const clientMessageSchema = z.discriminatedUnion('type', [
 ]);
 export type InputCommand = z.infer<typeof controlSchema>;
 export const scenarioResetSchema = z.strictObject({
-  scene: z.enum(['orbit_day', 'orbit_night', 'orbit_maneuver', 'low_fuel', 'cargo_mission']),
+  startOrbitAltitudeKm: z.literal(800).optional(),
+  scene: z.enum([
+    'orbit_day',
+    'orbit_night',
+    'orbit_maneuver',
+    'low_fuel',
+    'cargo_mission',
+    'intercept',
+    'missile_hit',
+  ]),
   paused: z.boolean().default(false),
   seed: z.number().int().default(4401),
 });

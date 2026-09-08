@@ -174,7 +174,7 @@ export function ManeuverPanel({
           <h2>Yörünge transferi</h2>
         </div>
         <button onClick={onClose} aria-label="Manevra panelini kapat">
-          ×
+          [X]
         </button>
       </div>
       <label className="target-select">

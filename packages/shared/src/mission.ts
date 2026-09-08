@@ -63,6 +63,10 @@ export interface InterceptObjective {
   targetId: string;
   targetLabel: string;
   identified: boolean;
+  combatAuthorized: boolean;
+  damageRequired: number;
+  damageDealt: number;
+  neutralized: boolean;
 }
 
 export interface MissionInstance {
