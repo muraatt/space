@@ -1,5 +1,19 @@
 import { createHash } from 'node:crypto';
-import type { ShipState } from '@orbital/shared';
+import type { ShipState, CombatState, FactionId } from '@orbital/shared';
+
+/** Atomic Phase-0 checkpoint, not a shared mission/NPC database. */
+export interface PilotCheckpoint {
+  version: 1;
+  credits: number;
+  reputation: number;
+  factionId?: FactionId;
+  modules: CombatState['modules'];
+  recovery?: CombatState['recovery'];
+  wrecks: CombatState['wrecks'];
+  economicTransactionIds: string[];
+  completedMissionTemplateIds: string[];
+  missionCargoKg: number;
+}
 
 export interface IdentityRecord {
   playerId: string;
@@ -10,12 +24,13 @@ export interface IdentityRecord {
   spawnSlot: number;
   createdAtMs?: number;
   ship?: ShipState;
+  checkpoint?: PilotCheckpoint;
 }
 
 export interface IdentityRepository {
   register(rawUsername: string, credential: string): Promise<{ record: IdentityRecord; credential: string }>;
   authenticate(credential: string): Promise<IdentityRecord | undefined>;
-  saveShip(playerId: string, ship: ShipState): Promise<void>;
+  saveShip(playerId: string, ship: ShipState, checkpoint?: PilotCheckpoint): Promise<void>;
   health(): Promise<void>;
 }
 

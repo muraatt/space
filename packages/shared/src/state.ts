@@ -85,7 +85,7 @@ export type ServerMessage =
   | { type: 'welcome'; version: 1; shipId: string; testMode: boolean }
   | { type: 'identity_required'; reason: 'MISSING_CREDENTIAL' | 'INVALID_CREDENTIAL'; registrationCredential: string }
   | { type: 'identity_established'; identity: PublicPlayerIdentity; credential?: string; restored: boolean }
-  | { type: 'identity_error'; code: 'USERNAME_INVALID' | 'USERNAME_TAKEN' | 'INVALID_CREDENTIAL' }
+  | { type: 'identity_error'; code: 'USERNAME_INVALID' | 'USERNAME_TAKEN' | 'INVALID_CREDENTIAL' | 'IDENTITY_UNAVAILABLE' | 'IDENTITY_RESTORE_INVALID' }
   | { type: 'error'; code: string }
   | { type: 'maneuver_plan'; requestId: string; result: ManeuverPlanResult }
   | { type: 'maneuver_ack'; action: 'EXECUTE' | 'CANCEL'; executionId: string }

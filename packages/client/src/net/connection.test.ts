@@ -5,6 +5,7 @@ import { Connection } from './connection';
 
 class FakeSocket {
   static OPEN = 1;
+  static instances: FakeSocket[] = [];
   readyState = 1;
   onopen?: () => void;
   onmessage?: (event: { data: string }) => void;
@@ -12,7 +13,7 @@ class FakeSocket {
   onerror?: () => void;
   send = vi.fn();
   close = vi.fn();
-  constructor(public url: string) {}
+  constructor(public url: string) { FakeSocket.instances.push(this); }
   receive(value: unknown) { this.onmessage?.({ data: JSON.stringify(value) }); }
 }
 
@@ -21,8 +22,9 @@ describe('client command availability', () => {
   let socket: FakeSocket;
   beforeEach(() => {
     vi.useFakeTimers();
+    FakeSocket.instances = [];
     vi.stubGlobal('WebSocket', FakeSocket);
-    vi.stubGlobal('location', { protocol: 'http:', host: '127.0.0.1:5174' });
+    vi.stubGlobal('location', { protocol: 'http:', host: '127.0.0.1:5174', port: '5174', search: '' });
     connection = new Connection();
     connection.connect('orbit_day');
     socket = connection.socket as unknown as FakeSocket;
@@ -80,5 +82,79 @@ describe('client command availability', () => {
     state.combat.playerDestroyed = false;
     socket.receive({ type: 'snapshot', state });
     expect(connection.flightInputAllowed()).toBe(true);
+  });
+
+  it('CAN-003: replacement snapshots update the public identity and command ownership together', () => {
+    connection.identity = { playerId: 'pilot', callsign: 'LOCKED', shipId: 'old-ship' };
+    const state = initialWorld(); state.ship.id = 'ship-replacement'; state.profile.activeShipId = state.ship.id;
+    socket.receive({ type: 'snapshot', state });
+    expect(connection.identity).toEqual({ playerId: 'pilot', callsign: 'LOCKED', shipId: state.ship.id });
+    connection.input({ translation: [0, 0, 0], rotation: [0, 0, 0] });
+    expect(JSON.parse(socket.send.mock.calls.at(-1)![0])).toMatchObject({ type: 'input', shipId: state.ship.id });
+  });
+
+  it('preserves the credential on transient identity failure and retries resume', () => {
+    connection.dispose();
+    const values = new Map<string, string>(), credential = 'c'.repeat(43);
+    values.set('orbital.identity.credential.v1', credential);
+    vi.stubGlobal('localStorage', {
+      getItem: (key: string) => values.get(key) ?? null,
+      setItem: (key: string, value: string) => values.set(key, value),
+      removeItem: (key: string) => values.delete(key),
+    });
+    vi.stubGlobal('location', {
+      protocol: 'http:', host: '127.0.0.1:5174', port: '5174', search: '?shared=1',
+    });
+    connection = new Connection();
+    connection.connect('bounty_sandbox');
+    socket = connection.socket as unknown as FakeSocket;
+    socket.onopen?.();
+    socket.receive({
+      type: 'identity_required', reason: 'MISSING_CREDENTIAL', registrationCredential: 'r'.repeat(43),
+    });
+    expect(socket.send).toHaveBeenCalledWith(JSON.stringify({
+      type: 'resume_identity', version: 1, credential,
+    }));
+    socket.receive({ type: 'identity_error', code: 'IDENTITY_UNAVAILABLE' });
+    expect(values.get('orbital.identity.credential.v1')).toBe(credential);
+    expect(connection.status).toContain('geçici');
+    socket.onclose?.({ code: 1013 });
+    expect(connection.status).toContain('yeniden deneniyor');
+    vi.advanceTimersByTime(1_000);
+    const retry = FakeSocket.instances.at(-1)!;
+    expect(retry).not.toBe(socket);
+    retry.onopen?.();
+    retry.receive({
+      type: 'identity_required', reason: 'MISSING_CREDENTIAL', registrationCredential: 'n'.repeat(43),
+    });
+    expect(retry.send).toHaveBeenCalledWith(JSON.stringify({
+      type: 'resume_identity', version: 1, credential,
+    }));
+    retry.receive({
+      type: 'identity_required', reason: 'INVALID_CREDENTIAL', registrationCredential: 'z'.repeat(43),
+    });
+    expect(values.has('orbital.identity.credential.v1')).toBe(false);
+  });
+
+  it('surfaces an isolated restore error without deleting the valid credential', () => {
+    connection.dispose();
+    const values = new Map<string, string>(), credential = 'd'.repeat(43);
+    values.set('orbital.identity.credential.v1', credential);
+    vi.stubGlobal('localStorage', {
+      getItem: (key: string) => values.get(key) ?? null,
+      setItem: (key: string, value: string) => values.set(key, value),
+      removeItem: (key: string) => values.delete(key),
+    });
+    vi.stubGlobal('location', {
+      protocol: 'http:', host: '127.0.0.1:5174', port: '5174', search: '?shared=1',
+    });
+    connection = new Connection();
+    connection.connect('bounty_sandbox');
+    socket = connection.socket as unknown as FakeSocket;
+    socket.onopen?.();
+    socket.receive({ type: 'identity_error', code: 'IDENTITY_RESTORE_INVALID' });
+    expect(connection.status).toBe('Kayıtlı gemi geri yüklenemedi');
+    expect(connection.lastError).toBe('IDENTITY_RESTORE_INVALID');
+    expect(values.get('orbital.identity.credential.v1')).toBe(credential);
   });
 });

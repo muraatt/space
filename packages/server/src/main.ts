@@ -6,9 +6,11 @@ import { resolve } from 'node:path';
 import { FileIdentityRepository } from './identity/file-identity-repository';
 import { PostgresIdentityRepository } from './identity/postgres-identity-repository';
 import { SharedSandbox } from './shared-sandbox';
+import { assertTestModeLoopback } from './startup-safety';
 const host = process.env.HOST ?? '127.0.0.1';
 const testToken = process.env.TEST_MODE === '1' ? process.env.TEST_TOKEN : undefined;
 if (process.env.TEST_MODE === '1' && !testToken) throw new Error('Test server requires TEST_TOKEN');
+assertTestModeLoopback(process.env.TEST_MODE === '1', host);
 const identityPath = resolve(process.env.IDENTITY_STORE_PATH ?? '.data/identities.json');
 const databaseUrl = process.env.DATABASE_URL?.trim();
 const identities = databaseUrl
@@ -35,7 +37,11 @@ const server = createServer(async (req, res) => {
   res.writeHead(404);
   res.end();
 });
-const gateway = attachGateway(server, sandbox, !!testToken);
+const gateway = attachGateway(server, sandbox, !!testToken, {
+  replacementCloseDelayMs: testToken
+    ? Math.max(0, Number(process.env.TEST_REPLACEMENT_CLOSE_DELAY_MS ?? 0))
+    : 0,
+});
 let prev = performance.now(),
   acc = 0,
   lastBroadcast = 0;

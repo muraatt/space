@@ -1,5 +1,6 @@
 import { CONFIG, type ManeuverCandidate, type Vec3, type WorldState } from '@orbital/shared';
 import { cross, dot, length, normalize, scale, sub } from '@orbital/simulation';
+import { livePlayers } from '../live-players';
 
 const project = (point: Vec3, scaleM: number) => {
   const x = point[0] / scaleM,
@@ -60,7 +61,7 @@ export function OrbitalMap({
   const currentRadius = length(state.ship.position),
     stationRadius = length(state.station.position),
     finalRadius = candidate ? length(candidate.expectedFinalState.position) : 0,
-    scaleM = Math.max(currentRadius, stationRadius, targetRadiusM ?? 0, finalRadius, ...state.remotePlayers.map(player => length(player.ship.position)), CONFIG.earthRadius * 1.08),
+    scaleM = Math.max(currentRadius, stationRadius, targetRadiusM ?? 0, finalRadius, ...livePlayers(state.remotePlayers).map(player => length(player.ship.position)), CONFIG.earthRadius * 1.08),
     player = project(state.ship.position, scaleM),
     station = project(state.station.position, scaleM),
     target = targetPosition ? project(targetPosition, scaleM) : targetRadiusM
@@ -96,7 +97,7 @@ export function OrbitalMap({
           data-testid="orbit-map-station"
         ><rect x="-4" y="-4" width="8" height="8"/><path d="M-8 0H8M0-8V8"/></g>
         <g transform={`translate(${player[0]} ${player[1]})`} className="map-player" data-testid="orbit-map-player"><circle r="4"/><path d="M-8 0H8M0-8V8"/></g>
-        {state.remotePlayers.map((remote) => {
+        {livePlayers(state.remotePlayers).map((remote) => {
           const point = project(remote.ship.position, scaleM);
           return <g key={remote.playerId} transform={`translate(${point[0]} ${point[1]})`} className="map-remote-player" data-testid={`orbit-map-remote-${remote.playerId}`}><circle r="3"/><path d="M-6 0H6M0-6V6"/><text x="7" y="-5">{remote.callsign}</text></g>;
         })}

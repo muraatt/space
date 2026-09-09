@@ -94,6 +94,7 @@ export interface BountyObjective {
 
 export interface MissionInstance {
   id: string;
+  templateId?: string;
   type: MissionType;
   title: string;
   briefing: string;

@@ -128,7 +128,7 @@ export function initialWorld(scene: SceneId = 'orbit_day', seed = 4401): WorldSt
       missileCooldownUntilMs: 0,
       countermeasureCharges: CONFIG.countermeasureCharges,
       countermeasureCooldownUntilMs: 0,
-      playerHull: 100,
+      playerHull: activeShip.conditionPercent,
       playerMaxHull: 100,
       combatTagUntilMs: 0,
       serverNowMs: CONFIG.epochMs,
@@ -198,9 +198,10 @@ export function initialWorld(scene: SceneId = 'orbit_day', seed = 4401): WorldSt
     },
   };
 }
-export function step(world: WorldState): WorldState {
-  const dt = CONFIG.fixedDt,
-    ship = world.ship,
+export function step(world: WorldState, dt = CONFIG.fixedDt): WorldState {
+  if (!Number.isFinite(dt) || dt <= 0 || dt > CONFIG.fixedDt)
+    throw new RangeError('Simulation step duration must be within (0, fixedDt]');
+  const ship = world.ship,
     stationMotion = integrate(world.station.position, world.station.velocity, [0, 0, 0], dt),
     station = { ...world.station, ...stationMotion };
   const authoritativeMassKg = totalMassKg(ship.mass);

@@ -8,6 +8,7 @@ import {
   normalizeUsername,
   type IdentityRecord,
   type IdentityRepository,
+  type PilotCheckpoint,
 } from './identity-repository';
 
 const { Pool } = pg;
@@ -20,6 +21,7 @@ interface IdentityRow extends QueryResultRow {
   ship_id: string;
   spawn_slot: number;
   ship_state: ShipState | null;
+  checkpoint: PilotCheckpoint | null;
 }
 
 function toRecord(row: IdentityRow): IdentityRecord {
@@ -31,6 +33,7 @@ function toRecord(row: IdentityRow): IdentityRecord {
     shipId: row.ship_id,
     spawnSlot: row.spawn_slot,
     ship: row.ship_state ?? undefined,
+    checkpoint: row.checkpoint ?? undefined,
   };
 }
 
@@ -54,6 +57,7 @@ export class PostgresIdentityRepository implements IdentityRepository {
         'utf8',
       );
       await pool.query(migration);
+      await pool.query(await readFile(new URL('../../migrations/002_pilot_checkpoint.sql', import.meta.url), 'utf8'));
       return repository;
     } catch (error) {
       await pool.end();
@@ -127,12 +131,19 @@ export class PostgresIdentityRepository implements IdentityRepository {
     return result.rows[0] ? toRecord(result.rows[0]) : undefined;
   }
 
-  async saveShip(playerId: string, ship: ShipState) {
-    await this.pool.query(
-      'UPDATE orbital_phase0_identities SET ship_state = $2::jsonb WHERE player_id = $1',
-      [playerId, JSON.stringify(ship)],
-    );
+  async saveShip(playerId: string, ship: ShipState, checkpoint?: PilotCheckpoint) {
+    try {
+      const result = await this.pool.query(
+        'UPDATE orbital_phase0_identities SET ship_state = $2::jsonb, ship_id = $3, checkpoint = $4::jsonb WHERE player_id = $1',
+        [playerId, JSON.stringify(ship), ship.id, checkpoint ? JSON.stringify(checkpoint) : null],
+      );
+      if (!result.rowCount) throw new Error('IDENTITY_NOT_FOUND');
+    } catch (error) {
+      if ((error as { code?: string }).code === '23505') throw new IdentityConflict('SHIP_IN_USE');
+      throw error;
+    }
   }
+  async close() { await this.pool.end(); }
 
   async health() {
     await this.pool.query('SELECT 1');

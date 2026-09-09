@@ -23,6 +23,7 @@ import {
 import {
   availableDeltaV,
   cross,
+  dot,
   add,
   integrate,
   initialWorld,
@@ -43,6 +44,8 @@ import {
   stationPortWorld,
 } from '@orbital/simulation';
 import { MemoryRepository } from './persistence/memory-repository';
+import { randomUUID } from 'node:crypto';
+import type { PilotCheckpoint } from './identity/identity-repository';
 export class World {
   state = initialWorld();
   paused = false;
@@ -50,6 +53,46 @@ export class World {
   rejectedCommands = 0;
   private times: number[] = [];
   private repository = new MemoryRepository();
+  private economicTransactions = new Set<string>();
+  private completedTemplates = new Set<string>();
+  private stationContactActive = false;
+  checkpoint(): PilotCheckpoint {
+    const active = this.state.missions.find(m => m.id === this.state.profile.activeMissionId);
+    return structuredClone({
+      version: 1, credits: this.state.profile.credits, reputation: this.state.profile.reputation,
+      factionId: this.state.profile.factionId, modules: this.state.combat.modules,
+      recovery: this.state.combat.recovery, wrecks: this.state.combat.wrecks.slice(-32),
+      economicTransactionIds: [...this.economicTransactions],
+      completedMissionTemplateIds: [...this.completedTemplates],
+      missionCargoKg: active?.cargo && !active.cargo.delivered ? active.cargo.massKg : 0,
+    });
+  }
+  restoreCheckpoint(checkpoint?: PilotCheckpoint) {
+    if (checkpoint) {
+      this.state.profile.credits = checkpoint.credits;
+      this.state.profile.reputation = checkpoint.reputation;
+      this.state.profile.factionId = checkpoint.factionId;
+      this.state.combat.modules = structuredClone(checkpoint.modules);
+      this.state.combat.recovery = structuredClone(checkpoint.recovery);
+      this.state.combat.wrecks = structuredClone(checkpoint.wrecks);
+      this.economicTransactions = new Set(checkpoint.economicTransactionIds);
+      this.completedTemplates = new Set(checkpoint.completedMissionTemplateIds);
+      // Local active missions are cancelled on reconstruction; their physical cargo is removed.
+      this.state.ship.mass.cargoKg = Math.max(0, this.state.ship.mass.cargoKg - checkpoint.missionCargoKg);
+      this.state.ship.massKg = totalMassKg(this.state.ship.mass);
+    } else this.resetDamageState();
+    this.state.combat.playerHull = this.state.ship.conditionPercent;
+    this.state.combat.playerDestroyed = false;
+    if (this.state.ship.conditionPercent <= 0) {
+      if (!this.state.combat.recovery || this.state.combat.recovery.status !== 'PENDING') this.destroyPlayer(0);
+      this.state.combat.playerDestroyed = true;
+      this.state.hangar.ships = [];
+      this.state.profile.ownedShipIds = [];
+    }
+    this.state.profile.activeShipId = this.state.ship.id;
+    this.updateDamageConsequences();
+    this.syncActiveShipRecord();
+  }
   private combatCommand(commandId: string) {
     if (this.state.combat.processedCommandIds.includes(commandId))
       return { ok: false as const, code: 'DUPLICATE_COMBAT_COMMAND' };
@@ -112,15 +155,13 @@ export class World {
   }
   stationManeuverTarget(stationId: string): ManeuverTarget | undefined {
     if (stationId !== this.state.station.id) return undefined;
+    const worldPort = stationPortWorld(this.state.station, this.state.station.ports[0]),
+      position = add(worldPort.position, scale(worldPort.approachAxis, CONFIG.stationRendezvousHandoffOffsetM)),
+      normal = normalize(cross(this.state.station.position, this.state.station.velocity)),
+      velocity = scale(normalize(cross(normal, position)), Math.sqrt(CONFIG.earthMu / length(position)));
     return {
       kind: 'NEAR_RENDEZVOUS_STATE',
-      state: {
-        // Plan against the station's orbital center. The docking handoff is
-        // rebased to the live port on completion; using a fixed inertial port
-        // offset here would cease to be a valid orbital state after a long coast.
-        position: [...this.state.station.position],
-        velocity: [...this.state.station.velocity],
-      },
+      state: { position, velocity },
     };
   }
   orbitalEntityManeuverTarget(entityId: string): ManeuverTarget | undefined {
@@ -336,7 +377,7 @@ export class World {
     if (this.state.combat.playerDestroyed) return { ok: false as const, code: 'SHIP_DESTROYED' };
     if (!Number.isFinite(amount) || amount <= 0) return { ok: false as const, code: 'INVALID_DAMAGE' };
     this.state.combat.processedDamageIds.push(damageId);
-    this.state.combat.playerHull = Math.max(0, this.state.combat.playerHull - amount);
+    this.state.combat.playerHull = Math.max(0, this.state.ship.conditionPercent - amount);
     this.state.ship.conditionPercent = this.state.combat.playerHull;
     this.applyModuleDamage(damageId, amount, nowMs);
     this.tagCombat(nowMs);
@@ -389,12 +430,15 @@ export class World {
     combat.missiles.forEach((missile) => {
       if (missile.targetId === lost.id && missile.status === 'ACTIVE') missile.status = 'EXPIRED';
     });
-    const mission = this.currentIntercept();
-    if (mission) {
+    const mission = this.state.missions.find(item => item.id === this.state.profile.activeMissionId);
+    if (mission && ['ACCEPTED', 'ACTIVE'].includes(mission.status)) {
       mission.status = 'FAILED';
       mission.failedAtMs = nowMs;
+      if (mission.recon) mission.recon.scanning = false;
       this.state.profile.activeMissionId = undefined;
     }
+    lost.mass.cargoKg = 0;
+    lost.massKg = totalMassKg(lost.mass);
     this.state.hangar.ships = this.state.hangar.ships.filter((ship) => ship.id !== lost.id);
     this.state.profile.ownedShipIds = this.state.profile.ownedShipIds.filter((id) => id !== lost.id);
     combat.recovery = {
@@ -404,6 +448,7 @@ export class World {
       covered: true,
       deductibleCredits: lost.definitionId === 'RAPTOR_COMBAT' ? CONFIG.raptorInsuranceDeductibleCredits : 0,
       wreckId: wreck.id,
+      recoverablePropellantKg: lost.mass.propellantKg,
     };
     this.combatEvent('SHIP_DESTROYED', nowMs, `${lost.id} kaybedildi.`, { targetId: lost.id });
     this.combatEvent('WRECK_CREATED', nowMs, `${wreck.id} kayıp kaydı oluşturuldu.`, { targetId: wreck.id });
@@ -570,11 +615,12 @@ export class World {
     if (index >= 0) this.state.hangar.ships[index] = structuredClone(this.state.ship);
   }
   private transactionAvailable(transactionId: string) {
-    if (this.state.hangar.processedTransactionIds.includes(transactionId))
+    if (this.economicTransactions.has(transactionId) || this.state.hangar.processedTransactionIds.includes(transactionId))
       return { ok: false as const, code: 'DUPLICATE_TRANSACTION' };
     return { ok: true as const };
   }
   private rememberTransaction(transactionId: string) {
+    this.economicTransactions.add(transactionId);
     this.state.hangar.processedTransactionIds.push(transactionId);
     if (this.state.hangar.processedTransactionIds.length > 256)
       this.state.hangar.processedTransactionIds.shift();
@@ -674,8 +720,9 @@ export class World {
     return { ok: true as const, cost };
   }
   private resetDamageState() {
-    this.state.combat.playerDestroyed = false;
-    for (const module of Object.values(this.state.combat.modules)) module.condition = 100;
+    this.state.combat.playerHull = this.state.ship.conditionPercent;
+    this.state.combat.playerDestroyed = this.state.ship.conditionPercent <= 0;
+    for (const module of Object.values(this.state.combat.modules)) module.condition = this.state.ship.conditionPercent;
     this.updateDamageConsequences();
   }
   claimReplacement(transactionId: string, nowMs: number) {
@@ -694,7 +741,7 @@ export class World {
     if (!charged.ok) return charged;
     const definition = shipDefinition(definitionId),
       performance = shipPerformance(definitionId, []),
-      replacementId = `${definitionId === 'RAPTOR_COMBAT' ? 'raptor' : 'kestrel'}-replacement-${++this.state.combat.sequence}`,
+      replacementId = `ship-${randomUUID()}`,
       replacement = {
         id: replacementId,
         definitionId,
@@ -708,7 +755,7 @@ export class World {
           modulesKg: 0,
           cargoKg: 0,
           ammunitionKg: 0,
-          propellantKg: definition.initialPropellantKg,
+          propellantKg: Math.min(definition.initialPropellantKg, recovery.recoverablePropellantKg ?? 0),
         },
         performance,
         conditionPercent: 100,
@@ -796,8 +843,13 @@ export class World {
       ['COMPLETED', 'FAILED'].includes(mission.status),
     );
     this.state.missions = [
-      ...historical,
-      ...missions.filter((offer) => !historical.some((mission) => mission.id === offer.id)),
+      ...historical.slice(-32),
+      ...missions.filter(offer => !this.completedTemplates.has(offer.templateId ?? offer.id) &&
+        !historical.some(mission => mission.status === 'COMPLETED' && (mission.templateId ?? mission.id) === (offer.templateId ?? offer.id)))
+        .map(offer => {
+          const templateId = offer.templateId ?? offer.id;
+          return Object.assign(offer, { templateId, id: `${templateId}:attempt-${randomUUID()}` });
+        }),
     ];
     return { ok: true as const };
   }
@@ -849,9 +901,11 @@ export class World {
     );
   }
   private completeMission(mission: MissionInstance, nowMs: number) {
+    if (this.state.combat.playerDestroyed) return { ok: false as const, code: 'SHIP_DESTROYED' };
     if (mission.status !== 'ACTIVE') return { ok: false as const, code: 'INVALID_MISSION_STATE' };
     if (mission.bounty?.rewardIssued) return { ok: false as const, code: 'DUPLICATE_BOUNTY_REWARD' };
     mission.status = 'COMPLETED';
+    this.completedTemplates.add(mission.templateId ?? mission.id);
     mission.completedAtMs = nowMs;
     if (mission.bounty) {
       const fuelUsedKg = Math.max(0, (mission.bounty.acceptedFuelKg ?? this.state.ship.mass.propellantKg) - this.state.ship.mass.propellantKg),
@@ -875,6 +929,7 @@ export class World {
     return { ok: true as const };
   }
   deliverCargo(missionId: string, cargoId: string, destinationId: string, nowMs: number) {
+    if (this.state.combat.playerDestroyed) return { ok: false as const, code: 'SHIP_DESTROYED' };
     const mission = this.state.missions.find((item) => item.id === missionId);
     if (!mission) return { ok: false as const, code: 'UNKNOWN_MISSION' };
     if (mission.status !== 'ACTIVE') return { ok: false as const, code: 'INVALID_MISSION_STATE' };
@@ -890,6 +945,7 @@ export class World {
     return this.completeMission(mission, nowMs);
   }
   startScan(missionId: string, destinationId: string) {
+    if (this.state.combat.playerDestroyed) return { ok: false as const, code: 'SHIP_DESTROYED' };
     const mission = this.state.missions.find((item) => item.id === missionId);
     if (!mission) return { ok: false as const, code: 'UNKNOWN_MISSION' };
     if (mission.status !== 'ACTIVE' || mission.type !== 'RECONNAISSANCE' || !mission.recon)
@@ -939,6 +995,7 @@ export class World {
     return { ok: true as const };
   }
   private advanceMission(nowMs: number) {
+    if (this.state.combat.playerDestroyed) return;
     const mission = this.state.missions.find((item) => item.id === this.state.profile.activeMissionId);
     if (!mission) return;
     if (mission.status === 'ACCEPTED') mission.status = 'ACTIVE';
@@ -1071,6 +1128,10 @@ export class World {
   }
   reset(scene: SceneId, paused = false, seed = 4401) {
     this.state = initialWorld(scene, seed);
+    this.economicTransactions.clear();
+    this.completedTemplates.clear();
+    this.stationContactActive = false;
+    this.state.combat.playerHull = this.state.ship.conditionPercent;
     this.paused = paused;
     this.lastInputAt = 0;
     this.repository.write(this.state);
@@ -1174,7 +1235,7 @@ export class World {
     maneuver.nextEventAtMs = undefined;
     maneuver.coastAnchor = undefined;
   }
-  private burnDirection(candidate: ManeuverCandidate, burnIndex: number): Vec3 {
+  private burnDirection(candidate: ManeuverCandidate, burnIndex: number, burnElapsedSeconds = 0): Vec3 {
     const burn = candidate.burns[burnIndex],
       ship = this.state.ship,
       normal = normalize(cross(ship.position, ship.velocity)),
@@ -1183,8 +1244,9 @@ export class World {
     if (burn.steering === 'RETROGRADE') return scale(prograde, -1);
     if (burn.steering === 'INERTIAL_VECTOR' && burn.direction) return normalize(burn.direction);
     const targetRadius = length(candidate.expectedFinalState.position),
+      remainingSeconds = Math.max(0, burn.durationSeconds - burnElapsedSeconds),
       desired = candidate.burns.some((item) => item.steering === 'INERTIAL_VECTOR')
-        ? candidate.expectedFinalState.velocity
+        ? propagateKepler(candidate.expectedFinalState, -remainingSeconds).velocity
         : scale(prograde, Math.sqrt(CONFIG.earthMu / targetRadius));
     return normalize(sub(desired, ship.velocity));
   }
@@ -1208,46 +1270,64 @@ export class World {
       maneuver.completedAtMs = nowMs;
       return true;
     }
-    this.state.ship.orientation = orientationForBodyMinusZ(this.burnDirection(maneuver.candidate, burnIndex));
-    this.state.ship.angularVelocity = [0, 0, 0];
-    this.state.controls = { translation: [0, 0, -1], rotation: [0, 0, 0] };
-    this.state = step(this.state);
+    const remainingSeconds = burn.durationSeconds - maneuver.burnElapsedSeconds;
+    if (remainingSeconds > 1e-9) {
+      const stepSeconds = Math.min(CONFIG.fixedDt, remainingSeconds);
+      this.state.ship.orientation = orientationForBodyMinusZ(
+        this.burnDirection(maneuver.candidate, burnIndex, maneuver.burnElapsedSeconds),
+      );
+      this.state.ship.angularVelocity = [0, 0, 0];
+      this.state.controls = { translation: [0, 0, -1], rotation: [0, 0, 0] };
+      this.state = step(this.state, stepSeconds);
+      const stepped = this.state.maneuver!;
+      stepped.burnElapsedSeconds += stepSeconds;
+      stepped.updatedAtMs = stepped.startedAtMs + (burn.offsetSeconds + stepped.burnElapsedSeconds) * 1000;
+      this.state.docking.stationUpdatedAtMs = stepped.updatedAtMs;
+      if (stepped.burnElapsedSeconds + 1e-9 < burn.durationSeconds) return true;
+    }
     const active = this.state.maneuver!;
-    active.burnElapsedSeconds += CONFIG.fixedDt;
-    active.updatedAtMs = nowMs;
-    if (active.burnElapsedSeconds + 1e-9 < burn.durationSeconds) return true;
+    const burnCompletedAtMs = active.startedAtMs + (burn.offsetSeconds + burn.durationSeconds) * 1000;
     this.state.controls = neutralControls();
     if (burnIndex + 1 < active.candidate.burns.length) {
       active.status = 'COASTING';
       active.activeBurnIndex = burnIndex;
       active.burnElapsedSeconds = 0;
       active.coastAnchor = {
-        atMs: nowMs,
+        atMs: burnCompletedAtMs,
         state: { position: [...this.state.ship.position], velocity: [...this.state.ship.velocity] },
         mass: { ...this.state.ship.mass },
       };
       active.nextEventAtMs = active.startedAtMs + active.candidate.burns[burnIndex + 1].offsetSeconds * 1000;
     } else {
       active.status = 'COMPLETE';
-      active.completedAtMs = nowMs;
+      active.completedAtMs = burnCompletedAtMs;
+      active.updatedAtMs = burnCompletedAtMs;
       active.nextEventAtMs = undefined;
       active.coastAnchor = undefined;
       if (active.targetEntityId === this.state.station.id) {
         const worldPort = stationPortWorld(this.state.station, this.state.station.ports[0]);
-        // The planner solves against the station snapshot captured when the plan is
-        // requested. Rebase that solved rendezvous onto the station's authoritative
-        // propagated state at arrival so a timestamped coast cannot leave the ship
-        // aiming at the station's old position.
-        this.state.ship.position = add(
-          worldPort.position,
-          scale(worldPort.approachAxis, CONFIG.stationRendezvousHandoffOffsetM),
-        );
-        this.state.ship.velocity = [...this.state.station.velocity];
-        this.state.ship.orientation = orientationForBodyMinusZ(scale(worldPort.approachAxis, -1));
-        this.state.ship.angularVelocity = [0, 0, 0];
-        this.state.docking.selectedStationId = this.state.station.id;
-        this.state.docking.portId = this.state.station.ports[0].id;
-        this.state.docking.rendezvousComplete = true;
+        const target = this.stationManeuverTarget(this.state.station.id)!;
+        if (target.kind !== 'NEAR_RENDEZVOUS_STATE') throw new Error('Station target must be a rendezvous state');
+        const positionErrorM = length(sub(this.state.ship.position, target.state.position)),
+          relativeVelocityMps = length(sub(this.state.ship.velocity, this.state.station.velocity)),
+          axialDistanceM = dot(sub(this.state.ship.position, worldPort.position), worldPort.approachAxis);
+        if (
+          positionErrorM > CONFIG.stationManeuverCompletionPositionToleranceM ||
+          relativeVelocityMps > CONFIG.stationManeuverCompletionVelocityToleranceMps ||
+          axialDistanceM < 0
+        ) {
+          active.status = 'FAILED';
+          active.failureReason = 'STATION_HANDOFF_TOLERANCE_NOT_MET';
+        } else {
+          active.stationHandoffCorrectionM = positionErrorM;
+          this.state.ship.position = [...target.state.position];
+          this.state.ship.velocity = [...this.state.station.velocity];
+          this.state.ship.orientation = orientationForBodyMinusZ(scale(worldPort.approachAxis, -1));
+          this.state.ship.angularVelocity = [0, 0, 0];
+          this.state.docking.selectedStationId = this.state.station.id;
+          this.state.docking.portId = this.state.station.ports[0].id;
+          this.state.docking.rendezvousComplete = true;
+        }
       } else if (active.targetEntityId) {
         const target = this.state.combat.contacts.find((item) => item.id === active.targetEntityId && !item.destroyed);
         if (target?.bountyClass) {
@@ -1267,9 +1347,75 @@ export class World {
     }
     return true;
   }
+  private resolveStationContact(
+    previousShipPosition: Vec3,
+    previousStationPosition: Vec3,
+    nowMs: number,
+  ) {
+    if (this.state.docking.phase === 'DOCKED' || this.state.combat.playerDestroyed) return;
+    const relativeStart = sub(previousShipPosition, previousStationPosition),
+      relativeEnd = sub(this.state.ship.position, this.state.station.position),
+      radiusM = this.state.station.bodyRadiusM,
+      separationM = length(relativeEnd);
+    if (!segmentSphereHit(relativeStart, relativeEnd, [0, 0, 0], radiusM)) {
+      if (separationM > radiusM + 2) this.stationContactActive = false;
+      return;
+    }
+    const segment = sub(relativeEnd, relativeStart),
+      a = dot(segment, segment),
+      b = 2 * dot(relativeStart, segment),
+      c = dot(relativeStart, relativeStart) - radiusM ** 2,
+      discriminant = Math.max(0, b ** 2 - 4 * a * c),
+      roots = a > 1e-12
+        ? [(-b - Math.sqrt(discriminant)) / (2 * a), (-b + Math.sqrt(discriminant)) / (2 * a)]
+        : [0],
+      hitFraction = length(relativeStart) <= radiusM
+        ? 0
+        : roots.find((value) => value >= 0 && value <= 1) ?? 0,
+      contactOffset = add(relativeStart, scale(segment, hitFraction)),
+      relativeVelocity = sub(this.state.ship.velocity, this.state.station.velocity),
+      normal = length(contactOffset) > 1e-9
+        ? normalize(contactOffset)
+        : length(relativeVelocity) > 1e-9
+          ? scale(normalize(relativeVelocity), -1)
+          : ([1, 0, 0] as Vec3),
+      stationTravel = sub(this.state.station.position, previousStationPosition),
+      stationAtContact = add(previousStationPosition, scale(stationTravel, hitFraction)),
+      inwardSpeed = dot(relativeVelocity, normal),
+      impactSpeed = length(relativeVelocity);
+    this.state.ship.position = add(stationAtContact, scale(normal, radiusM + 0.5));
+    this.state.ship.velocity = inwardSpeed < 0
+      ? add(this.state.station.velocity, sub(relativeVelocity, scale(normal, inwardSpeed * 1.25)))
+      : add(this.state.station.velocity, relativeVelocity);
+    this.state.controls = neutralControls();
+    const active = this.state.maneuver;
+    if (active && ['PLANNED', 'EXECUTING_BURN', 'COASTING', 'ARRIVAL_BURN'].includes(active.status)) {
+      active.status = 'FAILED';
+      active.failureReason = 'STATION_COLLISION';
+      active.completedAtMs = nowMs;
+      active.nextEventAtMs = undefined;
+      active.coastAnchor = undefined;
+    }
+    if (
+      !this.stationContactActive &&
+      impactSpeed >= CONFIG.stationHardImpactSpeedMps &&
+      nowMs >= this.state.docking.impactCooldownUntilMs
+    ) {
+      this.state.docking.impactCooldownUntilMs = nowMs + 5_000;
+      this.state.docking.lastResultCode = 'HARD_IMPACT';
+      this.receivePlayerDamage(
+        `station-motion-impact:${nowMs}:${this.state.tick}`,
+        Math.min(60, Math.ceil(impactSpeed * 4)),
+        nowMs,
+      );
+    }
+    this.stationContactActive = true;
+  }
   tick(now: number, nowMs = Date.now()) {
     if (this.paused) return;
-    const start = performance.now();
+    const start = performance.now(),
+      previousShipPosition = [...this.state.ship.position] as Vec3,
+      previousStationPosition = [...this.state.station.position] as Vec3;
     if (!this.state.combat.playerDestroyed && !this.advanceManeuver(nowMs)) {
       if (now - this.lastInputAt > CONFIG.inputTimeoutMs) this.state.controls = neutralControls();
       this.state = step(this.state);
@@ -1277,8 +1423,7 @@ export class World {
     } else if (this.state.combat.playerDestroyed) {
       this.state.controls = neutralControls();
     }
-    if (this.state.maneuver && ['EXECUTING_BURN', 'ARRIVAL_BURN'].includes(this.state.maneuver.status))
-      this.state.docking.stationUpdatedAtMs = nowMs;
+    this.resolveStationContact(previousShipPosition, previousStationPosition, nowMs);
     this.refreshDocking();
     this.advanceMission(nowMs);
     this.advanceCombat(nowMs);

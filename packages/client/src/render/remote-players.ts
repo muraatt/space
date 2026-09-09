@@ -2,6 +2,7 @@ import { CanvasTexture, Group, Quaternion, Sprite, SpriteMaterial, SRGBColorSpac
 import type { RemotePlayerState } from '@orbital/shared';
 import { makeShip } from './ship';
 import type { renderFrame } from './render-frame';
+import { livePlayers } from '../live-players';
 
 type Frame = ReturnType<typeof renderFrame>;
 type Visual = ReturnType<typeof makeShip> & { root: Group; label: Sprite };
@@ -23,6 +24,7 @@ export class RemotePlayersVisual {
   group = new Group();
   private visuals = new Map<string, Visual>();
   update(players: RemotePlayerState[], frame: Frame) {
+    players = livePlayers(players);
     const active = new Set(players.map((player) => player.playerId));
     for (const [id, visual] of this.visuals) if (!active.has(id)) {
       this.group.remove(visual.root); this.visuals.delete(id);

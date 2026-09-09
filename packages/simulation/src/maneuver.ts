@@ -81,7 +81,7 @@ function simulateFiniteBurn(
   initialState: OrbitalState,
   initialMass: MassState,
   deltaVMps: number,
-  directionAt: (state: OrbitalState) => Vec3,
+  directionAt: (state: OrbitalState, elapsedSeconds: number) => Vec3,
   performance: ShipPerformance,
 ): BurnResult {
   if (!Number.isFinite(deltaVMps) || deltaVMps < 0) throw new PlannerFailure('NO_FEASIBLE_TRANSFER');
@@ -100,7 +100,7 @@ function simulateFiniteBurn(
     const duration = Math.min(CONFIG.fixedDt, (remaining * exhaustVelocity) / performance.mainThrustN),
       controls = { translation: [0, 0, -1] as Vec3, rotation: [0, 0, 0] as Vec3 },
       propulsion = propulsionStep(mass, controls, duration, performance),
-      orientation = orientationForBodyMinusZ(directionAt(state)),
+      orientation = orientationForBodyMinusZ(directionAt(state, durationSeconds)),
       acceleration = rotate(propulsion.bodyAcceleration, orientation);
     state = integrate(state.position, state.velocity, acceleration, duration);
     mass = propulsion.mass;
@@ -230,20 +230,46 @@ function runLocalRendezvous(ship: ShipState, target: ResolvedTarget, coastSecond
     nominalArrival = propagateKepler(initial, coastSeconds);
   let departureVector = scale(sub(expectedAtBurn.position, nominalArrival.position), 1 / coastSeconds);
   const fly = (vector: Vec3) => {
-    const arrivalState = propagateKepler(
-      { position: initial.position, velocity: add(initial.velocity, vector) },
-      coastSeconds,
-    );
-    return { arrivalState };
+    const departureDirection = length(vector) > 1e-9
+        ? normalize(vector)
+        : tangential(initial.position, target.normal, target.direction),
+      departure = simulateFiniteBurn(
+        initial,
+        ship.mass,
+        length(vector),
+        () => departureDirection,
+        ship.performance,
+      );
+    if (departure.durationSeconds > coastSeconds)
+      throw new PlannerFailure('NO_FEASIBLE_TRANSFER');
+    const arrivalStart = propagateKepler(departure.state, coastSeconds - departure.durationSeconds);
+    const arrivalDeltaV = length(sub(targetAt(target, coastSeconds).velocity, arrivalStart.velocity)),
+      arrival = simulateFiniteBurn(
+        arrivalStart,
+        departure.mass,
+        arrivalDeltaV,
+        (state, elapsedSeconds) => sub(targetAt(target, coastSeconds + elapsedSeconds).velocity, state.velocity),
+        ship.performance,
+      );
+    const etaSeconds = coastSeconds + arrival.durationSeconds,
+      expectedTarget = targetAt(target, etaSeconds);
+    return { departureDirection, departure, arrivalStart, arrivalDeltaV, arrival, etaSeconds, expectedTarget };
   };
-  for (let iteration = 0; iteration < 8; iteration++) {
-    const base = fly(departureVector), error = sub(expectedAtBurn.position, base.arrivalState.position);
-    if (length(error) < 2) break;
+  for (let iteration = 0; iteration < 10; iteration++) {
+    const base = fly(departureVector), error = sub(base.expectedTarget.position, base.arrival.state.position);
+    if (length(error) < 0.25) break;
     const epsilon = 0.05,
       columns = ([0, 1, 2] as const).map((axis) => {
         const perturbed = [...departureVector] as Vec3;
         perturbed[axis] += epsilon;
-        return scale(sub(fly(perturbed).arrivalState.position, base.arrivalState.position), 1 / epsilon);
+        const sample = fly(perturbed);
+        return scale(
+          sub(
+            sub(sample.arrival.state.position, sample.expectedTarget.position),
+            sub(base.arrival.state.position, base.expectedTarget.position),
+          ),
+          1 / epsilon,
+        );
       }),
       correction = solveLinear3(
         [
@@ -258,56 +284,35 @@ function runLocalRendezvous(ship: ShipState, target: ResolvedTarget, coastSecond
     departureVector = add(departureVector, capped);
   }
   const flown = fly(departureVector),
-    departureDirection = length(departureVector) > 1e-9
-      ? normalize(departureVector)
-      : tangential(initial.position, target.normal, target.direction),
-    departure = simulateFiniteBurn(
-      initial,
-      ship.mass,
-      length(departureVector),
-      () => departureDirection,
-      ship.performance,
-    ),
-    arrivalVector = sub(expectedAtBurn.velocity, flown.arrivalState.velocity),
-    arrivalDeltaV = length(arrivalVector),
-    arrival = simulateFiniteBurn(
-      flown.arrivalState,
-      departure.mass,
-      arrivalDeltaV,
-      (state) => sub(expectedAtBurn.velocity, state.velocity),
-      ship.performance,
-    ),
-    etaSeconds = coastSeconds + arrival.durationSeconds,
-    expectedTarget = targetAt(target, etaSeconds),
-    positionErrorM = length(sub(flown.arrivalState.position, expectedAtBurn.position)),
-    radiusErrorM = Math.abs(length(flown.arrivalState.position) - length(expectedAtBurn.position)),
-    velocityErrorMps = length(sub(add(flown.arrivalState.velocity, arrivalVector), expectedAtBurn.velocity));
+    positionErrorM = length(sub(flown.arrival.state.position, flown.expectedTarget.position)),
+    radiusErrorM = Math.abs(length(flown.arrival.state.position) - length(flown.expectedTarget.position)),
+    velocityErrorMps = length(sub(flown.arrival.state.velocity, flown.expectedTarget.velocity));
   if (positionErrorM > POSITION_TOLERANCE_M || radiusErrorM > RADIUS_TOLERANCE_M || velocityErrorMps > VELOCITY_TOLERANCE_MPS)
     throw new PlannerFailure('ARRIVAL_TOLERANCE_NOT_MET');
   return {
-    estimatedDeltaVMps: length(departureVector) + arrivalDeltaV,
-    estimatedPropellantKg: ship.mass.propellantKg - arrival.mass.propellantKg,
+    estimatedDeltaVMps: length(departureVector) + flown.arrivalDeltaV,
+    estimatedPropellantKg: ship.mass.propellantKg - flown.arrival.mass.propellantKg,
     waitSeconds: 0,
-    transferDurationSeconds: etaSeconds,
-    etaSeconds,
+    transferDurationSeconds: flown.etaSeconds,
+    etaSeconds: flown.etaSeconds,
     burns: [
       {
         offsetSeconds: 0,
-        durationSeconds: departure.durationSeconds,
+        durationSeconds: flown.departure.durationSeconds,
         deltaVMps: length(departureVector),
         steering: 'INERTIAL_VECTOR',
-        direction: departureDirection,
+        direction: flown.departureDirection,
       },
       {
         offsetSeconds: coastSeconds,
-        durationSeconds: arrival.durationSeconds,
-        deltaVMps: arrivalDeltaV,
+        durationSeconds: flown.arrival.durationSeconds,
+        deltaVMps: flown.arrivalDeltaV,
         steering: 'MATCH_TARGET_VELOCITY',
       },
     ],
-    expectedFinalState: expectedTarget,
-    expectedFinalMass: arrival.mass,
-    expectedReserveDeltaVMps: availableDeltaV(arrival.mass, ship.performance.specificImpulseSeconds),
+    expectedFinalState: flown.expectedTarget,
+    expectedFinalMass: flown.arrival.mass,
+    expectedReserveDeltaVMps: availableDeltaV(flown.arrival.mass, ship.performance.specificImpulseSeconds),
     verification: { positionErrorM, radiusErrorM, velocityErrorMps },
   };
 }

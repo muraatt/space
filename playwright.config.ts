@@ -5,8 +5,8 @@ export default defineConfig({
   fullyParallel: false,
   workers: 1,
   retries: 0,
-  outputDir: 'artifacts/session-01/test-output',
-  reporter: [['list'], ['json', { outputFile: 'artifacts/session-01/e2e-results.json' }]],
+  outputDir: '.runs/playwright/test-output',
+  reporter: [['list'], ['json', { outputFile: '.runs/playwright/results.json' }]],
   use: {
     baseURL: 'http://127.0.0.1:5174',
     channel: 'chrome',
@@ -21,7 +21,10 @@ export default defineConfig({
       url: 'http://127.0.0.1:8788/health',
       timeout: 30000,
       reuseExistingServer: false,
-      env: { PORT: '8788', TEST_MODE: '1', TEST_TOKEN: 'orbital-isolated-test-01', IDENTITY_STORE_PATH: 'artifacts/shared-phase-00/test-identities.json' },
+      env: {
+        PORT: '8788', HOST: '127.0.0.1', TEST_MODE: '1', TEST_TOKEN: 'orbital-isolated-test-01',
+        TEST_REPLACEMENT_CLOSE_DELAY_MS: '1000', IDENTITY_STORE_PATH: `.runs/playwright/test-identities-${process.pid}.json`,
+      },
     },
     {
       command:

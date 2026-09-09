@@ -3,6 +3,6 @@ export default defineConfig({
   test: {
     include: ['packages/**/*.test.ts'],
     reporters: ['default', 'json'],
-    outputFile: { json: 'artifacts/session-01/unit-results.json' },
+    outputFile: { json: '.runs/vitest/unit-results.json' },
   },
 });

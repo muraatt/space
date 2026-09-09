@@ -96,13 +96,18 @@ export class Connection {
         this.startPing();
       }
       if (data.type === 'identity_error') {
-        this.clearCredential();
-        this.identityRequired = true;
+        if (data.code === 'INVALID_CREDENTIAL') this.clearCredential();
+        this.identityRequired = ['INVALID_CREDENTIAL', 'USERNAME_INVALID', 'USERNAME_TAKEN'].includes(data.code);
         this.registrationPending = false;
         this.lastError = data.code;
-        this.status = 'Çağrı adı gerekli';
+        this.status = data.code === 'IDENTITY_UNAVAILABLE'
+          ? 'Kimlik servisi geçici olarak kullanılamıyor'
+          : data.code === 'IDENTITY_RESTORE_INVALID'
+            ? 'Kayıtlı gemi geri yüklenemedi'
+            : 'Çağrı adı gerekli';
       }
       if (data.type === 'snapshot') {
+        if (this.identity) this.identity.shipId = data.state.ship.id;
         this.snapshot = data;
         this.receivedAt = performance.now();
         this.seq = Math.max(this.seq, data.state.lastInputSeq + 1);
@@ -138,8 +143,10 @@ export class Connection {
         ? 'Kapalı'
         : event.code === 4001
           ? 'Kumanda başka sekmede'
+          : event.code === 1013 && this.lastError === 'IDENTITY_UNAVAILABLE'
+            ? 'Kimlik servisi kullanılamıyor; yeniden deneniyor'
           : 'Bağlantı kesildi';
-      this.lastError = this.status;
+      if (event.code !== 1013 || this.lastError !== 'IDENTITY_UNAVAILABLE') this.lastError = this.status;
       clearInterval(this.pingTimer);
       this.planPending = false;
       this.missionPending = false;

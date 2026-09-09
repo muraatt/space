@@ -1,10 +1,12 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { FileIdentityRepository, IdentityConflict } from './file-identity-repository';
 import { SharedSandbox } from '../shared-sandbox';
 import { dispatch } from '../commands/dispatch';
+import type { IdentityRecord, IdentityRepository } from './identity-repository';
+import { IdentityRestoreError } from './persisted-ship';
 
 describe('minimal durable shared identity', () => {
   let directory = '';
@@ -43,5 +45,47 @@ describe('minimal durable shared identity', () => {
     expect(resumed?.runtime.world.state.ship.id).toBe(a.record.shipId);
     expect(resumed?.runtime.world.state.ship.position[1]).toBeCloseTo(a.runtime.world.state.ship.position[1]);
     expect(resumed?.runtime.world.state.profile.ownedShipIds).toEqual([a.record.shipId]);
+  });
+
+  it('isolates a malformed persisted ship while other identities keep running', async () => {
+    const validShip = structuredClone(new SharedSandbox((await setup()).repository).legacyWorld.state.ship),
+      badRecord: IdentityRecord = {
+        playerId: 'bad-player', username: 'BAD_SHIP', normalizedUsername: 'bad_ship',
+        credentialHash: 'bad-hash', shipId: 'bad-ship', spawnSlot: 0,
+        ship: { ...validShip, id: 'bad-ship', massKg: Number.NaN },
+      },
+      goodRecord: IdentityRecord = {
+        playerId: 'good-player', username: 'GOOD_SHIP', normalizedUsername: 'good_ship',
+        credentialHash: 'good-hash', shipId: 'good-ship', spawnSlot: 1,
+        ship: { ...validShip, id: 'good-ship' },
+      },
+      repository: IdentityRepository = {
+        async register() { throw new Error('unused'); },
+        async authenticate(value) { return value === 'b'.repeat(43) ? badRecord : goodRecord; },
+        async saveShip() {},
+        async health() {},
+      },
+      sandbox = new SharedSandbox(repository);
+    await expect(sandbox.resume('b'.repeat(43))).rejects.toBeInstanceOf(IdentityRestoreError);
+    const good = await sandbox.resume('g'.repeat(43));
+    expect(good?.runtime.world.state.ship.id).toBe('good-ship');
+    expect(() => good?.runtime.world.tick(1, 1)).not.toThrow();
+  });
+
+  it('contains background save rejection, reports degradation, and retries dirty state', async () => {
+    const { repository } = await setup(), save = vi.spyOn(repository, 'saveShip'),
+      reports: string[] = [], sandbox = new SharedSandbox(repository, (message) => reports.push(message)),
+      created = await sandbox.register('RETRY_01', 'r'.repeat(43));
+    save.mockRejectedValueOnce(new Error('disk temporarily unavailable'));
+    sandbox.connect(created.runtime);
+    sandbox.disconnect(created.runtime);
+    await vi.waitFor(() => expect(reports).toHaveLength(1));
+    expect(sandbox.persistenceStatus().degraded).toBe(true);
+    sandbox.connect(created.runtime);
+    expect(() => sandbox.tick(1)).not.toThrow();
+    expect(created.runtime.world.state.tick).toBeGreaterThan(0);
+    await expect(sandbox.flush()).resolves.toBeUndefined();
+    expect(sandbox.persistenceStatus()).toEqual({ degraded: false, dirtyPlayerIds: [] });
+    expect(save).toHaveBeenCalledTimes(3);
   });
 });

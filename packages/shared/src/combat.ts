@@ -59,6 +59,7 @@ export interface RecoveryState {
   replacementShipId?: string;
   transactionId?: string;
   wreckId: string;
+  recoverablePropellantKg?: number;
 }
 
 export interface CombatTargetState {

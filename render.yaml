@@ -12,6 +12,9 @@ services:
         fromDatabase:
           name: orbital-identity-db
           property: connectionString
+      # Render is the only trusted HTTP/WebSocket proxy in front of this service.
+      - key: TRUST_PROXY
+        value: "1"
 
 databases:
   - name: orbital-identity-db

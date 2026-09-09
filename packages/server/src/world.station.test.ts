@@ -96,4 +96,77 @@ describe('authoritative station and docking', () => {
     expect(dispatch(world.state, { type: 'input', version: 1, shipId: world.state.ship.id, seq: 70, translation: [0, 0, -1], rotation: [0, 0.5, 0] }, world.state.ship.id).ok).toBe(true);
     expect(world.undock(STATION_ID, 'undock-valid')).toMatchObject({ ok: false, code: 'DUPLICATE_DOCKING_COMMAND' });
   });
+
+  it('accepts only a bounded live-state station handoff', () => {
+    const world = selectedWorld('station_rendezvous'), target = world.stationManeuverTarget(STATION_ID)!,
+      candidate = generateManeuverPlan(world.state.ship, target).candidates.find(item => item.type === 'FAST')!,
+      startedAtMs = 1_800_000_000_000;
+    world.paused = false;
+    expect(world.startManeuver('station-handoff', candidate, startedAtMs, STATION_ID).ok).toBe(true);
+    let nowMs = startedAtMs, ticks = 0;
+    while (!['COMPLETE', 'FAILED'].includes(world.state.maneuver!.status) && ticks++ < 10_000) {
+      if (world.state.maneuver!.status === 'COASTING') nowMs = world.state.maneuver!.nextEventAtMs!;
+      else nowMs += CONFIG.fixedDt * 1000;
+      world.tick(ticks, nowMs);
+    }
+    expect(world.state.maneuver?.status).toBe('COMPLETE');
+    expect(world.state.maneuver?.stationHandoffCorrectionM).toBeLessThanOrEqual(
+      CONFIG.stationManeuverCompletionPositionToleranceM,
+    );
+    expect(world.state.docking.phase).toBe('FINAL_APPROACH');
+    expect(world.state.docking.metrics?.rangeM).toBeCloseTo(CONFIG.stationRendezvousHandoffOffsetM, 0);
+    expect(world.state.docking.metrics?.relativeSpeedMps).toBe(0);
+  });
+
+  it('refuses a station completion that is 860 km away without rebasing the ship', () => {
+    const world = selectedWorld('station_rendezvous'), target = world.stationManeuverTarget(STATION_ID)!;
+    if (target.kind !== 'NEAR_RENDEZVOUS_STATE') throw new Error('Expected station state target');
+    const candidate = generateManeuverPlan(world.state.ship, target).candidates[0], fuel = world.state.ship.mass.propellantKg;
+    candidate.burns = [{ offsetSeconds: 0, durationSeconds: 0, deltaVMps: 0, steering: 'PROGRADE' }];
+    candidate.estimatedDeltaVMps = 0;
+    world.state.ship.position[0] += 860_000;
+    const displaced = [...world.state.ship.position];
+    world.paused = false;
+    expect(world.startManeuver('stale-station', candidate, CONFIG.epochMs, STATION_ID).ok).toBe(true);
+    world.tick(1, CONFIG.epochMs + CONFIG.fixedDt * 1000);
+    expect(world.state.maneuver).toMatchObject({ status: 'FAILED', failureReason: 'STATION_HANDOFF_TOLERANCE_NOT_MET' });
+    expect(world.state.ship.position).toEqual(displaced);
+    expect(world.state.ship.mass.propellantKg).toBe(fuel);
+    expect(world.state.docking.rendezvousComplete).toBe(false);
+  });
+
+  it('sweeps the solid station body and applies one stable hard-impact consequence', () => {
+    const world = selectedWorld();
+    world.paused = false;
+    world.state.ship.position = add(world.state.station.position, [0, 0, -100]);
+    world.state.ship.velocity = add(world.state.station.velocity, [0, 0, 12_000]);
+    const hull = world.state.ship.conditionPercent;
+    world.tick(1, CONFIG.epochMs + CONFIG.fixedDt * 1000);
+    expect(length(add(world.state.ship.position, scale(world.state.station.position, -1))))
+      .toBeGreaterThan(world.state.station.bodyRadiusM);
+    expect(world.state.ship.conditionPercent).toBeLessThan(hull);
+    expect(world.state.docking.phase).not.toBe('DOCKED');
+    const afterImpact = world.state.ship.conditionPercent;
+    for (let tick = 2; tick <= 120; tick++) world.tick(tick, CONFIG.epochMs + tick * CONFIG.fixedDt * 1000);
+    expect(world.state.ship.conditionPercent).toBe(afterImpact);
+    expect(Number.isFinite(length(world.state.ship.position))).toBe(true);
+  });
+
+  it('keeps the capture volume distinct and allows a swept near miss without auto-docking', () => {
+    const capture = selectedWorld(), hull = capture.state.ship.conditionPercent;
+    capture.paused = false;
+    capture.state.ship.position = add(capture.state.station.position, [-10, 0, CONFIG.stationPortCapturePointM]);
+    capture.state.ship.velocity = add(capture.state.station.velocity, [1_200, 0, 0]);
+    capture.tick(1, CONFIG.epochMs + CONFIG.fixedDt * 1000);
+    expect(capture.state.docking.phase).not.toBe('DOCKED');
+    expect(capture.state.ship.conditionPercent).toBe(hull);
+
+    const nearMiss = selectedWorld(), nearMissHull = nearMiss.state.ship.conditionPercent;
+    nearMiss.paused = false;
+    nearMiss.state.ship.position = add(nearMiss.state.station.position, [46, 0, -100]);
+    nearMiss.state.ship.velocity = add(nearMiss.state.station.velocity, [0, 0, 12_000]);
+    nearMiss.tick(1, CONFIG.epochMs + CONFIG.fixedDt * 1000);
+    expect(nearMiss.state.ship.conditionPercent).toBe(nearMissHull);
+    expect(nearMiss.state.docking.phase).not.toBe('DOCKED');
+  });
 });

@@ -3,7 +3,11 @@ import { expect, test } from '@playwright/test';
 
 test('two independent identities share authoritative ships and reconnect without duplication', async ({ browser }) => {
   test.setTimeout(90_000);
-  await mkdir('artifacts/shared-phase-00', { recursive: true });
+  const startedAt = Date.now();
+  const evidence = process.env.UPDATE_ACCEPTED_EVIDENCE === '1'
+    ? 'artifacts/shared-phase-00'
+    : '.runs/playwright/shared-identity';
+  await mkdir(evidence, { recursive: true });
   const suffix = Date.now().toString(36).slice(-7).toUpperCase(),
     callsignA = `ALPHA_${suffix}`.slice(0, 20), callsignB = `BRAVO_${suffix}`.slice(0, 20);
   const contextA = await browser.newContext({ viewport: { width: 1440, height: 900 } }),
@@ -11,7 +15,7 @@ test('two independent identities share authoritative ships and reconnect without
     pageA = await contextA.newPage(), pageB = await contextB.newPage();
   await pageA.goto('/?scene=bounty_sandbox&backend=webgl2&shared=1');
   await expect(pageA.getByTestId('identity-gate')).toBeVisible();
-  await pageA.screenshot({ path: 'artifacts/shared-phase-00/01-registration.png' });
+  await pageA.screenshot({ path: `${evidence}/01-registration.png` });
   await pageA.getByTestId('callsign-input').fill(callsignA);
   await pageA.getByTestId('register-identity').click();
   await expect(pageA.getByTestId('identity-gate')).toBeHidden({ timeout: 15_000 });
@@ -56,7 +60,7 @@ test('two independent identities share authoritative ships and reconnect without
   await pageA.getByLabel('Operasyon paneli').getByRole('button', { name: /OPS/ }).click();
   await expect(pageA.getByTestId('shared-pilots')).toContainText(callsignB);
   await expect(pageA.locator('[data-testid^="orbit-map-remote-"]')).toHaveCount(1);
-  await pageA.screenshot({ path: 'artifacts/shared-phase-00/02-two-player-hud.png' });
+  await pageA.screenshot({ path: `${evidence}/02-two-player-hud.png` });
   const metrics = await pageA.evaluate(() => window.__ORBITAL__!.getMetrics());
   const foreignCommandResult = await pageA.evaluate(async (foreignShipId) => new Promise<string>((resolve, reject) => {
     const credential = localStorage.getItem('orbital.identity.credential.v1');
@@ -82,11 +86,19 @@ test('two independent identities share authoritative ships and reconnect without
   await expect(pageA.getByTestId('identity-gate')).toBeHidden({ timeout: 15_000 });
   await expect.poll(() => pageA.evaluate(() => window.__ORBITAL__?.getState()?.ship.id)).toBe(beforeReload);
   await expect.poll(() => pageB.evaluate(() => window.__ORBITAL__?.getState()?.remotePlayers.length)).toBe(1);
-  await writeFile('artifacts/shared-phase-00/two-client-results.json', JSON.stringify({
+  await pageB.goto('about:blank');
+  await expect.poll(() => pageA.evaluate(() => window.__ORBITAL__?.getState()?.remotePlayers.length)).toBe(0);
+  await expect(pageA.locator('[data-testid^="orbit-map-remote-"]')).toHaveCount(0);
+  // Refresh resets the expanded panel; real UI controls expose the offline policy.
+  await pageA.getByLabel('Operasyon paneli').getByRole('button', { name: /OPS/ }).click();
+  await expect(pageA.getByTestId('shared-pilots')).not.toContainText(callsignB);
+  await pageA.screenshot({ path: `${evidence}/03-offline-hidden.png` });
+  await writeFile(`${evidence}/two-client-results.json`, JSON.stringify({
     browser: 'Chrome / Playwright', viewport: '1440x900', backend: metrics.backend,
     drawCalls: metrics.drawCalls, triangles: metrics.triangles, frameMs: metrics.frameMs,
     rttMs: metrics.rttMs, players: 2, distinctShips: true, movementObservedBothDirections: true,
     ownershipRejection: foreignCommandResult, reconnectRestoredShip: true, duplicateShipCountAfterReconnect: 0,
+    offlineSpatialHidden: true, durationMs: Date.now() - startedAt,
   }, null, 2));
-  await Promise.all([pageA.goto('about:blank'), pageB.goto('about:blank')]);
+  await Promise.all([contextA.close(), contextB.close()]);
 });

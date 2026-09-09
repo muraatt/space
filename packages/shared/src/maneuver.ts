@@ -77,4 +77,5 @@ export interface ManeuverExecutionState {
   completedAtMs?: number;
   failureReason?: string;
   targetEntityId?: string;
+  stationHandoffCorrectionM?: number;
 }

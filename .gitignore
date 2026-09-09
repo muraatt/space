@@ -8,4 +8,5 @@ artifacts/**/test-output/
 *.tsbuildinfo
 .pnpm-store/
 .data/
+.runs/
 artifacts/shared-phase-00/test-identities.json
