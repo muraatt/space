@@ -4,7 +4,7 @@ import { World } from './world';
 import type { IdentityRecord, IdentityRepository } from './identity/identity-repository';
 import { assertRestorableShip, assertPilotCheckpoint } from './identity/persisted-ship';
 
-export interface SharedPilotRuntime { record: IdentityRecord; world: World; presence: RemotePlayerState['presence']; connections: number; inactiveSince: number; busy: boolean }
+export interface SharedPilotRuntime { record: IdentityRecord; world: World; presence: RemotePlayerState['presence']; connections: number; inactiveSince: number; busy: boolean; testClockOffsetMs?: number }
 export const DISCONNECT_GRACE_MS = 60_000;
 
 export class SharedSandbox {
@@ -160,10 +160,21 @@ export class SharedSandbox {
     }
   }
   runtimeCount() { return this.pilots.size; }
+  worldForTest(playerId: string) { return this.pilots.get(playerId)?.world; }
+  advanceManeuverForTest(playerId: string) {
+    const runtime = this.pilots.get(playerId), world = runtime?.world,
+      nextEventAtMs = world?.state.maneuver?.nextEventAtMs;
+    if (!runtime || !world || !nextEventAtMs || world.state.maneuver?.status !== 'COASTING') return undefined;
+    runtime.testClockOffsetMs = nextEventAtMs + 1 - this.clock();
+    world.tick(performance.now(), nextEventAtMs + 1);
+    this.syncStation(world, nextEventAtMs + 1);
+    return nextEventAtMs + 1;
+  }
   tick(now: number) {
     this.legacyWorld.tick(now);
     for (const pilot of this.pilots.values()) if (pilot.connections && !pilot.busy) {
-      pilot.world.tick(now, this.clock()); this.syncStation(pilot.world);
+      const atMs = this.clock() + (pilot.testClockOffsetMs ?? 0);
+      pilot.world.tick(now, atMs); this.syncStation(pilot.world, atMs);
     }
     if (!this.persistPending && now - this.lastPersistAt >= 5_000) {
       this.lastPersistAt = now; this.persistPending = true;
@@ -173,7 +184,10 @@ export class SharedSandbox {
   prepareSnapshots() {
     const list = [...this.pilots.values()].filter(pilot => pilot.connections && !pilot.busy);
     const atMs = this.clock();
-    for (const pilot of list) { this.syncStation(pilot.world, atMs); pilot.record.shipId = pilot.world.state.ship.id; }
+    for (const pilot of list) {
+      this.syncStation(pilot.world, atMs + (pilot.testClockOffsetMs ?? 0));
+      pilot.record.shipId = pilot.world.state.ship.id;
+    }
     for (const local of list) local.world.state.remotePlayers = list
       .filter((remote) => remote !== local)
       .map((remote) => ({

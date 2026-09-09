@@ -37,6 +37,7 @@ export class Connection {
   private disposed = false;
   private reconnectTimer?: ReturnType<typeof setTimeout>;
   private identityMode = true;
+  private reconnectAttempts = 0;
   private registrationCredential = '';
   private readonly pageHide = () => {
     this.disposed = true;
@@ -93,6 +94,7 @@ export class Connection {
         this.registrationPending = false;
         this.status = 'Bağlı';
         this.lastError = '';
+        this.reconnectAttempts = 0;
         this.startPing();
       }
       if (data.type === 'identity_error') {
@@ -139,6 +141,7 @@ export class Connection {
     };
     ws.onclose = (event) => {
       if (this.socket !== ws) return;
+      this.snapshot = undefined;
       this.status = this.disposed
         ? 'Kapalı'
         : event.code === 4001
@@ -151,17 +154,23 @@ export class Connection {
       this.planPending = false;
       this.missionPending = false;
       this.maneuverCommandActive = false;
-      if (!this.disposed && this.identityMode && event.code !== 4001)
-        this.reconnectTimer = setTimeout(() => this.connect(scene, true), 1000);
+      if (!this.disposed && this.identityMode && event.code !== 4001) {
+        const retryDelayMs = Math.min(30_000, 1_000 * 2 ** Math.min(this.reconnectAttempts++, 5));
+        this.reconnectTimer = setTimeout(() => this.connect(scene, true), retryDelayMs);
+      }
     };
     ws.onerror = () => {
       if (this.socket !== ws) return;
+      this.snapshot = undefined;
       this.status = 'Sunucuya erişilemiyor';
     };
   }
   private startPing() {
     clearInterval(this.pingTimer);
     this.pingTimer = setInterval(() => this.send({ type: 'ping', sentAt: performance.now() }), 1000);
+  }
+  usesIdentityMode() {
+    return this.identityMode;
   }
   private readCredential() {
     try { return localStorage.getItem(CREDENTIAL_KEY) ?? ''; } catch { return ''; }

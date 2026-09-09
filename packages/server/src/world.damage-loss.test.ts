@@ -55,6 +55,20 @@ describe('authoritative damage, loss and recovery', () => {
     expect(world.fireMissile('offline-missile', 2000)).toMatchObject({ ok: false, code: 'WEAPON_OFFLINE' });
   });
 
+  it('CAN-026: bounds long-session damage replay bookkeeping', () => {
+    const world = new World();
+    world.reset('orbit_day');
+    for (let hit = 0; hit < 900; hit++)
+      expect(world.receivePlayerDamage(`long-session-${hit}`, 0.01, 1_000 + hit).ok).toBe(true);
+    expect(world.state.combat.processedDamageIds).toHaveLength(256);
+    expect(world.state.combat.processedDamageIds[0]).toBe('long-session-644');
+    expect(world.receivePlayerDamage('long-session-899', 0.01, 2_000)).toMatchObject({
+      ok: false,
+      code: 'DUPLICATE_DAMAGE',
+    });
+    expect(JSON.stringify(world.state.combat.processedDamageIds).length).toBeLessThan(6_000);
+  });
+
   it('creates one wreck, resolves cargo/modules and blocks a destroyed ship', () => {
     const world = new World();
     world.reset('orbit_day');

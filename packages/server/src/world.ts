@@ -56,6 +56,7 @@ export class World {
   private economicTransactions = new Set<string>();
   private completedTemplates = new Set<string>();
   private stationContactActive = false;
+  private damageSequence = 0;
   checkpoint(): PilotCheckpoint {
     const active = this.state.missions.find(m => m.id === this.state.profile.activeMissionId);
     return structuredClone({
@@ -314,11 +315,16 @@ export class World {
     this.combatEvent('LASER_REJECTED', nowMs, `Lazer atışı reddedildi: ${code}.`);
     return { ok: false as const, code };
   }
-  private applyTargetDamage(damageId: string, target: CombatTargetState, amount: number, nowMs: number) {
-    if (this.state.combat.processedDamageIds.includes(damageId))
-      return { ok: false as const, code: 'DUPLICATE_DAMAGE' };
+  private rememberDamage(damageId: string) {
+    if (this.state.combat.processedDamageIds.includes(damageId)) return undefined;
     this.state.combat.processedDamageIds.push(damageId);
-    if (this.state.combat.processedDamageIds.length > 256) this.state.combat.processedDamageIds.shift();
+    if (this.state.combat.processedDamageIds.length > 256)
+      this.state.combat.processedDamageIds.splice(0, this.state.combat.processedDamageIds.length - 256);
+    return this.damageSequence++;
+  }
+  private applyTargetDamage(damageId: string, target: CombatTargetState, amount: number, nowMs: number) {
+    if (this.rememberDamage(damageId) === undefined)
+      return { ok: false as const, code: 'DUPLICATE_DAMAGE' };
     target.health = Math.max(0, target.health - amount);
     this.tagCombat(nowMs);
     this.combatEvent('DAMAGE_APPLIED', nowMs, `${target.label}: ${amount} gövde hasarı.`, {
@@ -353,9 +359,9 @@ export class World {
         ? 'Lazer ve füze çevrimi devre dışı'
         : `Silah verimi %${Math.round(50 + modules.WEAPON.condition / 2)}`;
   }
-  private applyModuleDamage(damageId: string, amount: number, nowMs: number) {
+  private applyModuleDamage(damageIndex: number, amount: number, nowMs: number) {
     const ids: CombatModuleId[] = ['ENGINE', 'FUEL', 'POWER', 'WEAPON'],
-      id = ids[(this.state.combat.processedDamageIds.length - 1) % ids.length],
+      id = ids[damageIndex % ids.length],
       module = this.state.combat.modules[id],
       applied = Math.min(module.condition, amount * CONFIG.moduleDamageMultiplier);
     module.condition = Math.max(0, module.condition - applied);
@@ -376,10 +382,10 @@ export class World {
       return { ok: false as const, code: 'DUPLICATE_DAMAGE' };
     if (this.state.combat.playerDestroyed) return { ok: false as const, code: 'SHIP_DESTROYED' };
     if (!Number.isFinite(amount) || amount <= 0) return { ok: false as const, code: 'INVALID_DAMAGE' };
-    this.state.combat.processedDamageIds.push(damageId);
+    const damageIndex = this.rememberDamage(damageId)!;
     this.state.combat.playerHull = Math.max(0, this.state.ship.conditionPercent - amount);
     this.state.ship.conditionPercent = this.state.combat.playerHull;
-    this.applyModuleDamage(damageId, amount, nowMs);
+    this.applyModuleDamage(damageIndex, amount, nowMs);
     this.tagCombat(nowMs);
     this.combatEvent('DAMAGE_APPLIED', nowMs, `Araç ${amount} gövde hasarı aldı.`, {
       targetId: this.state.ship.id,
@@ -1131,6 +1137,7 @@ export class World {
     this.economicTransactions.clear();
     this.completedTemplates.clear();
     this.stationContactActive = false;
+    this.damageSequence = 0;
     this.state.combat.playerHull = this.state.ship.conditionPercent;
     this.paused = paused;
     this.lastInputAt = 0;

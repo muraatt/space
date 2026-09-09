@@ -21,9 +21,11 @@ export default defineConfig({
       url: 'http://127.0.0.1:8788/health',
       timeout: 30000,
       reuseExistingServer: false,
+      gracefulShutdown: { signal: 'SIGINT', timeout: 5_000 },
       env: {
         PORT: '8788', HOST: '127.0.0.1', TEST_MODE: '1', TEST_TOKEN: 'orbital-isolated-test-01',
         TEST_REPLACEMENT_CLOSE_DELAY_MS: '1000', IDENTITY_STORE_PATH: `.runs/playwright/test-identities-${process.pid}.json`,
+        REQUIRE_DATABASE_URL: '', REQUIRE_ALLOWED_ORIGINS: '', DATABASE_URL: '',
       },
     },
     {
@@ -32,6 +34,7 @@ export default defineConfig({
       url: 'http://127.0.0.1:5174',
       timeout: 60000,
       reuseExistingServer: false,
+      gracefulShutdown: { signal: 'SIGINT', timeout: 5_000 },
       env: { PORT: '8788' },
     },
   ],

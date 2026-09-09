@@ -27,6 +27,7 @@ import { OrbitalMap } from './ui/orbital-map';
 import { TelemetryStrip } from './ui/telemetry-strip';
 import { OpsPanel } from './ui/ops-panel';
 import { DockingGuidance } from './ui/docking-guidance';
+import { scenePresentation } from './ui/scene-presentation';
 import './styles.css';
 type View = {
   state?: WorldState;
@@ -43,6 +44,7 @@ type View = {
   identityRequired: boolean;
   registrationPending: boolean;
   identity?: PublicPlayerIdentity;
+  identityMode: boolean;
 };
 function IdentityGate({ pending, error, onSubmit }: { pending: boolean; error: string; onSubmit: (username: string) => void }) {
   const [username, setUsername] = useState('');
@@ -83,6 +85,7 @@ export default function App() {
     flightAllowed: false,
     identityRequired: false,
     registrationPending: false,
+    identityMode: true,
   });
   const [ready, setReady] = useState(false),
     [active, setActive] = useState(false),
@@ -158,6 +161,7 @@ export default function App() {
               identityRequired: connection.identityRequired,
               registrationPending: connection.registrationPending,
               identity: connection.identity,
+              identityMode: connection.usesIdentityMode(),
             });
         }, 250);
         let shown = false;
@@ -169,6 +173,9 @@ export default function App() {
               shown = true;
               setReady(true);
             }
+          } else if (shown) {
+            renderer!.clear();
+            shown = false;
           }
           frame = requestAnimationFrame(loop);
         };
@@ -306,6 +313,7 @@ export default function App() {
   }, [plannerOpen, selectedCandidate, target.altitudeKm]);
   const elapsed = Math.floor((state?.tick ?? 0) * CONFIG.fixedDt),
     clock = `${String(Math.floor(elapsed / 3600)).padStart(2, '0')}:${String(Math.floor(elapsed / 60) % 60).padStart(2, '0')}:${String(elapsed % 60).padStart(2, '0')}`;
+  const presentedScene = scenePresentation(scene, state?.scene, view.identityMode);
   const goScene = (night: boolean) => {
     const p = new URLSearchParams(location.search);
     p.set('scene', night ? 'orbit_night' : 'orbit_day');
@@ -455,7 +463,7 @@ export default function App() {
         <button className="mission-toggle" disabled={!ready} onClick={openHangar}>HANGAR VE SERVİS</button>
         <button className="combat-toggle" disabled={!ready} onClick={openCombat}>ATEŞ KONTROLÜ</button>
         <button className="station-toggle" disabled={!ready} onClick={selectStation}>{stationSelected ? 'İSTASYON HEDEFTE' : 'İSTASYONU HEDEFLE'}</button>
-        <span className="scene-control"><button aria-pressed={scene === 'orbit_day'} onClick={() => goScene(false)}>☀ Gündüz</button><button aria-pressed={scene === 'orbit_night'} onClick={() => goScene(true)}>◐ Gece</button></span>
+        {presentedScene.canSelectScene && <span className="scene-control"><button aria-pressed={presentedScene.scene === 'orbit_day'} onClick={() => goScene(false)}>☀ Gündüz</button><button aria-pressed={presentedScene.scene === 'orbit_night'} onClick={() => goScene(true)}>◐ Gece</button></span>}
       </nav>}
       <ManeuverPanel
         open={plannerOpen}
@@ -524,35 +532,9 @@ export default function App() {
         }}
       />
       {!anySystemOpen && <section className="scene-caption">
-        <span className="eyebrow">
-          {scene === 'orbit_night'
-            ? 'DÜNYA GÖLGESİ'
-            : scene === 'cargo_mission'
-              ? 'DENETİM HALKASI'
-              : scene === 'intercept' || scene === 'missile_hit'
-                ? scene === 'missile_hit'
-                  ? 'ÇEKİŞMELİ BÖLGE · DARBE TESTİ'
-                  : 'NORMAL BÖLGE · GÖREV TEMASI'
-                : 'ALÇAK DÜNYA YÖRÜNGESİ'}
-        </span>
-        <h2>
-          {scene === 'orbit_night'
-            ? 'Gece vardiyası'
-            : scene === 'cargo_mission'
-              ? 'Denetim halkası varışı'
-              : scene === 'intercept' || scene === 'missile_hit'
-                ? scene === 'missile_hit' ? 'Füze darbe testi' : 'R-17 önleme hattı'
-                : 'Sessizliğin üzerinde'}
-        </h2>
-        <p>
-          {scene === 'orbit_night'
-            ? 'Güneş hattının ötesinde. Seyir ışıkları etkin.'
-            : scene === 'cargo_mission'
-              ? '450 kilometrede. Görev kontrolü teslimat için bağlantıda.'
-              : scene === 'intercept' || scene === 'missile_hit'
-                ? scene === 'missile_hit' ? 'Gelen darbeyi ve alt sistem kaybını gözle.' : 'Hedefi tanımla; ateş yetkisi sunucudan gelir.'
-                : '400 kilometre yukarıda. Her hareketin bir karşılığı var.'}
-        </p>
+        <span className="eyebrow">{presentedScene.eyebrow}</span>
+        <h2>{presentedScene.title}</h2>
+        <p>{presentedScene.description}</p>
       </section>}
       <div className="center-reticle" aria-hidden="true">
         <span />

@@ -1,5 +1,5 @@
 import { CONFIG, type WorldState } from '@orbital/shared';
-import { availableDeltaV, dot, length, normalize, sub } from '@orbital/simulation';
+import { availableDeltaV, dot, length, normalize, propulsionStep, sub } from '@orbital/simulation';
 
 function orbitalValues(state: WorldState) {
   const r = state.ship.position, v = state.ship.velocity, radius = length(r), speed = length(v), mu = CONFIG.earthMu,
@@ -28,11 +28,17 @@ function attitude([x, y, z, w]: [number, number, number, number]) {
 
 const Value = ({ label, value, unit = '' }: { label: string; value: string | number; unit?: string }) => <div className="telemetry-value"><small>{label}</small><strong>{value}</strong><em>{unit}</em></div>;
 
+export function propulsionAccelerationMps2(state: WorldState) {
+  return length(
+    propulsionStep(state.ship.mass, state.controls, CONFIG.fixedDt, state.ship.performance).bodyAcceleration,
+  );
+}
+
 export function TelemetryStrip({ state, clock, onCamera, onDebug }: { state?: WorldState; clock: string; onCamera: () => void; onDebug: () => void }) {
   if (!state) return <aside className="telemetry-strip" aria-label="Sayısal uçuş telemetrisi" />;
   const orbit = orbitalValues(state), [pitch, yaw, roll] = attitude(state.ship.orientation),
     thrustVector = Math.hypot(...state.controls.translation),
-    acceleration = thrustVector * state.ship.performance.mainThrustN / state.ship.massKg,
+    acceleration = propulsionAccelerationMps2(state),
     fuelPercent = state.ship.mass.propellantKg / state.ship.performance.propellantCapacityKg * 100,
     selected = state.combat.contacts.find(item => item.id === state.combat.selectedTargetId),
     relativeVelocity = selected ? sub(selected.velocity, state.ship.velocity) : undefined,

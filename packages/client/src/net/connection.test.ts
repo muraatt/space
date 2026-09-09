@@ -58,6 +58,7 @@ describe('client command availability', () => {
     expect(connection.lastError).toBe('NOT_CONNECTED');
     expect(connection.missionPending || connection.planPending || connection.maneuverCommandActive).toBe(false);
     expect(connection.flightInputAllowed()).toBe(false);
+    expect(connection.snapshot).toBeUndefined();
   });
 
   it('reclaim preserves the world and ignores delayed events from the old socket', () => {

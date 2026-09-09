@@ -158,6 +158,10 @@ export class GameRenderer {
   setManeuverVisual(targetRadiusM?: number, candidate?: ManeuverCandidate) {
     this.maneuver.setPlan(targetRadiusM, candidate);
   }
+  clear() {
+    if (!this.ready) return;
+    this.renderer.clear(true, true, true);
+  }
   metrics() {
     const values = this.frameTimes.slice(-240).sort((a, b) => a - b),
       avg = values.reduce((a, b) => a + b, 0) / (values.length || 1);

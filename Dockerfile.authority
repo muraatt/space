@@ -4,6 +4,6 @@ RUN corepack enable
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json ./
 COPY packages ./packages
 RUN pnpm install --frozen-lockfile
-ENV HOST=0.0.0.0 PORT=8787 IDENTITY_STORE_PATH=/data/identities.json
+ENV HOST=0.0.0.0 PORT=8787 REQUIRE_DATABASE_URL=1 REQUIRE_ALLOWED_ORIGINS=1
 EXPOSE 8787
 CMD ["node", "--import", "tsx", "packages/server/src/main.ts"]

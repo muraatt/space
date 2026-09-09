@@ -12,6 +12,11 @@ services:
         fromDatabase:
           name: orbital-identity-db
           property: connectionString
+      # Never allow the public authority to fall back to its ephemeral container filesystem.
+      - key: REQUIRE_DATABASE_URL
+        value: "1"
+      - key: REQUIRE_ALLOWED_ORIGINS
+        value: "1"
       # Render is the only trusted HTTP/WebSocket proxy in front of this service.
       - key: TRUST_PROXY
         value: "1"

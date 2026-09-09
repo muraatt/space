@@ -23,7 +23,11 @@ export function dockingMetrics(ship: ShipState, station: StationState, port: Doc
     shipForward = normalize(rotate([0, 0, -1], ship.orientation)),
     shipUp = normalize(rotate([0, 1, 0], ship.orientation)),
     forward = Math.max(-1, Math.min(1, dot(shipForward, desiredForward))),
-    forwardDenominator = Math.max(1e-9, dot(shipForward, desiredForward));
+    signedForward = dot(shipForward, desiredForward),
+    directionError = (offAxis: number) =>
+      Math.abs(offAxis) < 1e-12 && Math.abs(signedForward) < 1e-12
+        ? 0
+        : degrees(Math.atan2(offAxis, signedForward));
   return {
     rangeM,
     relativeSpeedMps: length(relativeVelocity),
@@ -32,8 +36,8 @@ export function dockingMetrics(ship: ShipState, station: StationState, port: Doc
     lateralErrorM: length(lateral),
     verticalErrorM: dot(offset, worldPort.upAxis),
     forwardAlignment: forward,
-    yawErrorDeg: degrees(Math.atan2(dot(shipForward, rightAxis), forwardDenominator)),
-    pitchErrorDeg: degrees(Math.atan2(dot(shipForward, worldPort.upAxis), forwardDenominator)),
+    yawErrorDeg: directionError(dot(shipForward, rightAxis)),
+    pitchErrorDeg: directionError(dot(shipForward, worldPort.upAxis)),
     rollErrorDeg: degrees(Math.atan2(dot(shipUp, rightAxis), dot(shipUp, worldPort.upAxis))),
   };
 }

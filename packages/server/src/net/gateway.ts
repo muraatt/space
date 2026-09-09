@@ -13,6 +13,7 @@ import { IdentityRestoreError } from '../identity/persisted-ship';
 import type { SharedPilotRuntime } from '../shared-sandbox';
 import { SharedSandbox } from '../shared-sandbox';
 import { RegistrationLimiter, registrationSource } from './registration-limiter';
+import { parseAllowedOrigins } from '../startup-safety';
 interface GatewayOptions { replacementCloseDelayMs?: number }
 export function attachGateway(
   server: Server,
@@ -31,7 +32,7 @@ export function attachGateway(
   const socketUrls = new WeakMap<WebSocket, URL>(), sessions = new Map<WebSocket, { world: World; runtime?: SharedPilotRuntime }>(),
     playerSockets = new Map<string, WebSocket>();
   let legacyOwner: WebSocket | undefined;
-  const configuredOrigins = (process.env.ALLOWED_ORIGINS ?? '').split(',').map((item) => item.trim()).filter(Boolean);
+  const configuredOrigins = parseAllowedOrigins(process.env.ALLOWED_ORIGINS);
   const originAllowed = (origin?: string) => (testMode && !origin) || (!!origin && (
     configuredOrigins.length
       ? configuredOrigins.includes(origin)
