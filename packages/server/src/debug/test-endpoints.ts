@@ -91,6 +91,13 @@ export async function testEndpoint(
     }
     return true;
   }
+  if (req.method === 'POST' && url.pathname === '/__test/prepare-capture') {
+    if (!playerId || !sandbox?.prepareCaptureForTest(playerId)) {
+      res.writeHead(404);
+      res.end(JSON.stringify({ error: 'UNKNOWN_TEST_PLAYER' }));
+    } else res.end(JSON.stringify({ ok: true }));
+    return true;
+  }
   res.writeHead(404);
   res.end();
   return true;

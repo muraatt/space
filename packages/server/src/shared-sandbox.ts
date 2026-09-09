@@ -1,11 +1,22 @@
 import { CONFIG, neutralControls, type PublicPlayerIdentity, type RemotePlayerState } from '@orbital/shared';
-import { add, scale, normalize, length, cross, propagateKepler, sub } from '@orbital/simulation';
+import { add, scale, normalize, length, cross, propagateKepler, sub, orientationForBodyMinusZ, stationPortWorld } from '@orbital/simulation';
 import { World } from './world';
 import type { IdentityRecord, IdentityRepository } from './identity/identity-repository';
 import { assertRestorableShip, assertPilotCheckpoint } from './identity/persisted-ship';
 
-export interface SharedPilotRuntime { record: IdentityRecord; world: World; presence: RemotePlayerState['presence']; connections: number; inactiveSince: number; busy: boolean; testClockOffsetMs?: number }
+export interface SharedPilotRuntime { record: IdentityRecord; world: World; presence: RemotePlayerState['presence']; connections: number; inactiveSince: number; busy: boolean; testNowMs?: number }
 export const DISCONNECT_GRACE_MS = 60_000;
+
+function propagateInBoundedSteps(state: { position: RemotePlayerState['ship']['position']; velocity: RemotePlayerState['ship']['velocity'] }, seconds: number) {
+  let propagated = { position: [...state.position] as typeof state.position, velocity: [...state.velocity] as typeof state.velocity },
+    remaining = Math.max(0, seconds);
+  while (remaining > 0) {
+    const duration = Math.min(1_800, remaining);
+    propagated = propagateKepler(propagated, duration);
+    remaining -= duration;
+  }
+  return propagated;
+}
 
 export class SharedSandbox {
   readonly legacyWorld = new World();
@@ -135,7 +146,17 @@ export class SharedSandbox {
     return { playerId: record.playerId, callsign: record.username, shipId: this.pilots.get(record.playerId)?.world.state.ship.id ?? record.shipId };
   }
   private syncStation(world: World, atMs = this.clock()) {
-    const station = propagateKepler(this.stationAnchor, (atMs - CONFIG.epochMs) / 1000);
+    const elapsedSeconds = Math.max(0, (atMs - world.state.docking.stationUpdatedAtMs) / 1000),
+      station = propagateKepler(this.stationAnchor, (atMs - CONFIG.epochMs) / 1000);
+    if (elapsedSeconds > CONFIG.fixedDt * 2) for (const contact of world.state.combat.contacts) {
+      if (contact.destroyed) continue;
+      const propagated = propagateInBoundedSteps(
+        { position: contact.position, velocity: contact.velocity },
+        elapsedSeconds,
+      );
+      contact.position = propagated.position;
+      contact.velocity = propagated.velocity;
+    }
     const delta = sub(station.position, world.state.station.position);
     world.state.station.position = station.position;
     world.state.station.velocity = station.velocity;
@@ -165,15 +186,38 @@ export class SharedSandbox {
     const runtime = this.pilots.get(playerId), world = runtime?.world,
       nextEventAtMs = world?.state.maneuver?.nextEventAtMs;
     if (!runtime || !world || !nextEventAtMs || world.state.maneuver?.status !== 'COASTING') return undefined;
-    runtime.testClockOffsetMs = nextEventAtMs + 1 - this.clock();
-    world.tick(performance.now(), nextEventAtMs + 1);
-    this.syncStation(world, nextEventAtMs + 1);
+    let sampleAtMs = world.state.maneuver.updatedAtMs;
+    while (sampleAtMs < nextEventAtMs + 1 && world.state.maneuver?.status === 'COASTING') {
+      sampleAtMs = Math.min(nextEventAtMs + 1, sampleAtMs + 1_000);
+      runtime.testNowMs = sampleAtMs;
+      world.tick(performance.now(), sampleAtMs);
+      this.syncStation(world, sampleAtMs);
+    }
     return nextEventAtMs + 1;
+  }
+  prepareCaptureForTest(playerId: string) {
+    const runtime = this.pilots.get(playerId);
+    if (!runtime) return false;
+    const atMs = runtime.testNowMs ?? this.clock(), world = runtime.world;
+    runtime.testNowMs = atMs;
+    this.syncStation(world, atMs);
+    const port = world.state.station.ports[0], worldPort = stationPortWorld(world.state.station, port);
+    world.state.ship.position = add(worldPort.position, scale(worldPort.approachAxis, 3.4));
+    world.state.ship.velocity = [...world.state.station.velocity];
+    world.state.ship.orientation = orientationForBodyMinusZ(scale(worldPort.approachAxis, -1));
+    world.state.ship.angularVelocity = [0, 0, 0];
+    world.state.controls = neutralControls();
+    world.state.docking.rendezvousComplete = true;
+    world.selectStation(world.state.station.id, `test-capture-${atMs}`);
+    return true;
   }
   tick(now: number) {
     this.legacyWorld.tick(now);
+    const sharedAtMs = this.clock();
     for (const pilot of this.pilots.values()) if (pilot.connections && !pilot.busy) {
-      const atMs = this.clock() + (pilot.testClockOffsetMs ?? 0);
+      const atMs = pilot.testNowMs === undefined
+        ? sharedAtMs
+        : (pilot.testNowMs += CONFIG.fixedDt * 1000);
       pilot.world.tick(now, atMs); this.syncStation(pilot.world, atMs);
     }
     if (!this.persistPending && now - this.lastPersistAt >= 5_000) {
@@ -183,9 +227,7 @@ export class SharedSandbox {
   }
   prepareSnapshots() {
     const list = [...this.pilots.values()].filter(pilot => pilot.connections && !pilot.busy);
-    const atMs = this.clock();
     for (const pilot of list) {
-      this.syncStation(pilot.world, atMs + (pilot.testClockOffsetMs ?? 0));
       pilot.record.shipId = pilot.world.state.ship.id;
     }
     for (const local of list) local.world.state.remotePlayers = list

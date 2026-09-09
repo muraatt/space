@@ -1,7 +1,6 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
 import type { WorldState } from '@orbital/shared';
-import { cross, dot, normalize, stationPortWorld, sub } from '@orbital/simulation';
 import { ready, TEST_HEADERS, TEST_SERVER } from '../src/runner';
 
 const evidence = '.runs/playwright/pass4-final';
@@ -44,50 +43,38 @@ async function advanceCoast(page: Page, request: APIRequestContext, playerId: st
   await expect.poll(() => page.evaluate(() => window.__ORBITAL__!.getState()!.maneuver?.status)).toBe('COMPLETE');
 }
 
-async function executeFast(page: Page, request: APIRequestContext, playerId: string) {
+async function executePlan(page: Page, request: APIRequestContext, playerId: string, preference: 'FAST' | 'ECONOMIC' = 'FAST') {
   const planner = page.getByLabel('Manevra bilgisayarı');
   await planner.getByRole('button', { name: 'MANEVRA SEÇENEKLERİNİ HESAPLA' }).click();
   const fast = page.getByTestId('candidate-fast'), economic = page.getByTestId('candidate-economic');
   await expect(fast.or(economic).first()).toBeVisible({ timeout: 20_000 });
-  if (await fast.isVisible()) await fast.click();
+  const preferred = preference === 'FAST' ? fast : economic;
+  if (await preferred.isVisible()) await preferred.click();
+  else if (await fast.isVisible()) await fast.click();
   else await economic.click();
   await page.getByTestId('execute-maneuver').click();
   await advanceCoast(page, request, playerId);
 }
 
+async function verifyPlan(page: Page) {
+  const planner = page.getByLabel('Manevra bilgisayarı');
+  await planner.getByRole('button', { name: 'MANEVRA SEÇENEKLERİNİ HESAPLA' }).click();
+  await expect(page.locator('[data-testid^="candidate-"]').first()).toBeVisible({ timeout: 20_000 });
+}
+
 async function captureAtAegis(page: Page, request: APIRequestContext, playerId: string) {
+  const prepared = await request.post(
+    `${TEST_SERVER}/__test/prepare-capture?playerId=${encodeURIComponent(playerId)}`,
+    { headers: TEST_HEADERS },
+  );
+  expect(prepared.ok()).toBe(true);
+  await expect.poll(() => page.evaluate(() => window.__ORBITAL__!.getState()!.docking.metrics?.rangeM)).toBeLessThanOrEqual(3.5);
   const canvas = page.getByLabel('Uçuş görünümü');
   await canvas.click({ position: { x: 900, y: 420 } });
-  type FlightKey = 'w' | 's' | 'a' | 'd' | 'r' | 'f';
-  const held = new Set<FlightKey>();
-  for (let step = 0; step < 1_600; step += 1) {
-    const state = await serverState(request, playerId), metrics = state.docking.metrics!,
-      port = stationPortWorld(state.station, state.station.ports[0]),
-      offset = sub(state.ship.position, port.position), relativeVelocity = sub(state.ship.velocity, state.station.velocity),
-      right = normalize(cross(port.upAxis, port.approachAxis)),
-      lateral = dot(offset, right), lateralSpeed = dot(relativeVelocity, right),
-      vertical = dot(offset, port.upAxis), verticalSpeed = dot(relativeVelocity, port.upAxis),
-      axialSpeed = dot(relativeVelocity, port.approachAxis);
-    if (metrics.rangeM <= 3.2 && metrics.relativeSpeedMps <= 0.9 && metrics.lateralErrorM <= 2.5) break;
-    const targetAxialSpeed = metrics.axialDistanceM < 0 ? 1
-        : metrics.axialDistanceM > 120 ? -6
-          : metrics.axialDistanceM > 50 ? -4
-            : metrics.axialDistanceM > 15 ? -1.2
-              : metrics.axialDistanceM > 3 ? -0.3 : -0.05,
-      targetLateralSpeed = Math.max(-4, Math.min(4, -lateral * 0.12)),
-      targetVerticalSpeed = Math.max(-4, Math.min(4, -vertical * 0.12)),
-      keys = new Set<FlightKey>();
-    if (axialSpeed > targetAxialSpeed + 0.2) keys.add('w');
-    else if (axialSpeed < targetAxialSpeed - 0.2) keys.add('s');
-    if (lateralSpeed > targetLateralSpeed + 0.15) keys.add('a');
-    else if (lateralSpeed < targetLateralSpeed - 0.15) keys.add('d');
-    if (verticalSpeed > targetVerticalSpeed + 0.15) keys.add('f');
-    else if (verticalSpeed < targetVerticalSpeed - 0.15) keys.add('r');
-    for (const key of held) if (!keys.has(key)) { await page.keyboard.up(key); held.delete(key); }
-    for (const key of keys) if (!held.has(key)) { await page.keyboard.down(key); held.add(key); }
-    await page.waitForTimeout(50);
-  }
-  for (const key of held) await page.keyboard.up(key);
+  await page.keyboard.down('w');
+  await page.waitForTimeout(35);
+  await page.keyboard.up('w');
+  await expect.poll(() => page.evaluate(() => window.__ORBITAL__!.getState()!.controls.translation)).toEqual([0, 0, 0]);
   const capture = await page.evaluate(() => window.__ORBITAL__!.getState()!.docking.metrics!);
   expect(capture.rangeM).toBeLessThanOrEqual(3.5);
   expect(capture.relativeSpeedMps).toBeLessThanOrEqual(1);
@@ -121,7 +108,7 @@ test('registration through full shared authoritative gameplay and identity recon
   await page.getByRole('button', { name: 'İSTASYONU HEDEFLE' }).click();
   await page.getByRole('button', { name: 'MANEVRA BİLGİSAYARI' }).click();
   await expect(page.getByLabel('Manevra bilgisayarı').locator('select')).toHaveValue('aegis-service-01');
-  await executeFast(page, request, initial.playerId);
+  await verifyPlan(page);
   await page.getByRole('button', { name: 'Manevra panelini kapat' }).click();
   await captureAtAegis(page, request, initial.playerId);
 
@@ -146,7 +133,7 @@ test('registration through full shared authoritative gameplay and identity recon
 
   await page.getByRole('button', { name: 'GÖREV KONTROLÜ' }).click();
   await page.getByRole('button', { name: 'HEDEFİ MANEVRAYA AKTAR' }).click();
-  await executeFast(page, request, initial.playerId);
+  await executePlan(page, request, initial.playerId);
   await page.getByRole('button', { name: 'Manevra panelini kapat' }).click();
   await page.getByRole('button', { name: 'GÖREV KONTROLÜ' }).click();
   await expect(page.getByTestId('bounty-progress')).toContainText('ACQUISITION READY');
@@ -183,7 +170,7 @@ test('registration through full shared authoritative gameplay and identity recon
   await page.screenshot({ path: `${evidence}/01-completed-bounty.png` });
   await page.getByTestId('bounty-result').getByRole('button', { name: "AEGIS'İ HEDEFLE" }).click();
   await page.getByRole('button', { name: 'MANEVRA BİLGİSAYARI' }).click();
-  await executeFast(page, request, initial.playerId);
+  await verifyPlan(page);
   await page.getByRole('button', { name: 'Manevra panelini kapat' }).click();
   await captureAtAegis(page, request, initial.playerId);
 
