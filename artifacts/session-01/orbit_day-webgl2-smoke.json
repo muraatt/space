@@ -9,29 +9,29 @@
     },
     "drawCalls": 15,
     "triangles": 54454,
-    "frameMs": 148.56363636363636,
-    "fps": 6.73112226165708,
-    "p95Ms": 97.30000000000018,
-    "frames": 33,
+    "frameMs": 59.07945205479452,
+    "fps": 16.926358746058245,
+    "p95Ms": 76.40000000000009,
+    "frames": 73,
     "viewport": [
       1920,
       1080
     ],
     "pixelRatio": 1,
-    "rttMs": 3.6000001430511475,
-    "bytesIn": 48670,
-    "bytesOut": 2975,
+    "rttMs": 14.099999994039536,
+    "bytesIn": 398022,
+    "bytesOut": 4403,
     "server": {
-      "tickMs": 0.25,
-      "tickP95Ms": 0.391500000000633,
-      "tickP99Ms": 0.6886999999996988,
-      "backlogMs": 4.670566666666966,
+      "tickMs": 0.17570000000023356,
+      "tickP95Ms": 0.41780000000017026,
+      "tickP99Ms": 0.5100999999999658,
+      "backlogMs": 13.130066666666755,
       "rejectedCommands": 0
     }
   },
   "pixelComparison": "NOT_RUN",
   "memory": {
-    "usedJSHeapSize": 46071623,
-    "totalJSHeapSize": 57624851
+    "usedJSHeapSize": 49496242,
+    "totalJSHeapSize": 61981998
   }
 }

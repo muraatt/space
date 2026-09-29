@@ -37,6 +37,14 @@ Verification on 2026-09-08:
 
 Evidence is in `artifacts/shared-phase-00`. Playwright's Windows web-server wrapper left the already-finished 5174/8788 child processes open after reporting assertions; the isolated listener PIDs were stopped and Playwright then returned exit code 0. This is a test-harness cleanup issue, not a game-server assertion failure.
 
+### Shared lighting follow-up — 2026-09-29
+
+- Added authority-owned `DAY` / `NIGHT` lighting independent of the `bounty_sandbox` gameplay scene. The intent remains bound to the caller's owned ship and is copied to all live pilot worlds plus later joins.
+- `pnpm check` and `pnpm build` passed. Targeted protocol, ownership, client-command and presentation tests passed; the shared two-existing-plus-one-late-join lighting regression passed without ship-state changes.
+- The full parallel unit run completed 158/182 assertions; 24 pre-existing CPU/crypto/worker tests exceeded their fixed time limits under the loaded Windows host. No lighting assertion failed, so this run is recorded as incomplete rather than passed.
+- Production `space-client-delta.vercel.app` restored `LIVEB_929`, exposed both controls, accepted `Gece`, retained it across a production reload, then returned to `Gündüz`. The authority health endpoint remained ready and exact-origin protected.
+- Closure-mode visual capture passed 4/4 on Chrome at 1920×1080 for WebGPU and WebGL2. Day/night captures were manually inspected: the controls are legible with no blocking overlap. The ordinary pixel-regression run did not match the older baselines; those baselines were not overwritten.
+
 ## Deferred
 
 Passwords/authentication hardening, recovery, full game persistence, shared mission state, squad, chat, combat between players, interpolation/lag compensation, scale/load work and PostgreSQL belong to later Session 5 passes.
