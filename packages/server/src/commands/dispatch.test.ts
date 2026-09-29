@@ -20,6 +20,13 @@ describe('authoritative dispatch', () => {
     });
     expect(w.controls.translation).toEqual([0, 0, 0]);
   });
+  it('accepts shared lighting only from the owned ship', () => {
+    const w = initialWorld('bounty_sandbox');
+    expect(dispatch(w, { type: 'set_lighting', version: 1, shipId: w.ship.id, mode: 'NIGHT' }, w.ship.id))
+      .toEqual({ ok: true, lightingRequest: { mode: 'NIGHT' } });
+    expect(dispatch(w, { type: 'set_lighting', version: 1, shipId: 'other', mode: 'DAY' }, w.ship.id))
+      .toEqual({ ok: false, code: 'NOT_OWNER' });
+  });
   it('rejects duplicates and out-of-order input', () => {
     const w = initialWorld();
     expect(dispatch(w, input, w.ship.id).ok).toBe(true);

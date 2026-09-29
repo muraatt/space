@@ -26,6 +26,12 @@ export const clientMessageSchema = z.discriminatedUnion('type', [
   controlSchema,
   z.strictObject({ type: z.literal('ping'), sentAt: z.number().finite().nonnegative() }),
   z.strictObject({
+    type: z.literal('set_lighting'),
+    version: z.literal(1),
+    shipId: z.string().max(64),
+    mode: z.enum(['DAY', 'NIGHT']),
+  }),
+  z.strictObject({
     type: z.literal('plan_maneuver'),
     version: z.literal(1),
     shipId: z.string().max(64),

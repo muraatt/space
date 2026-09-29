@@ -16,6 +16,8 @@ Registration creates exactly one existing Raptor starter configuration with a st
 
 First entry presents one callsign field. Normal UI exposes the callsign as locked identity. Remote ships use the existing editable ship model in the Three.js near scene, with a cyan callsign plate. The orbital map and OPS panel show remote callsign, presence and range.
 
+The system dock also exposes `Gündüz` and `Gece` lighting controls. An authenticated pilot sends only a versioned lighting intent bound to their owned ship; the authority applies the selected visual lighting to every live pilot snapshot without changing or resetting the AEGIS gameplay scenario, physics, missions, identity or ship state. A newly joined pilot receives the current shared lighting mode.
+
 ## Deployment boundary
 
 Vercel hosts the static client. A Render Free Web Service hosts the continuous authoritative loop and WebSocket gateway; a minimal Render Free Postgres database backs Phase 0 identity and ship restoration. See [deployment instructions](../deployment_shared_sandbox.md). Free Postgres expires after 30 days and has no backups; this is accepted only for the closed-alpha prototype.

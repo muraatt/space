@@ -37,6 +37,7 @@ export interface PublicPlayerIdentity {
   callsign: string;
   shipId: string;
 }
+export type LightingMode = 'DAY' | 'NIGHT';
 export interface MassState {
   dryKg: number;
   modulesKg: number;
@@ -47,6 +48,8 @@ export interface MassState {
 export interface WorldState {
   universeId: string;
   scene: SceneId;
+  /** Authority-selected shared visual lighting; independent of the gameplay scenario. */
+  lightingMode: LightingMode;
   seed: number;
   tick: number;
   ship: ShipState;

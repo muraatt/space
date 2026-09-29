@@ -151,6 +151,21 @@ describe('canonical adjudication evidence', () => {
     await sandbox.flush();
   });
 
+  it('keeps day/night visual lighting shared without resetting either pilot world', async () => {
+    const sandbox = new SharedSandbox(new MemoryIdentities()),
+      a = await sandbox.register('LIGHT_A', 'light-a'),
+      b = await sandbox.register('LIGHT_B', 'light-b');
+    sandbox.connect(a.runtime); sandbox.connect(b.runtime);
+    const aShip = structuredClone(a.runtime.world.state.ship), bShip = structuredClone(b.runtime.world.state.ship);
+    sandbox.setLighting('NIGHT');
+    expect(a.runtime.world.state.lightingMode).toBe('NIGHT');
+    expect(b.runtime.world.state.lightingMode).toBe('NIGHT');
+    expect(a.runtime.world.state.ship).toEqual(aShip);
+    expect(b.runtime.world.state.ship).toEqual(bShip);
+    const c = await sandbox.register('LIGHT_C', 'light-c');
+    expect(c.runtime.world.state.lightingMode).toBe('NIGHT');
+  }, 60_000);
+
   it('CAN-005/CAN-006 freezes the fatal-destruction mission matrix', () => {
     const results: Record<string, unknown> = {};
 

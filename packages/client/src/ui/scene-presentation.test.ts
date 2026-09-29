@@ -2,11 +2,12 @@ import { describe, expect, it } from 'vitest';
 import { scenePresentation } from './scene-presentation';
 
 describe('CAN-027 authoritative scene presentation', () => {
-  it('hides ineffective scene controls and presents the shared authority scene', () => {
+  it('presents the shared authority scene with effective shared lighting controls', () => {
     expect(scenePresentation('orbit_night', 'bounty_sandbox', true)).toMatchObject({
       scene: 'bounty_sandbox',
       title: 'Paylaşılan görev alanı',
-      canSelectScene: false,
+      canSelectScene: true,
+      sharedLighting: true,
     });
   });
 

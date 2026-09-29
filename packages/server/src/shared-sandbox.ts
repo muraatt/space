@@ -1,4 +1,4 @@
-import { CONFIG, neutralControls, type PublicPlayerIdentity, type RemotePlayerState } from '@orbital/shared';
+import { CONFIG, neutralControls, type LightingMode, type PublicPlayerIdentity, type RemotePlayerState } from '@orbital/shared';
 import { add, scale, normalize, length, cross, propagateKepler, sub, orientationForBodyMinusZ, stationPortWorld } from '@orbital/simulation';
 import { World } from './world';
 import type { IdentityRecord, IdentityRepository } from './identity/identity-repository';
@@ -26,6 +26,7 @@ export class SharedSandbox {
   private dirtyPlayerIds = new Set<string>();
   private persistChains = new Map<string, Promise<void>>();
   private stationAnchor = structuredClone(new World().state.station);
+  private lightingMode: LightingMode = 'DAY';
   constructor(
     readonly identities: IdentityRepository,
     private readonly reportPersistenceError: (message: string, error: unknown) => void = (message, error) =>
@@ -64,6 +65,7 @@ export class SharedSandbox {
   private createWorld(record: IdentityRecord) {
     const world = new World();
     world.reset('bounty_sandbox');
+    world.state.lightingMode = this.lightingMode;
     this.syncStation(world);
     if (record.ship) assertRestorableShip(record.ship, record.shipId);
     if (record.checkpoint) {
@@ -132,6 +134,11 @@ export class SharedSandbox {
   }
 
   connect(runtime: SharedPilotRuntime) { runtime.connections++; runtime.presence = 'ONLINE'; }
+  setLighting(mode: LightingMode) {
+    this.lightingMode = mode;
+    this.legacyWorld.state.lightingMode = mode;
+    for (const pilot of this.pilots.values()) pilot.world.state.lightingMode = mode;
+  }
   disconnect(runtime: SharedPilotRuntime) {
     if (this.pilots.get(runtime.record.playerId) !== runtime) return;
     runtime.connections = Math.max(0, runtime.connections - 1);

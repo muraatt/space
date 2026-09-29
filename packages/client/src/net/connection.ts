@@ -209,6 +209,10 @@ export class Connection {
     if (!this.snapshot) return;
     this.send({ type: 'input', version: 1, shipId: this.activeShipId(), seq: this.seq++, ...c });
   }
+  setLighting(mode: 'DAY' | 'NIGHT') {
+    this.lastError = '';
+    this.send({ type: 'set_lighting', version: 1, shipId: this.activeShipId(), mode });
+  }
   private activeShipId() {
     return this.snapshot?.state.profile.activeShipId ?? CONFIG.shipId;
   }

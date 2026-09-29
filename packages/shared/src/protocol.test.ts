@@ -15,6 +15,12 @@ describe('untrusted wire commands', () => {
     expect(identityMessageSchema.safeParse({ type: 'resume_identity', version: 1, credential: 'x'.repeat(43), playerId: 'forged' }).success).toBe(false);
   });
   it('accepts bounded control intent', () => expect(controlSchema.safeParse(input).success).toBe(true));
+  it('accepts bounded shared lighting intent without authoritative scene fields', () => {
+    const lighting = { type: 'set_lighting', version: 1, shipId: 'kestrel-01', mode: 'NIGHT' };
+    expect(clientMessageSchema.safeParse(lighting).success).toBe(true);
+    expect(clientMessageSchema.safeParse({ ...lighting, mode: 'DUSK' }).success).toBe(false);
+    expect(clientMessageSchema.safeParse({ ...lighting, scene: 'orbit_night' }).success).toBe(false);
+  });
   it.each([NaN, Infinity, -Infinity, 1.01, -1.01])('rejects invalid axis %s', (value) =>
     expect(controlSchema.safeParse({ ...input, translation: [value, 0, 0] }).success).toBe(false),
   );

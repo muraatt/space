@@ -168,6 +168,7 @@ export function initialWorld(scene: SceneId = 'orbit_day', seed = 4401): WorldSt
   return {
     universeId: CONFIG.universeId,
     scene,
+    lightingMode: scene === 'orbit_night' || scene === 'missile_hit' ? 'NIGHT' : 'DAY',
     seed,
     tick: 0,
     lastInputSeq: -1,

@@ -126,8 +126,8 @@ export class GameRenderer {
     this.combat.update(world, frame);
     this.station.update(world, frame);
     this.remotePlayers.update(world.remotePlayers, frame);
-    // Scene sunlight is ECI-fixed; night is a genuinely eclipsed initial orbit location.
-    const sunDirection = world.scene === 'orbit_night' ? [-0.8, 0.15, -0.6] : [0.55, 0.5, -1];
+    // Shared authority lighting is ECI-fixed and identical for every connected pilot.
+    const sunDirection = world.lightingMode === 'NIGHT' ? [-0.8, 0.15, -0.6] : [0.55, 0.5, -1];
     this.sunEci.set(sunDirection[0], sunDirection[1], sunDirection[2]).normalize();
     this.localSun.copy(this.sunEci).applyQuaternion(frame.eciToLocal);
     this.sunFar.position.copy(this.localSun).multiplyScalar(10000);

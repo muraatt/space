@@ -85,6 +85,13 @@ describe('client command availability', () => {
     expect(connection.flightInputAllowed()).toBe(true);
   });
 
+  it('sends shared lighting intent with the authoritative active ship id', () => {
+    connection.setLighting('NIGHT');
+    expect(JSON.parse(socket.send.mock.calls.at(-1)![0])).toEqual({
+      type: 'set_lighting', version: 1, shipId: 'kestrel-01', mode: 'NIGHT',
+    });
+  });
+
   it('CAN-003: replacement snapshots update the public identity and command ownership together', () => {
     connection.identity = { playerId: 'pilot', callsign: 'LOCKED', shipId: 'old-ship' };
     const state = initialWorld(); state.ship.id = 'ship-replacement'; state.profile.activeShipId = state.ship.id;

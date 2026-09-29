@@ -314,9 +314,14 @@ export default function App() {
   const elapsed = Math.floor((state?.tick ?? 0) * CONFIG.fixedDt),
     clock = `${String(Math.floor(elapsed / 3600)).padStart(2, '0')}:${String(Math.floor(elapsed / 60) % 60).padStart(2, '0')}:${String(elapsed % 60).padStart(2, '0')}`;
   const presentedScene = scenePresentation(scene, state?.scene, view.identityMode);
-  const goScene = (night: boolean) => {
+  const lightingMode = state?.lightingMode ?? (presentedScene.scene === 'orbit_night' ? 'NIGHT' : 'DAY');
+  const setLighting = (mode: 'DAY' | 'NIGHT') => {
+    if (view.identityMode) {
+      engine.current?.connection.setLighting(mode);
+      return;
+    }
     const p = new URLSearchParams(location.search);
-    p.set('scene', night ? 'orbit_night' : 'orbit_day');
+    p.set('scene', mode === 'NIGHT' ? 'orbit_night' : 'orbit_day');
     location.search = p.toString();
   };
   const requestPlan = () => {
@@ -463,7 +468,7 @@ export default function App() {
         <button className="mission-toggle" disabled={!ready} onClick={openHangar}>HANGAR VE SERVİS</button>
         <button className="combat-toggle" disabled={!ready} onClick={openCombat}>ATEŞ KONTROLÜ</button>
         <button className="station-toggle" disabled={!ready} onClick={selectStation}>{stationSelected ? 'İSTASYON HEDEFTE' : 'İSTASYONU HEDEFLE'}</button>
-        {presentedScene.canSelectScene && <span className="scene-control"><button aria-pressed={presentedScene.scene === 'orbit_day'} onClick={() => goScene(false)}>☀ Gündüz</button><button aria-pressed={presentedScene.scene === 'orbit_night'} onClick={() => goScene(true)}>◐ Gece</button></span>}
+        {presentedScene.canSelectScene && <span className="scene-control"><button aria-pressed={lightingMode === 'DAY'} onClick={() => setLighting('DAY')}>☀ Gündüz</button><button aria-pressed={lightingMode === 'NIGHT'} onClick={() => setLighting('NIGHT')}>◐ Gece</button></span>}
       </nav>}
       <ManeuverPanel
         open={plannerOpen}

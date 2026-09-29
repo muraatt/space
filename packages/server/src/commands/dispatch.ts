@@ -6,6 +6,8 @@ export function dispatch(world: WorldState, data: unknown, ownedShipId: string) 
   if (c.type === 'ping') return { ok: true as const, pong: c.sentAt };
   if (c.shipId !== ownedShipId || c.shipId !== world.ship.id)
     return { ok: false as const, code: 'NOT_OWNER' };
+  if (c.type === 'set_lighting')
+    return { ok: true as const, lightingRequest: { mode: c.mode } };
   if (c.type === 'claim_replacement')
     return { ok: true as const, recoveryRequest: { transactionId: c.transactionId } };
   if (world.combat.playerDestroyed) return { ok: false as const, code: 'SHIP_DESTROYED' };

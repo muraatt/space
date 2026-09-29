@@ -15,5 +15,5 @@ export function scenePresentation(requested: SceneId, authoritative: SceneId | u
       'Sessizliğin üzerinde',
       '400 kilometre yukarıda. Her hareketin bir karşılığı var.',
     ];
-  return { scene, eyebrow, title, description, canSelectScene: !identityMode };
+  return { scene, eyebrow, title, description, canSelectScene: true, sharedLighting: identityMode };
 }

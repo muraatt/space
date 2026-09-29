@@ -162,6 +162,8 @@ export function attachGateway(
           .some(key => key in result);
         if (durable && runtime) { runtime.busy = true; pendingMessages.set(ws, []); }
         if ('pong' in result && result.pong !== undefined) send(ws, { type: 'pong', sentAt: result.pong });
+        else if ('lightingRequest' in result && result.lightingRequest !== undefined)
+          sandbox.setLighting(result.lightingRequest.mode);
         else if ('planRequest' in result && result.planRequest !== undefined) {
           let target: ManeuverTarget, targetEntityId: string | undefined;
           if (result.planRequest.target.kind === 'STATION_RENDEZVOUS') {
